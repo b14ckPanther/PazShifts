@@ -39,7 +39,10 @@ export async function adminCorrectAttendanceAction(input: {
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === input.stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === input.stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -72,7 +75,10 @@ export async function rotateNfcTokenAction(stationId: string): Promise<RotateTok
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {

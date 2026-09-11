@@ -186,10 +186,15 @@ export function WeeklyScheduleManager({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div
+      className="schedule-manager"
+      style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+    >
       {/* Week Navigator & Status / Actions Bar */}
       <Card
+        className="schedule-toolbar"
         style={{
+          padding: 0,
           backgroundColor: '#FFFFFF',
           border: '1px solid #E5E7EB',
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
@@ -205,67 +210,48 @@ export function WeeklyScheduleManager({
               gap: '16px',
             }}
           >
-            {/* Week Navigation Controls */}
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(-7)}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                disabled={isPending}
-                title="שבוע קודם"
-              >
-                <ChevronRightIcon size={16} />
-                <span>שבוע קודם</span>
-              </Button>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#F9FAFB',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                }}
-              >
-                <CalendarIcon size={18} style={{ color: '#D97706' }} />
-                <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#111827' }}>
-                  שבוע: {formatDateDisplay(selectedWeekStart)} — {formatDateDisplay(weekEnd)}
-                </span>
+            <nav className="admin-week-nav" aria-label="בחירת שבוע">
+              <div className="admin-week-date">
+                <small>השבוע הנבחר</small>
+                <strong dir="ltr">
+                  {formatDateDisplay(selectedWeekStart)} – {formatDateDisplay(weekEnd)}
+                </strong>
               </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(7)}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              <button
+                type="button"
+                className="admin-week-previous"
+                onClick={() => navigateWeek(-7)}
                 disabled={isPending}
-                title="שבוע הבא"
+              >
+                <ChevronRightIcon size={18} />
+                <span>שבוע קודם</span>
+              </button>
+              <button
+                type="button"
+                className="admin-week-next"
+                onClick={() => navigateWeek(7)}
+                disabled={isPending}
               >
                 <span>שבוע הבא</span>
-                <ChevronLeftIcon size={16} />
-              </Button>
-
+                <ChevronLeftIcon size={18} />
+              </button>
               {!isViewingCurrentWeek && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  type="button"
+                  className="admin-week-today"
                   onClick={jumpToCurrentWeek}
                   disabled={isPending}
-                  style={{ fontSize: '0.8125rem' }}
                 >
                   השבוע הנוכחי
-                </Button>
+                </button>
               )}
-            </div>
+            </nav>
 
             {/* Schedule Status & Primary Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div className="schedule-status-actions">
               {schedule ? (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="schedule-action-group">
                     <span style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>סטטוס:</span>
                     {schedule.status === 'DRAFT' && (
                       <Badge variant="warning">טיוטה (ניתן לעריכה)</Badge>

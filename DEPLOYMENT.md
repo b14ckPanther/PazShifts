@@ -162,3 +162,19 @@ Before enabling a worker's phone login, an admin must check the number belongs t
 Editable worker details: name, email, phone, employee code, and optional replacement password. An empty password field preserves the current password. Role and station access use the existing controls; removing a worker ends station access while preserving attendance history. Station admins cannot edit their own permissions or credentials of admin accounts in other stations/platform accounts. Platform admins can edit station-admin accounts, but platform accounts remain protected here. Account identity is shared across stations, while employee code and access are station-specific.
 
 Test both email/password and phone/password login on the hosted project, then physically scan to clock in, rescan and cancel checkout, and rescan and confirm checkout. Confirm that retry/refresh never ends a shift twice and that no checkout is possible from the ordinary worker home screen. These hosted and physical checks remain pending user verification.
+
+## Admin layouts and scheduling-only shift managers
+
+Apply `20260912000013_shift_manager_scheduling_scope.sql` and deploy the admin app together. The migration removes shift managers' team-attendance SELECT policy and permits publishing/reopening their station's schedules. Existing personal attendance/NFC access remains intact.
+
+| Capability                                                         | Shift manager | Station admin                                   | Platform admin |
+| ------------------------------------------------------------------ | ------------- | ----------------------------------------------- | -------------- |
+| Build, assign, publish, reopen weekly schedules                    | Own station   | Own station                                     | All stations   |
+| Archive schedules                                                  | No            | Own station                                     | All stations   |
+| Team attendance, exceptions, lateness settings, NFC administration | No            | Own station                                     | All stations   |
+| Staff management and shift templates                               | No            | Own station, with existing protected-role rules | All stations   |
+| Create stations and appoint station admins                         | No            | No                                              | Yes            |
+
+Shift managers enter a scheduling-only home. Direct attendance and exceptions URLs are rejected before loading dashboard data. Their own attendance records remain readable for their personal worker flow; they cannot read coworkers' attendance through the database API. Suspended station admins are denied administrative actions. Phones and tablets use the day schedule view; the weekly grid remains available on wide screens.
+
+Verification: `node --test tests/*.test.mjs` and `python3 tests/staff-permissions-db.py` cover publishing/reopening, archive denial, cross-station denial, attendance isolation, and admin-only settings. Browser checks cover 320, 375, 430, 768 and 1280 pixel widths; physical Safari verification remains a manual post-deployment check.

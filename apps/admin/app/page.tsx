@@ -1,3 +1,4 @@
+import { SchedulingHome } from './components/SchedulingHome';
 import { BrandMark } from '@yellowshifts/ui';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -66,8 +67,16 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
   }
 
   const { user, profile, isPlatformAdmin, memberships } = context;
-  const adminMemberships = memberships.filter((m) => m.membership.role === 'ADMIN');
+  const adminMemberships = memberships.filter(
+    (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
+  );
   const resolvedSearchParams = await searchParams;
+
+  const schedulingMemberships = memberships.filter(
+    (m) => m.membership.role === 'SHIFT_MANAGER' && m.membership.status === 'ACTIVE'
+  );
+  if (!isPlatformAdmin && adminMemberships.length === 0 && schedulingMemberships.length > 0)
+    return <SchedulingHome stations={schedulingMemberships.map((m) => m.station)} />;
 
   // CASE 1: Neither Platform Admin NOR Station Admin (SHIFT_MANAGER, WORKER, or Unassigned)
   if (!isPlatformAdmin && adminMemberships.length === 0) {

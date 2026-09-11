@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import type {
   ScheduledShiftWithDetails,
   ShiftTemplate,
@@ -57,6 +57,13 @@ function formatDateDisplay(dateStr: string): string {
   return `${d}/${m}`;
 }
 
+const compactQuery = '(max-width: 1023px)';
+const subscribeCompact = (onChange: () => void) => {
+  const query = window.matchMedia(compactQuery);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+const getCompact = () => window.matchMedia(compactQuery).matches;
 export function WeeklyScheduleGrid({
   weekStartDate,
   shifts,
@@ -70,7 +77,9 @@ export function WeeklyScheduleGrid({
 }: WeeklyScheduleGridProps) {
   // Mobile active day index (0 = Monday)
   const [activeDayIndex, setActiveDayIndex] = useState(0);
-  const [mobileMode, setMobileMode] = useState<'grid' | 'singleDay'>('grid');
+  const [preferredMode, setMobileMode] = useState<'grid' | 'singleDay'>('grid');
+  const compact = useSyncExternalStore(subscribeCompact, getCompact, () => true);
+  const mobileMode = compact ? 'singleDay' : preferredMode;
 
   const getShiftsForDate = (dateStr: string) => {
     return shifts
@@ -372,7 +381,7 @@ export function WeeklyScheduleGrid({
           paddingBottom: '8px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="schedule-view-options" hidden={compact}>
           <button
             onClick={() => setMobileMode('grid')}
             style={{
@@ -422,15 +431,7 @@ export function WeeklyScheduleGrid({
       {mobileMode === 'singleDay' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Day Selector Pills */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '6px',
-              overflowX: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: '4px',
-            }}
-          >
+          <div className="schedule-day-tabs" role="group" aria-label="בחירת יום">
             {HEBREW_DAYS.map((d) => {
               const dayDate = addDays(weekStartDate, d.index);
               const dayShifts = getShiftsForDate(dayDate);
@@ -439,16 +440,18 @@ export function WeeklyScheduleGrid({
               return (
                 <button
                   key={d.index}
+                  aria-pressed={isSelected}
+                  aria-label={`${d.name} ${formatDateDisplay(dayDate)}`}
                   onClick={() => setActiveDayIndex(d.index)}
                   style={{
                     flex: '1 0 auto',
-                    minWidth: '90px',
+                    minWidth: 0,
                     backgroundColor: isSelected ? '#FFFBEB' : '#FFFFFF',
                     border: isSelected
                       ? '2px solid var(--ys-color-brand-yellow)'
                       : '1px solid #E5E7EB',
                     borderRadius: '8px',
-                    padding: '8px 12px',
+                    padding: '8px 2px',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -545,7 +548,7 @@ export function WeeklyScheduleGrid({
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
                       gap: '14px',
                     }}
                   >
