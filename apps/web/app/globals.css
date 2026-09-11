@@ -301,3 +301,41 @@ body {
     grid-row: 1;
   }
 }
+
+.scan-instruction[hidden] {
+  display: none;
+}
+.attendance-confirmation .attendance-symbol {
+  background: #fff7d7;
+  color: #8d6d13;
+}
+.attendance-confirmation .attendance-times {
+  margin-bottom: 16px;
+}
+@media (max-height: 700px) {
+  .attendance-confirmation {
+    padding: 16px;
+  }
+  .attendance-confirmation .attendance-symbol {
+    width: 42px;
+    height: 42px;
+    margin: 12px auto 8px;
+  }
+  .attendance-confirmation .attendance-symbol svg {
+    width: 26px;
+    height: 26px;
+  }
+  .attendance-confirmation p {
+    margin-bottom: 8px;
+  }
+  .attendance-confirmation .attendance-timer {
+    margin: 8px 0;
+  }
+  .attendance-confirmation .attendance-timer strong {
+    font-size: 30px;
+  }
+  .attendance-confirmation .attendance-times {
+    padding: 8px 0;
+    margin-bottom: 12px;
+  }
+}

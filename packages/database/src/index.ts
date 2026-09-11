@@ -14,3 +14,4 @@ export type { Database, Json } from '@yellowshifts/types';
 export * from './origins';
 export * from './redirects';
 export * from './member-permissions';
+export * from './login-identifier';

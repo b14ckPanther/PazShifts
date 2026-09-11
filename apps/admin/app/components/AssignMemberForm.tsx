@@ -26,6 +26,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
   // New User State
   const [newFullName, setNewFullName] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
+  const [newPhone, setNewPhone] = useState('');
   const [newPassword, setNewPassword] = useState<string>('');
 
   // Common State
@@ -69,7 +70,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
       // NEW USER
       const name = newFullName.trim();
       const email = newEmail.trim().toLowerCase();
-      const pwd = newPassword.trim();
+      const pwd = newPassword;
 
       if (!name || name.length < 2) {
         setErrorMessage('נא להזין שם מלא עבור העובד (לפחות 2 תווים).');
@@ -79,8 +80,8 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
         setErrorMessage('נא להזין כתובת אימייל תקינה.');
         return;
       }
-      if (!pwd || pwd.length < 6) {
-        setErrorMessage('נא להזין סיסמה בת 6 תווים לפחות.');
+      if (!pwd || pwd.length < 8) {
+        setErrorMessage('נא להזין סיסמה בת 8 תווים לפחות.');
         return;
       }
 
@@ -89,6 +90,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
           stationId,
           userEmail: email,
           fullName: name,
+          phone: newPhone,
           password: pwd,
           role,
           employeeCode: employeeCode.trim() || null,
@@ -100,6 +102,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
           setNewFullName('');
           setNewEmail('');
           setNewPassword('');
+          setNewPhone('');
           setEmployeeCode('');
         } else if (result.error) {
           setErrorMessage(result.error);
@@ -270,6 +273,16 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label htmlFor="new-user-phone">טלפון לכניסה (אופציונלי)</label>
+                <input
+                  id="new-user-phone"
+                  type="tel"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder="050-1234567"
+                  dir="ltr"
+                  style={{ width: '100%', minHeight: 44, fontSize: 16, marginBottom: 12 }}
+                />
                 <label
                   htmlFor="new-user-password"
                   style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}
@@ -279,7 +292,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
                 <Input
                   id="new-user-password"
                   type="password"
-                  placeholder="לפחות 6 תווים"
+                  placeholder="לפחות 8 תווים"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required

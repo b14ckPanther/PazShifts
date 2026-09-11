@@ -1,6 +1,6 @@
 # Phase 11 — Deployment preparation (temporary Vercel domains)
 
-The application is **not deployed**. Domain ownership or authorization from Paz is not confirmed. Preparation does not establish production or real-station pilot readiness. The user will push GitHub and create both Vercel projects manually; nothing in this guide requires deployment from the CLI.
+This guide covers deployment preparation and subsequent manual updates. The user has supplied the worker domain `https://paz-shifts.vercel.app`; the latest changes still need deployment verification. Domain ownership or authorization from Paz is not confirmed. Preparation does not establish production or real-station pilot readiness. The user will push GitHub and create both Vercel projects manually; nothing in this guide requires deployment from the CLI.
 
 ## Step A — Push the repository to GitHub
 
@@ -132,7 +132,7 @@ Automated code, database, and route checks are separate from physical testing. T
 
 Apply `supabase/migrations/20260911000010_atomic_nfc_scans.sql` after the previous migrations, then deploy the updated worker app. This migration introduces atomic scan receipts and removes workers' direct attendance insert/update policies. The old button-based worker build must be replaced in the same release; otherwise its attendance writes will fail. Admin correction access is retained. No new secret environment variable is required.
 
-The bare NFC URL stays the same. Middleware redirects each fresh opening to a unique receipt URL, preserved through login. The server validates the token, user, active membership and station, serializes scans per worker, and toggles attendance using database time. Persistent receipts prevent replay; a 10-second duplicate window handles rapid rescans. Unprocessed visits expire after 15 minutes. Only eligible published shifts are linked.
+The bare NFC URL stays the same. Middleware redirects each fresh opening to a unique receipt URL, preserved through login. The server validates the token, user, active membership and station, serializes scans per worker, and records clock-in using database time. With migration 11, an active shift requires a separate checkout confirmation; checkout time is the time of confirmation. Persistent receipts prevent replay; a 10-second duplicate window handles rapid rescans. Unprocessed visits expire after 15 minutes. Only eligible published shifts are linked.
 
 The worker app includes a manifest, home-screen icons, safe-area-aware layouts and a service worker that caches only an offline help page. Authenticated pages and attendance writes are never cached or queued for later submission. See [Next.js PWA documentation](https://nextjs.org/docs/app/guides/progressive-web-apps). Check the live HTTPS manifest, icons and service worker after deployment. Static NFC URLs cannot distinguish a physical scan from opening a copied URL; no physical-presence guarantee is claimed.
 
@@ -144,3 +144,21 @@ python3 tests/nfc-scans-db.py
 ```
 
 See [NFC_PILOT_CHECKLIST.md](NFC_PILOT_CHECKLIST.md) for the updated manual acceptance sequence. Local browser/database tests do not mean the hosted migration, deployment, or physical pilot is complete.
+
+## Worker profile editing, phone login, and checkout confirmation
+
+Apply migrations `20260911000011_nfc_checkout_confirmation.sql` and `20260911000012_auth_profile_contact_sync.sql` in order, then deploy both apps. The former changes checkout to a pending receipt followed by confirm/cancel; the latter synchronizes Auth email, phone, and name changes into profiles atomically. Do not skip migration 12: profile updates depend on that trigger.
+
+```sh
+supabase db push --dry-run
+supabase db push
+supabase migration list
+```
+
+In Supabase Auth settings, ensure Phone authentication is enabled for phone/password sign-in. Users are created/updated by an authorized admin with their phone confirmed; the login flow calls `signInWithPassword`, never OTP or SMS. Keep public signup restricted according to your existing deployment policy. See [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords). This repository change does not modify hosted Auth provider settings.
+
+Before enabling a worker's phone login, an admin must check the number belongs to that worker and save it under **צוות התחנה → עריכת פרטים**. Israeli local numbers such as `050-1234567` become `+972501234567`; other countries require a country code. Existing profile contact numbers are not automatically promoted into Auth credentials. Email and phone use the same password and the existing persistent session. A duplicate login identifier is rejected by Supabase Auth. No service-role credential is added to the worker app.
+
+Editable worker details: name, email, phone, employee code, and optional replacement password. An empty password field preserves the current password. Role and station access use the existing controls; removing a worker ends station access while preserving attendance history. Station admins cannot edit their own permissions or credentials of admin accounts in other stations/platform accounts. Platform admins can edit station-admin accounts, but platform accounts remain protected here. Account identity is shared across stations, while employee code and access are station-specific.
+
+Test both email/password and phone/password login on the hosted project, then physically scan to clock in, rescan and cancel checkout, and rescan and confirm checkout. Confirm that retry/refresh never ends a shift twice and that no checkout is possible from the ordinary worker home screen. These hosted and physical checks remain pending user verification.

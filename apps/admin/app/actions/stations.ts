@@ -1,5 +1,6 @@
 'use server';
 
+import type { TypedSupabaseClient } from '@yellowshifts/database';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import {
@@ -15,6 +16,7 @@ import {
   updateStationMemberStatus,
   getStationMemberById,
   canManageMember,
+  normalizePhone,
 } from '@yellowshifts/database';
 import type { StationRole, MembershipStatus } from '@yellowshifts/types';
 
@@ -244,6 +246,7 @@ export async function toggleStationStatusAction(
 }
 
 export interface AssignStationMemberActionInput {
+  phone?: string;
   stationId: string;
   userEmail?: string;
   userId?: string;
@@ -284,6 +287,7 @@ export async function assignStationMemberAction(
   let createNewUser = false;
   let fullName = '';
   let password = '';
+  let rawPhone = '';
 
   if (raw instanceof FormData) {
     stationId = (raw.get('stationId') as string)?.trim() || '';
@@ -293,7 +297,8 @@ export async function assignStationMemberAction(
     employeeCode = (raw.get('employeeCode') as string)?.trim() || null;
     createNewUser = raw.get('createNewUser') === 'true' || raw.get('createNewUser') === 'on';
     fullName = (raw.get('fullName') as string)?.trim() || '';
-    password = (raw.get('password') as string)?.trim() || '';
+    password = (raw.get('password') as string) || '';
+    rawPhone = String(raw.get('phone') ?? '').trim();
   } else if (raw && typeof raw === 'object') {
     stationId = typeof raw.stationId === 'string' ? raw.stationId.trim() : '';
     userEmail = typeof raw.userEmail === 'string' ? raw.userEmail.trim().toLowerCase() : '';
@@ -305,7 +310,8 @@ export async function assignStationMemberAction(
         : null;
     createNewUser = Boolean(raw.createNewUser);
     fullName = typeof raw.fullName === 'string' ? raw.fullName.trim() : '';
-    password = typeof raw.password === 'string' ? raw.password.trim() : '';
+    password = typeof raw.password === 'string' ? raw.password : '';
+    rawPhone = typeof raw.phone === 'string' ? raw.phone.trim() : '';
   }
 
   if (!stationId) {
@@ -350,6 +356,12 @@ export async function assignStationMemberAction(
 
   // CASE A: Create a brand new auth user and assign to station
   if (createNewUser) {
+    const phone = rawPhone ? normalizePhone(rawPhone) : undefined;
+    if (phone === null)
+      return {
+        success: false,
+        error: 'מספר הטלפון אינו תקין. השתמשו במספר ישראלי או בקידומת מדינה.',
+      };
     if (!userEmail || !userEmail.includes('@')) {
       return {
         success: false,
@@ -362,10 +374,10 @@ export async function assignStationMemberAction(
         error: 'נא להזין שם מלא עבור המשתמש החדש (לפחות 2 תווים).',
       };
     }
-    if (!password || password.length < 6) {
+    if (!password || password.length < 8) {
       return {
         success: false,
-        error: 'נא להזין סיסמה בת 6 תווים לפחות.',
+        error: 'נא להזין סיסמה בת 8 תווים לפחות.',
       };
     }
 
@@ -375,9 +387,10 @@ export async function assignStationMemberAction(
       // Creating an account must never reset credentials or metadata of an existing user.
       const { data: createData, error: createErr } = await adminClient.auth.admin.createUser({
         email: userEmail,
+        ...(phone ? { phone, phone_confirm: true } : {}),
         password,
         email_confirm: true,
-        user_metadata: { full_name: fullName },
+        user_metadata: { full_name: fullName, ...(phone ? { phone } : {}) },
       });
       if (createErr || !createData.user) {
         return {
@@ -755,5 +768,104 @@ export async function updateStationTolerancesAction(
       success: false,
       error: 'שגיאה בעדכון הגדרות סבילות נוכחות.',
     };
+  }
+}
+
+/** Account edits are privileged: a station membership alone cannot authorize changing another admin's login. */
+export async function updateWorkerProfileAction(
+  stationId: string,
+  membershipId: string,
+  form: FormData
+): Promise<StationActionResult> {
+  try {
+    const supabase: TypedSupabaseClient = createServerSupabaseClient(await cookies());
+    const context = await getAuthenticatedUserContext(supabase);
+    if (!context) return { success: false, error: 'נדרשת התחברות.' };
+    const allowed =
+      context.isPlatformAdmin ||
+      context.memberships.some(
+        (m) =>
+          m.station.id === stationId &&
+          m.membership.role === 'ADMIN' &&
+          m.membership.status === 'ACTIVE'
+      );
+    if (!allowed) return { success: false, error: 'אין הרשאה לערוך צוות בתחנה זו.' };
+    const member = await getStationMemberById(supabase, stationId, membershipId);
+    if (
+      !member ||
+      !canManageMember(
+        {
+          currentUserId: context.user.id,
+          isPlatformAdmin: context.isPlatformAdmin,
+          canManage: allowed,
+        },
+        member.membership
+      )
+    )
+      return { success: false, error: 'לא ניתן לערוך חשבון זה.' };
+    const admin = createAdminClient();
+    // A worker in this station may be an admin elsewhere. Never allow credential takeover.
+    const [platform, adminMemberships] = await Promise.all([
+      admin.from('platform_admins').select('user_id').eq('user_id', member.profile.id),
+      admin
+        .from('station_memberships')
+        .select('id')
+        .eq('user_id', member.profile.id)
+        .eq('role', 'ADMIN'),
+    ]);
+    if (
+      platform.error ||
+      adminMemberships.error ||
+      platform.data?.length ||
+      (!context.isPlatformAdmin && adminMemberships.data?.length)
+    )
+      return { success: false, error: 'פרטי חשבון מנהל מוגנים. פנו למנהל המערכת הראשי.' };
+    const fullName = String(form.get('fullName') ?? '').trim();
+    const email = String(form.get('email') ?? '')
+      .trim()
+      .toLowerCase();
+    const rawPhone = String(form.get('phone') ?? '').trim();
+    const phone = rawPhone ? normalizePhone(rawPhone) : '';
+    const password = String(form.get('password') ?? '');
+    const employeeCode = String(form.get('employeeCode') ?? '').trim();
+    if (
+      fullName.length < 2 ||
+      fullName.length > 120 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 254 ||
+      phone === null ||
+      (password && password.length < 8) ||
+      employeeCode.length > 64
+    )
+      return {
+        success: false,
+        error: 'בדקו שם, אימייל וטלפון. סיסמה חדשה חייבת להכיל לפחות 8 תווים.',
+      };
+    const { error } = await admin.auth.admin.updateUserById(member.profile.id, {
+      email,
+      email_confirm: true,
+      phone,
+      ...(phone ? { phone_confirm: true } : {}),
+      ...(password ? { password } : {}),
+      user_metadata: { full_name: fullName },
+    });
+    if (error)
+      return {
+        success: false,
+        error: 'העדכון לא נשמר. בדקו שהאימייל והטלפון אינם בשימוש ושהסיסמה תקינה.',
+      };
+    const { error: codeError } = await supabase
+      .from('station_memberships')
+      .update({ employee_code: employeeCode || null })
+      .eq('id', membershipId)
+      .eq('station_id', stationId)
+      .select('id')
+      .single();
+    revalidatePath(`/stations/${stationId}/staff`, 'layout');
+    if (codeError)
+      return { success: false, error: 'פרטי החשבון נשמרו, אך קוד העובד לא עודכן. נסו שוב.' };
+    return { success: true, stationId };
+  } catch {
+    return { success: false, error: 'לא ניתן להשלים את העדכון כרגע. נסו שוב.' };
   }
 }

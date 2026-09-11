@@ -10,10 +10,12 @@ import type { NfcScanResult } from '@yellowshifts/types';
 export async function processNfcScanAction(
   token: string,
   scanId: string,
-  scannedAt: number
+  scannedAt: number,
+  decision: 'scan' | 'confirm' | 'cancel' = 'scan'
 ): Promise<NfcScanResult> {
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(scanId) ||
+    !['scan', 'confirm', 'cancel'].includes(decision) ||
     !token ||
     token.length > 256 ||
     !Number.isFinite(scannedAt) ||
@@ -31,6 +33,7 @@ export async function processNfcScanAction(
       p_token: token,
       p_scan_id: scanId,
       p_scanned_at: new Date(scannedAt).toISOString(),
+      p_decision: decision,
     });
     if (error || !data)
       return {

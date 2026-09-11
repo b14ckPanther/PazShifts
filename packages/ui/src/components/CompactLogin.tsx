@@ -28,7 +28,7 @@ export function CompactLogin({
         </div>
         <header className="login-heading">
           <h1 id="login-heading">{nfc ? 'מתחברים ומדווחים' : 'טוב לראות אותך'}</h1>
-          <p>{nfc ? 'הנוכחות תירשם אוטומטית לאחר ההתחברות.' : 'האימייל והסיסמה שלך, וזהו.'}</p>
+          <p>{nfc ? 'הנוכחות תירשם אוטומטית לאחר ההתחברות.' : 'טלפון או אימייל, והסיסמה שלך.'}</p>
         </header>
         <form action={formAction} className="compact-login-form" aria-busy={pending}>
           <input type="hidden" name="next" value={nextPath} />
@@ -38,18 +38,18 @@ export function CompactLogin({
             </p>
           )}
           <label htmlFor="login-email">
-            אימייל
+            טלפון או אימייל
             <input
               id="login-email"
-              name="email"
-              type="email"
-              inputMode="email"
+              name="identifier"
+              type="text"
+              inputMode="text"
               autoComplete="username"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
               dir="ltr"
-              placeholder="name@example.com"
+              placeholder="050-1234567 / name@example.com"
               enterKeyHint="next"
               required
               disabled={pending}

@@ -5,6 +5,7 @@ import { Button } from '@yellowshifts/ui';
 import { ShieldCheckIcon } from '@yellowshifts/icons';
 import type { StationMemberWithProfile } from '@yellowshifts/types';
 import { canManageMember } from '@yellowshifts/database';
+import { EditWorkerProfileModal } from './EditWorkerProfileModal';
 import { RoleModal, StatusModal } from './MemberActionModals';
 import { RemoveMemberButton } from './RemoveMemberButton';
 
@@ -19,7 +20,7 @@ export function MemberDetailsActions({
   currentUserId: string;
   isPlatformAdmin?: boolean;
 }) {
-  const [modal, setModal] = useState<'role' | 'status' | null>(null);
+  const [modal, setModal] = useState<'role' | 'status' | 'profile' | null>(null);
   if (!canManageMember({ currentUserId, isPlatformAdmin, canManage: true }, member.membership)) {
     return (
       <div className="staff-protected">
@@ -33,6 +34,16 @@ export function MemberDetailsActions({
   }
   return (
     <div className="staff-actions">
+      <Button variant="secondary" size="sm" onClick={() => setModal('profile')}>
+        עריכת פרטים
+      </Button>
+      {modal === 'profile' && (
+        <EditWorkerProfileModal
+          stationId={stationId}
+          member={member}
+          onClose={() => setModal(null)}
+        />
+      )}
       <Button variant="secondary" size="sm" onClick={() => setModal('role')}>
         שינוי תפקיד
       </Button>
