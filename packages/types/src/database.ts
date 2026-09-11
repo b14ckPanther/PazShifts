@@ -537,6 +537,18 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      save_manual_attendance: {
+        Args: {
+          p_station_id: string;
+          p_membership_id: string;
+          p_record_id: string | null;
+          p_clock_in: string;
+          p_clock_out: string | null;
+          p_reason: string;
+          p_expected_updated_at: string | null;
+        };
+        Returns: Json;
+      };
       process_nfc_scan: {
         Args: { p_token: string; p_scan_id: string; p_scanned_at: string; p_decision?: string };
         Returns: Json;

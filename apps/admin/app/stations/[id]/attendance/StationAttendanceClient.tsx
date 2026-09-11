@@ -10,7 +10,6 @@ import {
   Button,
   Badge,
   Alert,
-  Input,
 } from '@yellowshifts/ui';
 import {
   ClockIcon,
@@ -22,12 +21,18 @@ import {
   UserIcon,
   CloseIcon,
 } from '@yellowshifts/icons';
-import { adminCorrectAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
+import { refreshStationAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
 import { configuredAppOrigin } from '@yellowshifts/database';
-import type { Station, AttendanceRecordWithDetails } from '@yellowshifts/types';
+import { ManualAttendanceDialog } from '../../../components/ManualAttendanceDialog';
+import type {
+  Station,
+  AttendanceRecordWithDetails,
+  StationMemberWithProfile,
+} from '@yellowshifts/types';
 
 interface StationAttendanceClientProps {
   station: Station;
+  members: StationMemberWithProfile[];
   canManageAttendance: boolean; // Platform Admin or Station Admin
   isPlatformAdmin?: boolean;
   initialActiveRecords: AttendanceRecordWithDetails[];
@@ -36,6 +41,7 @@ interface StationAttendanceClientProps {
 
 export function StationAttendanceClient({
   station,
+  members,
   canManageAttendance,
   initialActiveRecords,
   initialCompletedRecords,
@@ -53,8 +59,8 @@ export function StationAttendanceClient({
 
   // Admin Correction Modal State
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecordWithDetails | null>(null);
-  const [correctionAction, setCorrectionAction] = useState<'CLOSE' | 'FLAG'>('CLOSE');
-  const [correctionReason, setCorrectionReason] = useState<string>('');
+  const [showManual, setShowManual] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Rotate Token Confirm Modal State
@@ -201,59 +207,73 @@ export function StationAttendanceClient({
     });
   };
 
-  const handleSaveCorrection = () => {
-    if (!selectedRecord) return;
-    if (!correctionReason.trim()) {
-      setErrorMessage('יש להזין סיבת תיקון מנהלי מפורשת לצורכי ביקורת.');
-      return;
-    }
-
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    startTransition(async () => {
-      const result = await adminCorrectAttendanceAction({
-        attendanceRecordId: selectedRecord.id,
-        stationId: station.id,
-        action: correctionAction,
-        reason: correctionReason.trim(),
-      });
-
-      if (!result.success || !result.record) {
-        setErrorMessage(result.error || 'שגיאה בביצוע תיקון מנהלי');
+  async function refreshAttendance() {
+    try {
+      const fresh = await refreshStationAttendanceAction(station.id);
+      if (!fresh) {
+        setRefreshError(true);
         return;
       }
-
-      // If closed, remove from active and add to completed
-      if (correctionAction === 'CLOSE') {
-        setActiveRecords((prev) => prev.filter((r) => r.id !== selectedRecord.id));
-        setCompletedRecords((prev) => [
-          {
-            ...selectedRecord,
-            status: 'COMPLETED',
-            clock_out_at: result.record!.clock_out_at,
-            clock_out_source: 'MANUAL_ADMIN',
-            corrected_by: result.record!.corrected_by,
-            correction_reason: result.record!.correction_reason,
-            corrected_at: result.record!.corrected_at,
-          },
-          ...prev,
-        ]);
-      } else {
-        // If flagged
-        setActiveRecords((prev) =>
-          prev.map((r) => (r.id === selectedRecord.id ? { ...r, status: 'FLAGGED' } : r))
-        );
+      setActiveRecords(fresh.activeRecords);
+      setCompletedRecords(fresh.completedRecords);
+      setRefreshError(false);
+    } catch {
+      setRefreshError(true);
+    }
+  }
+  useEffect(() => {
+    let cancelled = false;
+    let busy = false;
+    async function poll() {
+      if (busy || document.visibilityState === 'hidden') return;
+      busy = true;
+      try {
+        const fresh = await refreshStationAttendanceAction(station.id);
+        if (!cancelled) {
+          if (fresh) {
+            setActiveRecords(fresh.activeRecords);
+            setCompletedRecords(fresh.completedRecords);
+            setRefreshError(false);
+          } else setRefreshError(true);
+        }
+      } catch {
+        if (!cancelled) setRefreshError(true);
+      } finally {
+        busy = false;
       }
-
-      setSelectedRecord(null);
-      setCorrectionReason('');
-      setSuccessMessage('רשומת הנוכחות עודכנה בהצלחה ונרשמה ביומן הביקורת.');
-    });
-  };
+    }
+    const timer = setInterval(poll, 15000);
+    document.addEventListener('visibilitychange', poll);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', poll);
+    };
+  }, [station.id]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div
+      className="station-attendance"
+      style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+    >
+      <div className="attendance-toolbar">
+        <span role="status">
+          {refreshError ? 'העדכון נכשל — הנתונים עשויים להיות לא עדכניים' : 'מתעדכן כל 15 שניות'}
+        </span>
+        <Button variant="secondary" onClick={refreshAttendance}>
+          רענון
+        </Button>
+        {canManageAttendance && (
+          <Button
+            onClick={() => {
+              setSelectedRecord(null);
+              setShowManual(true);
+            }}
+          >
+            דיווח ידני
+          </Button>
+        )}
+      </div>
       {/* Tab Navigation */}
       <div
         style={{
@@ -285,7 +305,7 @@ export function StationAttendanceClient({
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <CheckIcon size={16} />
-            משמרות שהסתיימו היום
+            דיווחים אחרונים
             <Badge variant="neutral">{completedRecords.length}</Badge>
           </span>
         </Button>
@@ -335,7 +355,7 @@ export function StationAttendanceClient({
                 </CardDescription>
               </div>
               <Badge variant="brandYellow" dot>
-                מעודכן בזמן אמת
+                מתעדכן אוטומטית
               </Badge>
             </div>
           </CardHeader>
@@ -357,7 +377,7 @@ export function StationAttendanceClient({
                   אין עובדים פעילים במשמרת כעת
                 </p>
                 <span style={{ fontSize: '13px', color: '#6B7280' }}>
-                  ברגע שעובד יסרוק את תג ה-NFC בתחנה, נוכחותו תופיע כאן מיד.
+                  ברגע שעובד יסרוק את תג ה-NFC בתחנה, נוכחותו תופיע כאן בעדכון הבא.
                 </span>
               </div>
             ) : (
@@ -477,11 +497,10 @@ export function StationAttendanceClient({
                           size="sm"
                           onClick={() => {
                             setSelectedRecord(record);
-                            setCorrectionAction('CLOSE');
-                            setCorrectionReason('');
+                            setShowManual(true);
                           }}
                         >
-                          תיקון מנהלי
+                          עריכת זמנים
                         </Button>
                       )}
                     </div>
@@ -503,9 +522,7 @@ export function StationAttendanceClient({
           }}
         >
           <CardHeader>
-            <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
-              משמרות שהסתיימו היום
-            </CardTitle>
+            <CardTitle style={{ fontSize: '18px', color: '#111827' }}>דיווחים אחרונים</CardTitle>
             <CardDescription style={{ color: '#6B7280' }}>
               תיעוד רשומות נוכחות שהושלמו בתחנה כולל ביקורת תיקונים
             </CardDescription>
@@ -513,7 +530,7 @@ export function StationAttendanceClient({
           <CardContent>
             {completedRecords.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 16px', color: '#6B7280' }}>
-                <p style={{ margin: 0, fontSize: '15px' }}>אין משמרות שהסתיימו היום</p>
+                <p style={{ margin: 0, fontSize: '15px' }}>אין דיווחים אחרונים</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -605,6 +622,18 @@ export function StationAttendanceClient({
                       })()}
                     </div>
 
+                    {canManageAttendance && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRecord(record);
+                          setShowManual(true);
+                        }}
+                      >
+                        עריכת זמני כניסה ויציאה
+                      </Button>
+                    )}
                     {/* Audited Correction Footnote if corrected */}
                     {record.corrected_by && (
                       <div
@@ -803,135 +832,21 @@ export function StationAttendanceClient({
         </Card>
       )}
 
-      {/* Admin Correction Modal */}
-      {selectedRecord && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 110,
-            padding: '16px',
+      {showManual && (
+        <ManualAttendanceDialog
+          stationId={station.id}
+          timezone={station.timezone || 'Asia/Jerusalem'}
+          members={members}
+          record={selectedRecord}
+          onClose={() => {
+            setShowManual(false);
+            setSelectedRecord(null);
           }}
-          onClick={() => setSelectedRecord(null)}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              width: '100%',
-              maxWidth: '500px',
-              padding: '24px',
-              direction: 'rtl',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '16px',
-              }}
-            >
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-                  תיקון מנהלי לרשומת נוכחות
-                </h3>
-                <p style={{ fontSize: '13px', color: '#4B5563', margin: '4px 0 0 0' }}>
-                  עובד: {selectedRecord.user?.full_name || 'עובד'} | שעת כניסה:{' '}
-                  {formatStationTime(selectedRecord.clock_in_at)}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#6B7280',
-                  cursor: 'pointer',
-                  padding: '4px',
-                }}
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    color: '#374151',
-                    marginBottom: '8px',
-                  }}
-                >
-                  סוג פעולת תיקון מנהלי
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <Button
-                    type="button"
-                    variant={correctionAction === 'CLOSE' ? 'primary' : 'outline'}
-                    size="sm"
-                    onClick={() => setCorrectionAction('CLOSE')}
-                  >
-                    סגירת משמרת (Clock-Out)
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={correctionAction === 'FLAG' ? 'destructive' : 'outline'}
-                    size="sm"
-                    onClick={() => setCorrectionAction('FLAG')}
-                  >
-                    סימון לחקירה (FLAG)
-                  </Button>
-                </div>
-              </div>
-
-              <Input
-                id="correctionReason"
-                label="סיבת התיקון (שדה חובה לצורכי ביקורת)"
-                placeholder="לדוגמה: עובד שכח לסגור משמרת בסיום יום עבודה..."
-                value={correctionReason}
-                onChange={(e) => setCorrectionReason(e.target.value)}
-                isRequired
-                helperText="הסיבה ומזהה המנהל יתועדו ביומן המערכת לצורכי ביקורת תפעולית."
-              />
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                  marginTop: '12px',
-                }}
-              >
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={() => setSelectedRecord(null)}
-                  disabled={isPending}
-                >
-                  ביטול
-                </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  isLoading={isPending}
-                  onClick={handleSaveCorrection}
-                >
-                  שמור תיקון מנהלי
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+          onSaved={() => {
+            setSuccessMessage('הדיווח נשמר בהצלחה.');
+            void refreshAttendance();
+          }}
+        />
       )}
 
       {/* Rotate Token Confirm Modal */}

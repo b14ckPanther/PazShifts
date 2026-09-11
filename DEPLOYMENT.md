@@ -186,3 +186,20 @@ The worker login defaults to Phone; admin login defaults to Email. The animated 
 Both apps use the existing YellowShifts artwork for the startup and route-loading screens. The startup animation runs for at most 1.1 seconds once per browser tab/session, dismisses on interaction, and never intercepts input or delays an auth/NFC request. Direct NFC routes skip it. Reduced-motion users skip the startup animation and receive static route-loading artwork. This is an in-app entrance; the operating system controls its native PWA launch screen.
 
 No new database migration is required for this login/splash update. Deploy both apps to receive the UI changes. Verify phone/password with an actual worker account on the hosted app, including a return NFC scan in the same browser session; automated UI checks do not substitute for a physical phone test.
+
+## Station manager dashboard and manual attendance
+
+Station admins now land on `/stations/<their-station-id>`, the same station operations dashboard used by platform admins. It exposes weekly schedules, live attendance, staff, attendance exceptions/tolerances and shift templates. Station creation, station identity changes and appointment of station admins remain platform-only. Shift managers retain their scheduling-only management workspace.
+
+Apply `20260912000014_manual_attendance.sql` before deploying the admin update:
+
+```bash
+supabase db push --dry-run
+supabase db push
+```
+
+The migration adds `save_manual_attendance` and a read-only audit table for manual edits. Station admins and platform admins can add missed attendance or edit existing check-in/check-out times for station members, including themselves. An empty checkout means the shift is still active. Every manual save requires a reason and records the actor, previous values and new values. Times are interpreted in the station timezone, future/reversed/overlapping intervals are rejected, and stale records must be reopened before editing. Manual operations serialize with NFC scans. No migration was applied remotely as part of this code change.
+
+The attendance screen fetches fresh records every 15 seconds while visible and on returning to the tab, with a manual refresh button and an error indicator when refreshing fails. Its history tab shows the latest 50 completed/flagged records (not just today). The manual form includes station managers in the member selector; editing one's attendance does not grant permission to remove one's membership or change one's role.
+
+After applying the migration and deploying, verify with a station-admin account: open weekly scheduling; publish/reopen a schedule; observe a worker's NFC check-in in attendance; correct both times with a reason; add a missed self attendance record; confirm that a shift-manager account still cannot manage attendance. Physical NFC and iPhone checks remain user verification steps.

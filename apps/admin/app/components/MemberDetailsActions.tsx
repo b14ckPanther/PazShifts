@@ -27,7 +27,7 @@ export function MemberDetailsActions({
         <ShieldCheckIcon size={18} />
         <span>
           {member.membership.userId === currentUserId ? 'זה החשבון שלך' : 'מנהל תחנה'}
-          <small>ההרשאות מנוהלות על ידי מנהל המערכת הראשי</small>
+          <small>שינוי הרשאות: מנהל המערכת בלבד</small>
         </span>
       </div>
     );
@@ -44,19 +44,24 @@ export function MemberDetailsActions({
           onClose={() => setModal(null)}
         />
       )}
-      <Button variant="secondary" size="sm" onClick={() => setModal('role')}>
-        שינוי תפקיד
-      </Button>
-      <Button variant="secondary" size="sm" onClick={() => setModal('status')}>
-        {member.membership.status === 'ACTIVE' ? 'עדכון גישה' : 'הפעלה מחדש'}
-      </Button>
-      {member.membership.status !== 'INACTIVE' && (
-        <RemoveMemberButton
-          stationId={stationId}
-          membershipId={member.membership.id}
-          memberName={member.profile.fullName || member.profile.email || 'איש הצוות'}
-        />
-      )}
+      <details className="staff-more">
+        <summary>הרשאות וגישה</summary>
+        <div className="staff-more-content">
+          <Button variant="secondary" size="sm" onClick={() => setModal('role')}>
+            שינוי תפקיד
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setModal('status')}>
+            {member.membership.status === 'ACTIVE' ? 'עדכון גישה' : 'הפעלה מחדש'}
+          </Button>
+          {member.membership.status !== 'INACTIVE' && (
+            <RemoveMemberButton
+              stationId={stationId}
+              membershipId={member.membership.id}
+              memberName={member.profile.fullName || member.profile.email || 'איש הצוות'}
+            />
+          )}
+        </div>
+      </details>
       {modal === 'role' && (
         <RoleModal
           stationId={stationId}

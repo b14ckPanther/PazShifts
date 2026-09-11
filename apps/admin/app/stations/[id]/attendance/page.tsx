@@ -6,6 +6,7 @@ import {
   getAuthenticatedUserContext,
   getStationById,
   listStationAttendance,
+  getStationMembers,
 } from '@yellowshifts/database';
 import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
 import {
@@ -53,6 +54,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
 
   const { activeRecords, completedRecords } = await listStationAttendance(supabase, stationId);
 
+  const members = await getStationMembers(supabase, stationId);
   const canManageAttendance = isPlatformAdmin || isStationAdmin;
 
   return (
@@ -204,6 +206,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
 
         {/* Real-time Attendance Client */}
         <StationAttendanceClient
+          members={members}
           station={station}
           canManageAttendance={canManageAttendance}
           isPlatformAdmin={isPlatformAdmin}
