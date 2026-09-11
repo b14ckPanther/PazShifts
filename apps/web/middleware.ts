@@ -10,6 +10,26 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // The physical tag keeps its bare URL. Each fresh navigation gets a stable receipt URL.
+  // Refresh/back/retries keep that ID, so they cannot toggle attendance again.
+  const isNfc = /^\/nfc\/[^/]+$/.test(request.nextUrl.pathname);
+  const isPrefetch =
+    request.headers.has('next-router-prefetch') || request.headers.get('purpose') === 'prefetch';
+  if (
+    request.method === 'GET' &&
+    isNfc &&
+    !isPrefetch &&
+    !request.headers.has('rsc') &&
+    !request.nextUrl.searchParams.has('scan')
+  ) {
+    const destination = request.nextUrl.clone();
+    destination.searchParams.set('scan', crypto.randomUUID());
+    destination.searchParams.set('at', String(Date.now()));
+    const redirectResponse = NextResponse.redirect(destination, 307);
+    redirectResponse.headers.set('Cache-Control', 'no-store');
+    return redirectResponse;
+  }
+
   // If Supabase environment variables are missing, bypass to let the user view setup guidance
   if (!isSupabaseConfigured()) {
     return response;
@@ -50,19 +70,27 @@ export async function middleware(request: NextRequest) {
     if (nextPath && nextPath !== '/') {
       redirectUrl.searchParams.set('next', nextPath);
     }
-    return NextResponse.redirect(redirectUrl);
+    const redirected = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+    redirected.headers.set('Cache-Control', 'no-store');
+    return redirected;
   }
 
   // Authenticated users attempting to access login page
   if (user && isLoginPage) {
     const nextPath = safeNextPath(request.nextUrl.searchParams.get('next'));
     const redirectUrl = new URL(nextPath, request.nextUrl.origin);
-    return NextResponse.redirect(redirectUrl);
+    const redirected = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+    redirected.headers.set('Cache-Control', 'no-store');
+    return redirected;
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };

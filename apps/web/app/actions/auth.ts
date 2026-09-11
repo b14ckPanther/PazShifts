@@ -34,7 +34,10 @@ export async function loginAction(
   if (error) {
     return {
       success: false,
-      error: error.message,
+      error:
+        error.status === 429
+          ? 'יותר מדי ניסיונות. נסו שוב בעוד רגע.'
+          : 'האימייל או הסיסמה אינם נכונים. נסו שוב.',
     };
   }
 

@@ -1,3 +1,4 @@
+import { BrandMark } from '@yellowshifts/ui';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import {
   getWorkerWeeklyAvailability,
 } from '@yellowshifts/database';
 import { Container, PageHeader } from '@yellowshifts/ui';
-import { StationIcon, CalendarIcon, BriefcaseIcon } from '@yellowshifts/icons';
+import { CalendarIcon, BriefcaseIcon } from '@yellowshifts/icons';
 import { StationSelector } from '../components/StationSelector';
 import { LogoutButton } from '../components/LogoutButton';
 import { WeeklyAvailabilityForm } from '../components/WeeklyAvailabilityForm';
@@ -118,20 +119,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  color: 'var(--ys-color-text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <StationIcon size={20} />
-              </div>
+              <BrandMark size={36} />
               <div>
                 <h2
                   style={{

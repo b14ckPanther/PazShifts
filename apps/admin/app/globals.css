@@ -1,4 +1,5 @@
 @import '../../../packages/ui/src/styles/tokens.css';
+@import '../../../packages/ui/src/styles/mobile.css';
 
 body {
   margin: 0;

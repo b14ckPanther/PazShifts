@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
 
@@ -17,8 +17,20 @@ const ubuntu = Ubuntu({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: '/icons/apple-touch-icon.png',
+  },
   title: 'YellowShifts Admin | ניהול תחנות ומערכת',
   description: 'פורטל ניהול רב-תחנתי וממשק מנהל מערכת ראשי של YellowShifts.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+  themeColor: '#f7f8fa',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

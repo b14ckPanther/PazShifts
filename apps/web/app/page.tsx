@@ -1,3 +1,4 @@
+import { BrandMark } from '@yellowshifts/ui';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -14,7 +15,7 @@ import {
   Container,
   PageHeader,
 } from '@yellowshifts/ui';
-import { StationIcon, ShieldCheckIcon, BriefcaseIcon, CalendarIcon } from '@yellowshifts/icons';
+import { ShieldCheckIcon, BriefcaseIcon, CalendarIcon } from '@yellowshifts/icons';
 import {
   createServerSupabaseClient,
   getAuthenticatedUserContext,
@@ -81,20 +82,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
           <Container size="lg">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: 'var(--ys-radius-sm)',
-                    backgroundColor: 'var(--ys-color-brand-yellow)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--ys-color-text-primary)',
-                  }}
-                >
-                  <StationIcon size={22} />
-                </div>
+                <BrandMark size={36} />
                 <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: '#111827' }}>
                   YellowShifts • פורטל עובדים
                 </h2>
@@ -232,20 +220,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  color: 'var(--ys-color-text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <StationIcon size={20} />
-              </div>
+              <BrandMark size={36} />
               <div>
                 <h2
                   style={{
