@@ -407,7 +407,7 @@ export async function listStationAttendance(
     .order('clock_in_at', { ascending: false });
 
   if (activeErr) {
-    console.error('Failed to load active attendance records:', activeErr);
+    throw new Error('Unable to load station attendance');
   }
 
   // Query 2: Completed / Flagged records for date (default today)
@@ -457,7 +457,7 @@ export async function listStationAttendance(
 
   const { data: completedData, error: completedErr } = await completedQuery;
   if (completedErr) {
-    console.error('Failed to load completed attendance records:', completedErr);
+    throw new Error('Unable to load station attendance history');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

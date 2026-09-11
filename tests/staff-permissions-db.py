@@ -101,6 +101,41 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         attempt(5, f"INSERT INTO public.shift_templates(station_id,name,start_time,end_time) VALUES ('{station}','Denied','09:00','17:00')", True)
         update(2,4,"status='INACTIVE'",1)
         assert sql('SELECT count(*) FROM public.attendance_records;').strip() == '2'
+        # Manual reporting: admins may correct themselves and staff, never another station.
+        def manual(member=201, target_station=station, start="2020-01-02 08:00", end="2020-01-02 16:00", reason="Correction"):
+            out = "NULL" if end is None else f"'{end}'"
+            return f"SELECT public.save_manual_attendance('{target_station}','{user(member)}',NULL,'{start}',{out},'{reason}',NULL)"
+        for actor in [1, 2]:
+            for member in [201, 203, 204]:
+                output = attempt(actor, manual(member))
+                assert 'MANUAL_ADMIN' in output and 'COMPLETED' in output, output
+        assert 'ACTIVE' in attempt(2, manual(end=None))
+        sql(f"UPDATE public.station_memberships SET status='SUSPENDED' WHERE id='{user(201)}'")
+        attempt(2, manual(), True)
+        sql(f"UPDATE public.station_memberships SET status='ACTIVE' WHERE id='{user(201)}'")
+        for actor in [4, 5, 6]:
+            attempt(actor, manual(), True)
+        attempt(2, manual(205, other), True)
+        attempt(2, manual(205), True)
+        attempt(2, manual(start='2099-01-01 08:00'), True)
+        attempt(2, manual(end='2020-01-02 07:00'), True)
+        attempt(2, manual(reason=''), True)
+        attempt(2, manual() + ';' + manual(), True)  # overlap
+        attempt(2, f"UPDATE public.station_memberships SET status='INACTIVE' WHERE id='{user(203)}';" + manual(203), True)
+        output = attempt(2, manual() + "; SELECT count(*) FROM public.attendance_manual_audit")
+        assert '\n1\n' in output, output
+        # Editing both timestamps, with optimistic concurrency and before/after audit snapshots.
+        output = attempt(2, manual() + f""";
+          SELECT public.save_manual_attendance('{station}','{user(201)}',id,
+            '2020-01-02 09:00','2020-01-02 17:00','Updated times',updated_at)
+          FROM public.attendance_records WHERE station_membership_id='{user(201)}';
+          SELECT count(*) FROM public.attendance_manual_audit WHERE before_record IS NOT NULL""")
+        assert 'Updated times' in output and '\n1\n' in output, output
+        attempt(2, manual() + f"""; SELECT public.save_manual_attendance('{station}','{user(201)}',id,
+          '2020-01-02 09:00','2020-01-02 17:00','Stale','1990-01-01')
+          FROM public.attendance_records WHERE station_membership_id='{user(201)}'""", True)
+        attempt(2, manual() + '; DELETE FROM public.attendance_manual_audit', True)
+        print('PASS: manual attendance self/staff/platform; worker/shift-manager/cross-station denials; time/overlap/stale validation; immutable audit')
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
     finally:
         command('pg_ctl', '-D', str(base / 'data'), '-m', 'immediate', '-w', 'stop')

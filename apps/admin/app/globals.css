@@ -602,3 +602,136 @@ body {
     min-width: 44px;
   }
 }
+
+.station-settings {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  min-width: 0;
+}
+.station-settings > summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  font-weight: 600;
+  min-height: 52px;
+}
+.station-settings[open] {
+  display: grid;
+  gap: 12px;
+}
+.staff-more {
+  position: relative;
+}
+.staff-more > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px;
+  font-size: 13px;
+  color: #647084;
+}
+.staff-more-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+.staff-actions {
+  align-items: flex-start;
+}
+@media (max-width: 640px) {
+  .staff-row {
+    padding: 12px;
+    gap: 10px;
+  }
+  .staff-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+  .staff-person-meta {
+    margin: 3px 0 6px;
+    gap: 4px 8px;
+  }
+  .staff-actions {
+    padding-top: 8px;
+    justify-content: space-between;
+  }
+  .staff-protected {
+    border-top: 1px solid #eee7ce;
+    padding-top: 8px;
+    font-size: 12px;
+  }
+  .staff-protected small {
+    display: inline;
+    margin-inline-start: 6px;
+  }
+}
+.manual-attendance-form {
+  display: grid;
+  gap: 14px;
+}
+.manual-attendance-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+.manual-attendance-form input,
+.manual-attendance-form select,
+.manual-attendance-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid #dbe1e9;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+  font-size: 16px;
+  min-height: 44px;
+}
+.manual-attendance-form small,
+.manual-timezone {
+  font-size: 12px;
+  font-weight: 400;
+  color: #647084;
+  margin: 0;
+}
+.manual-worker-name {
+  margin: 0;
+  font-weight: 600;
+}
+.attendance-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.attendance-toolbar > span {
+  flex: 1 1 150px;
+  font-size: 12px;
+  color: #647084;
+}
+.station-attendance {
+  min-width: 0;
+}
+.station-attendance div {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .station-attendance div[style*='display: flex'] {
+    flex-wrap: wrap;
+  }
+  .station-attendance button {
+    min-height: 44px;
+  }
+}
+
+.manual-attendance-form .staff-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

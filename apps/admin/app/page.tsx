@@ -18,7 +18,6 @@ import {
   PageHeader,
 } from '@yellowshifts/ui';
 import {
-  StationAdminIcon,
   StationIcon,
   ShieldAlertIcon,
   LockIcon,
@@ -30,14 +29,9 @@ import {
   getAuthenticatedUserContext,
   isSupabaseConfigured,
   listAllStations,
-  getStationMembers,
-  listAssignableUsers,
 } from '@yellowshifts/database';
 import { LogoutButton } from './components/LogoutButton';
-import { StationAdminSelector } from './components/StationAdminSelector';
 import { StationFilterableList } from './components/StationFilterableList';
-import { AssignMemberForm } from './components/AssignMemberForm';
-import { StaffFilterableList } from './components/StaffFilterableList';
 
 interface PageProps {
   searchParams: Promise<{ stationId?: string }>;
@@ -457,175 +451,5 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
     redirect('/login');
   }
 
-  const currentStationId = activeAdminStation.station.id;
-  const [stationMembers, assignableUsers] = await Promise.all([
-    getStationMembers(supabase, currentStationId),
-    listAssignableUsers(supabase).catch(() => []),
-  ]);
-
-  return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '3px solid var(--ys-color-brand-yellow)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          padding: '16px 0',
-        }}
-      >
-        <Container size="lg">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--ys-color-text-primary)',
-                }}
-              >
-                <StationAdminIcon size={22} />
-              </div>
-              <div>
-                <h2
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    margin: 0,
-                    lineHeight: '1.2',
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  {activeAdminStation.station.name} • פורטל ניהול תחנה
-                </h2>
-                <p
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    margin: 0,
-                  }}
-                >
-                  קוד תחנה: {activeAdminStation.station.code}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {adminMemberships.length > 1 && (
-                <StationAdminSelector
-                  adminMemberships={adminMemberships}
-                  activeStationId={currentStationId}
-                />
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Badge variant="brandYellow" dot>
-                  {t('roles.stationAdmin')}
-                </Badge>
-                <LogoutButton variant="outline" />
-              </div>
-            </div>
-          </div>
-        </Container>
-      </header>
-
-      <Container size="lg">
-        <PageHeader
-          title={`ניהול תחנת ${activeAdminStation.station.name}`}
-          description="הינך מחובר כמנהל תחנה מורשה. ניהול מוגדר לתחנה זו בלבד."
-          badge={
-            <Badge variant="success" dot>
-              {activeAdminStation.station.code}
-            </Badge>
-          }
-        />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Station Details Card */}
-          <Card>
-            <CardHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <StationIcon size={20} color="var(--ys-color-brand-crimson)" />
-                <CardTitle>פרטי התחנה המנוהלת</CardTitle>
-              </div>
-              <CardDescription>פרטי התחנה והגדרות פעילות</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: '16px',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '12px', color: '#AAAAAA' }}>שם התחנה</div>
-                  <div style={{ fontSize: '15px', fontWeight: 600 }}>
-                    {activeAdminStation.station.name}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#AAAAAA' }}>קוד זיהוי</div>
-                  <div style={{ fontSize: '15px', fontWeight: 600 }}>
-                    {activeAdminStation.station.code}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#AAAAAA' }}>כתובת</div>
-                  <div style={{ fontSize: '15px', fontWeight: 500 }}>
-                    {activeAdminStation.station.address || 'לא הוזנה'}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '12px', color: '#AAAAAA' }}>אזור זמן</div>
-                  <div style={{ fontSize: '15px', fontWeight: 500 }}>
-                    {activeAdminStation.station.timezone}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Assign Member Form */}
-          <AssignMemberForm
-            stationId={currentStationId}
-            assignableUsers={assignableUsers.filter(
-              (user) =>
-                user.id !== context.user.id &&
-                !stationMembers.some((member) => member.membership.userId === user.id)
-            )}
-            isPlatformAdmin={isPlatformAdmin}
-          />
-
-          <StaffFilterableList
-            stationId={currentStationId}
-            members={stationMembers}
-            canManage
-            currentUserId={context.user.id}
-            isPlatformAdmin={isPlatformAdmin}
-          />
-        </div>
-      </Container>
-    </main>
-  );
+  redirect(`/stations/${activeAdminStation.station.id}`);
 }

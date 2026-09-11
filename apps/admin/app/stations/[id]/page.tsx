@@ -1,3 +1,4 @@
+import { StationAdminSelector } from '../../components/StationAdminSelector';
 import { StationOperations } from '../../components/StationOperations';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
@@ -158,6 +159,17 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
       </header>
 
       <Container size="lg">
+        {!isPlatformAdmin &&
+          context.memberships.filter(
+            (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
+          ).length > 1 && (
+            <StationAdminSelector
+              activeStationId={stationId}
+              adminMemberships={context.memberships.filter(
+                (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
+              )}
+            />
+          )}
         {/* Top Actions & Page Header */}
         <div
           style={{
@@ -187,7 +199,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
             </Link>
             <PageHeader
               title={station.name}
-              description="ניהול פרטי התחנה, סטטוס פעילות, והקצאת מנהלי תחנה וצוות עובדים."
+              description="סידור עבודה, נוכחות חיה והצוות שלך — במקום אחד."
               badge={
                 <Badge variant={station.isActive ? 'success' : 'neutral'} dot>
                   {station.isActive ? 'פעילה' : 'מושבתת'}
@@ -257,220 +269,224 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <StationOperations stationId={station.id} />
 
-          {/* Phase 9: Attendance Tolerance Settings */}
-          <Card>
-            <CardHeader>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <SettingsIcon size={18} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                    <CardTitle>הגדרות סבילות נוכחות</CardTitle>
+          <details className="station-settings">
+            <summary>הגדרות התחנה ופרטי קשר</summary>
+            {/* Phase 9: Attendance Tolerance Settings */}
+            <Card>
+              <CardHeader>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <SettingsIcon size={18} style={{ color: 'var(--ys-color-brand-yellow)' }} />
+                      <CardTitle>הגדרות סבילות נוכחות</CardTitle>
+                    </div>
+                    <CardDescription>
+                      ניהול איחורים וחריגות — באחריות מנהלי התחנה והמערכת.
+                    </CardDescription>
                   </div>
-                  <CardDescription>
-                    ניהול איחורים וחריגות — באחריות מנהלי התחנה והמערכת.
-                  </CardDescription>
+                  <EditStationTolerancesModal station={station} />
                 </div>
-                <EditStationTolerancesModal station={station} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <dl className="tolerance-summary">
-                <div>
-                  <dt>איחור מותר</dt>
-                  <dd>
-                    {station.allowedLateMinutes} <small>דקות</small>
-                  </dd>
-                </div>
-                <div>
-                  <dt>יציאה מוקדמת מותרת</dt>
-                  <dd>
-                    {station.allowedEarlyLeaveMinutes} <small>דקות</small>
-                  </dd>
-                </div>
-                <div>
-                  <dt>התראת משמרת פתוחה</dt>
-                  <dd>
-                    {station.leftOpenWarningHours} <small>שעות</small>
-                  </dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
-          {/* Station Info Summary Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>פרטי התחנה</CardTitle>
-              <CardDescription>פרטי הקשר והפעילות של התחנה</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '20px',
-                }}
-              >
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    קוד תחנה ייחודי
+              </CardHeader>
+              <CardContent>
+                <dl className="tolerance-summary">
+                  <div>
+                    <dt>איחור מותר</dt>
+                    <dd>
+                      {station.allowedLateMinutes} <small>דקות</small>
+                    </dd>
                   </div>
-                  <div style={{ fontSize: '16px', fontWeight: 600, marginTop: '2px' }}>
-                    <Badge variant="brandYellow">{station.code}</Badge>
+                  <div>
+                    <dt>יציאה מוקדמת מותרת</dt>
+                    <dd>
+                      {station.allowedEarlyLeaveMinutes} <small>דקות</small>
+                    </dd>
                   </div>
-                </div>
+                  <div>
+                    <dt>התראת משמרת פתוחה</dt>
+                    <dd>
+                      {station.leftOpenWarningHours} <small>שעות</small>
+                    </dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+            {/* Station Info Summary Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>פרטי התחנה</CardTitle>
+                <CardDescription>פרטי הקשר והפעילות של התחנה</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '20px',
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      קוד תחנה ייחודי
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 600, marginTop: '2px' }}>
+                      <Badge variant="brandYellow">{station.code}</Badge>
+                    </div>
+                  </div>
 
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    שם מלא
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      שם מלא
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        marginTop: '2px',
+                        color: 'var(--ys-color-text-primary, #111827)',
+                      }}
+                    >
+                      {station.name}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    {station.name}
+
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      כתובת
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        marginTop: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: 'var(--ys-color-text-primary, #111827)',
+                      }}
+                    >
+                      <MapPinIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
+                      {station.address || 'לא צוינה כתובת'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      טלפון
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        marginTop: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: 'var(--ys-color-text-primary, #111827)',
+                      }}
+                    >
+                      <PhoneIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
+                      <span dir="ltr">{station.phone || 'לא צוין טלפון'}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      אזור זמן
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        marginTop: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: 'var(--ys-color-text-primary, #111827)',
+                      }}
+                    >
+                      <ClockIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
+                      <span>{station.timezone}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      מזהה NFC ציבורי
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        fontFamily: 'monospace',
+                        color: '#B45309',
+                        marginTop: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <NfcIcon size={15} color="#B45309" />
+                      <span>{station.nfcPublicToken || 'טרם הוגדר'}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
+                    >
+                      מנהלי תחנה מוקצים
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        marginTop: '2px',
+                        color: '#B45309',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <ShieldCheckIcon size={16} />
+                      <span>{adminMembers.length} מנהלים</span>
+                    </div>
                   </div>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    כתובת
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    <MapPinIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
-                    {station.address || 'לא צוינה כתובת'}
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    טלפון
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    <PhoneIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
-                    <span dir="ltr">{station.phone || 'לא צוין טלפון'}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    אזור זמן
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    <ClockIcon size={15} color="var(--ys-color-text-muted, #9CA3AF)" />
-                    <span>{station.timezone}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מזהה NFC ציבורי
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '13px',
-                      fontFamily: 'monospace',
-                      color: '#B45309',
-                      marginTop: '2px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <NfcIcon size={15} color="#B45309" />
-                    <span>{station.nfcPublicToken || 'טרם הוגדר'}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מנהלי תחנה מוקצים
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      marginTop: '2px',
-                      color: '#B45309',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <ShieldCheckIcon size={16} />
-                    <span>{adminMembers.length} מנהלים</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* User Assignment Form */}
-          <AssignMemberForm
-            stationId={station.id}
-            assignableUsers={assignableUsers.filter(
-              (user) =>
-                user.id !== context.user.id &&
-                !stationMembers.some((member) => member.membership.userId === user.id)
-            )}
-            isPlatformAdmin={isPlatformAdmin}
-          />
-
+              </CardContent>
+            </Card>
+          </details>
+          <details className="station-settings">
+            <summary>הוספת איש צוות</summary>
+            {/* User Assignment Form */}
+            <AssignMemberForm
+              stationId={station.id}
+              assignableUsers={assignableUsers.filter(
+                (user) =>
+                  user.id !== context.user.id &&
+                  !stationMembers.some((member) => member.membership.userId === user.id)
+              )}
+              isPlatformAdmin={isPlatformAdmin}
+            />
+          </details>
           <StaffFilterableList
             stationId={station.id}
             members={stationMembers}
