@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         return result.stdout
     try:
         sql("""CREATE ROLE authenticated; CREATE ROLE anon; CREATE ROLE service_role BYPASSRLS;
-        CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb DEFAULT '{}');
+        CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, phone text, raw_user_meta_data jsonb DEFAULT '{}');
         CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
         GRANT USAGE ON SCHEMA auth TO authenticated, anon;""")
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
@@ -35,9 +35,9 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         INSERT INTO public.stations(id,code,name,nfc_public_token) VALUES ('{uid(101)}','NFC-A','Test A','token-a'),('{uid(102)}','NFC-B','Test B','token-b');
         INSERT INTO public.station_memberships(id,station_id,user_id,role) VALUES ('{uid(201)}','{uid(101)}','{uid(1)}','WORKER'),('{uid(202)}','{uid(102)}','{uid(1)}','WORKER');
         GRANT SELECT,INSERT,UPDATE ON public.attendance_records TO authenticated;""")
-        def scan(scan_id=None, token='token-a', actor=1, timestamp='clock_timestamp()'):
+        def scan(scan_id=None, token='token-a', actor=1, timestamp='clock_timestamp()', decision='scan'):
             identity = str(scan_id or uuid.uuid4())
-            output = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(actor)}',true); SELECT public.process_nfc_scan('{token}','{identity}',{timestamp}); COMMIT;")
+            output = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(actor)}',true); SELECT public.process_nfc_scan('{token}','{identity}',{timestamp},'{decision}'); COMMIT;")
             return json.loads(next(line for line in output.splitlines() if line.startswith('{')))
         def cool_down():
             sql("UPDATE public.nfc_scan_receipts SET applied_at=clock_timestamp()-interval '11 seconds';")
@@ -56,11 +56,24 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         # Different UUIDs and same UUIDs, including after a lost response, cannot double-toggle.
         cool_down()
         checkout_id = uuid.uuid4()
+        assert scan(decision='confirm')['code'] == 'INVALID_SCAN'
+        cancelled_id = uuid.uuid4()
+        assert scan(cancelled_id)['action'] == 'CHECKOUT_PENDING'
+        assert scan(cancelled_id, decision='cancel')['action'] == 'CANCELLED'
+        assert scan(cancelled_id, decision='confirm')['record']['status'] == 'ACTIVE'
+        legacy = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',true); SELECT public.process_nfc_scan('token-a',gen_random_uuid(),clock_timestamp()); COMMIT;")
+        assert 'CHECKOUT_PENDING' in legacy and 'COMPLETED' not in legacy
+        pending = scan(checkout_id)
+        assert pending['action'] == 'CHECKOUT_PENDING' and pending['record']['clock_out_at'] is None
+        assert scan(checkout_id)['action'] == 'CHECKOUT_PENDING'
+        stale_id = uuid.uuid4()
+        assert scan(stale_id)['action'] == 'CHECKOUT_PENDING'
         with ThreadPoolExecutor(max_workers=6) as pool:
-            results = list(pool.map(lambda _: scan(checkout_id), range(6)))
+            results = list(pool.map(lambda _: scan(checkout_id, decision='confirm'), range(6)))
         assert all(r['record']['status'] == 'COMPLETED' for r in results)
         assert sum(not r['replayed'] for r in results) == 1
         assert sql('SELECT count(*) FROM public.attendance_records;').strip() == '1'
+        assert scan(stale_id, decision='confirm')['code'] == 'STALE_CHECKOUT'
         # Opening a historic receipt returns its current record and never starts new work.
         cool_down()
         assert scan(first_id)['record']['status'] == 'COMPLETED'
@@ -81,8 +94,15 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         assert 'UPDATE 0' in output
         sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',true); INSERT INTO public.attendance_records(station_id,station_membership_id,user_id) VALUES ('{uid(102)}','{uid(202)}','{uid(1)}'); ROLLBACK;", fails=True)
         sql("SET ROLE anon; SELECT public.process_nfc_scan('token-a',gen_random_uuid(),now());", fails=True)
+        cool_down()
+        expiring_id = uuid.uuid4()
+        assert scan(expiring_id)['action'] == 'CHECKOUT_PENDING'
+        sql(f"UPDATE public.nfc_scan_receipts SET created_at=now()-interval '16 minutes' WHERE scan_id='{expiring_id}';")
+        assert scan(expiring_id, decision='confirm')['code'] == 'EXPIRED_SCAN'
+        sql(f"UPDATE auth.users SET phone='972501234567', email='updated@example.com', raw_user_meta_data='{{\"full_name\":\"Updated Worker\"}}' WHERE id='{uid(1)}';")
+        assert sql(f"SELECT full_name || '|' || phone || '|' || email FROM public.profiles WHERE id='{uid(1)}';").strip() == 'Updated Worker|+972501234567|updated@example.com'
         sql(f"UPDATE public.station_memberships SET status='INACTIVE' WHERE id='{uid(201)}';")
         assert scan(first_id)['code'] == 'NO_MEMBERSHIP'
-        print('PASS: atomic in/out; persistent retry receipts; concurrent same/different IDs; duplicate window; old receipt; expiry; other station; inactive/unassigned users; direct-write and anonymous denial')
+        print('PASS: automatic clock-in; confirmed checkout; cancel/replay; concurrent confirmations; stale/expired denial; legacy calls cannot auto-checkout; auth-profile sync; station/membership isolation; direct-write denial')
     finally:
         command('pg_ctl', '-D', str(base / 'data'), '-m', 'immediate', '-w', 'stop')

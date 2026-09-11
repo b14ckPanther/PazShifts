@@ -156,7 +156,7 @@ export interface StationExceptionsResult {
 export type NfcScanResult =
   | {
       success: true;
-      action: 'CLOCK_IN' | 'CLOCK_OUT';
+      action: 'CLOCK_IN' | 'CLOCK_OUT' | 'CHECKOUT_PENDING' | 'CANCELLED';
       record: AttendanceRecord;
       replayed: boolean;
       duplicate?: boolean;

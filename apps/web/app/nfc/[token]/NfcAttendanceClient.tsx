@@ -24,6 +24,7 @@ const errors: Record<string, { title: string; text: string }> = {
     title: 'יש משמרת פתוחה בתחנה אחרת',
     text: 'סרקו את התג בתחנה שבה התחלתם כדי לסיים אותה.',
   },
+  STALE_CHECKOUT: { title: 'המשמרת כבר הסתיימה', text: 'לא בוצע שינוי נוסף. חזרו למסך שלכם.' },
   NETWORK_ERROR: {
     title: 'הדיווח עדיין לא אושר',
     text: 'בדקו את החיבור ונסו שוב. ניסיון חוזר לא ייצור דיווח כפול.',
@@ -48,6 +49,7 @@ export function NfcAttendanceClient({
   const [now, setNow] = useState<number | null>(null);
   const started = useRef(false);
   const busy = useRef(false);
+  const decisionRef = useRef<'scan' | 'confirm' | 'cancel'>('scan');
   const processScan = useCallback(async () => {
     if (busy.current) return;
     busy.current = true;
@@ -57,7 +59,7 @@ export function NfcAttendanceClient({
         setResult({ success: false, code: 'NETWORK_ERROR' });
         return;
       }
-      const response = await processNfcScanAction(nfcToken, scanId, scannedAt);
+      const response = await processNfcScanAction(nfcToken, scanId, scannedAt, decisionRef.current);
       setResult(response);
       if (response.success && !response.replayed) navigator.vibrate?.(60);
     } catch {
@@ -90,6 +92,7 @@ export function NfcAttendanceClient({
 
   const record = result?.success ? result.record : null;
   const active = record?.status === 'ACTIVE';
+  const confirmCheckout = result?.success && result.action === 'CHECKOUT_PENDING';
   const time = (value: string) =>
     new Intl.DateTimeFormat('he-IL', {
       timeZone: station.timezone,
@@ -114,7 +117,11 @@ export function NfcAttendanceClient({
   const error = result && !result.success ? errors[result.code] || errors.NETWORK_ERROR! : null;
   const returnPath = `/nfc/${encodeURIComponent(nfcToken)}?${new URLSearchParams({ scan: scanId, at: String(scannedAt) })}`;
   return (
-    <section className="attendance-panel" aria-labelledby="attendance-heading" aria-busy={pending}>
+    <section
+      className={`attendance-panel${confirmCheckout ? ' attendance-confirmation' : ''}`}
+      aria-labelledby="attendance-heading"
+      aria-busy={pending}
+    >
       <div className="attendance-topline">
         <BrandMark />
         <span>
@@ -129,7 +136,7 @@ export function NfcAttendanceClient({
         className={`attendance-symbol ${pending ? 'scan-processing' : error ? 'attendance-warning' : ''}`}
         aria-hidden="true"
       >
-        {pending ? <NfcIcon size={38} /> : error ? '!' : <CheckIcon size={38} />}
+        {pending || confirmCheckout ? <NfcIcon size={38} /> : error ? '!' : <CheckIcon size={38} />}
       </div>
       <div role="status" aria-live="polite">
         <h1 id="attendance-heading">
@@ -137,20 +144,26 @@ export function NfcAttendanceClient({
             ? 'רושמים נוכחות…'
             : error
               ? error.title
-              : result?.success && result.replayed
-                ? 'הסריקה כבר נקלטה'
-                : active
-                  ? 'המשמרת התחילה'
-                  : 'המשמרת הסתיימה'}
+              : confirmCheckout
+                ? 'לסיים את המשמרת?'
+                : result?.success && result.action === 'CANCELLED'
+                  ? 'ממשיכים במשמרת'
+                  : result?.success && result.replayed
+                    ? 'הסריקה כבר נקלטה'
+                    : active
+                      ? 'המשמרת התחילה'
+                      : 'המשמרת הסתיימה'}
         </h1>
         <p className="attendance-subtitle">
           {pending
             ? 'רק רגע, אין צורך ללחוץ על דבר.'
             : error
               ? error.text
-              : active
-                ? 'יום עבודה נעים!'
-                : 'תודה על העבודה, להתראות במשמרת הבאה.'}
+              : confirmCheckout
+                ? 'המשמרת עדיין פתוחה. אשרו רק אם סיימתם לעבוד.'
+                : active
+                  ? 'יום עבודה נעים!'
+                  : 'תודה על העבודה, להתראות במשמרת הבאה.'}
         </p>
       </div>
       {!pending && record && (
@@ -169,16 +182,42 @@ export function NfcAttendanceClient({
               <dd>{active ? 'במשמרת' : record.clock_out_at ? time(record.clock_out_at) : '—'}</dd>
             </div>
           </dl>
-          <div className="scan-instruction">
+          <div className="scan-instruction" hidden={confirmCheckout}>
             <NfcIcon size={24} />
             <span>
-              {active ? 'לסיום המשמרת, סרקו שוב את תג התחנה.' : 'למשמרת הבאה, סרקו את התג בכניסה.'}
+              {confirmCheckout
+                ? 'הסריקה נקלטה. המשמרת תסתיים רק לאחר האישור שלך.'
+                : active
+                  ? 'לסיום המשמרת, סרקו שוב את תג התחנה ואשרו יציאה.'
+                  : 'למשמרת הבאה, סרקו את התג בכניסה.'}
               {result?.success && result.duplicate && (
                 <small>סריקה חוזרת בתוך 10 שניות אינה משנה את הדיווח.</small>
               )}
             </span>
           </div>
         </>
+      )}
+      {!pending && confirmCheckout && (
+        <div style={{ display: 'grid', gap: 10 }}>
+          <button
+            className="mobile-primary"
+            onClick={() => {
+              decisionRef.current = 'confirm';
+              void processScan();
+            }}
+          >
+            כן, סיום משמרת
+          </button>
+          <button
+            className="mobile-secondary"
+            onClick={() => {
+              decisionRef.current = 'cancel';
+              void processScan();
+            }}
+          >
+            סרקתי בטעות — ממשיכים לעבוד
+          </button>
+        </div>
       )}
       {!pending && result && !result.success && result.code === 'NETWORK_ERROR' && (
         <button className="mobile-primary" onClick={() => void processScan()}>
