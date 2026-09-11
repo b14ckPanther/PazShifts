@@ -1,5 +1,6 @@
 'use client';
 
+import { WeekNavigator } from './WeekNavigator';
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type {
@@ -10,9 +11,6 @@ import type {
 import { saveWorkerAvailabilityAction } from '../actions/availability';
 import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
 import {
-  CalendarIcon,
-  ChevronRightIcon,
-  ChevronLeftIcon,
   CheckIcon,
   WarningIcon,
   SuccessIcon,
@@ -227,109 +225,32 @@ export function WeeklyAvailabilityForm({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Week Navigator Card */}
-      <Card
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-        }}
+    <div
+      className="worker-details"
+      style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+    >
+      <WeekNavigator
+        start={weekStartDate}
+        end={weekEnd}
+        onNavigate={navigateWeek}
+        previousDisabled={isPrevDisabled}
+        nextDisabled={isNextDisabled}
+        label={
+          weekStartDate === activeCurrentWeekStart
+            ? 'השבוע הנוכחי'
+            : weekStartDate === addDays(activeCurrentWeekStart, 7)
+              ? 'השבוע הבא'
+              : weekStartDate === addDays(activeCurrentWeekStart, 14)
+                ? 'בעוד שבועיים'
+                : 'השבוע הנבחר'
+        }
       >
-        <CardContent style={{ padding: '16px 20px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(-7)}
-                disabled={isPrevDisabled}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  opacity: isPrevDisabled ? 0.5 : 1,
-                  cursor: isPrevDisabled ? 'not-allowed' : 'pointer',
-                }}
-              >
-                <ChevronRightIcon size={16} />
-                <span>שבוע קודם</span>
-              </Button>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#F3F4F6',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                }}
-              >
-                <CalendarIcon size={16} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111827' }}>
-                  שבוע: {formatDateDisplay(weekStartDate)} — {formatDateDisplay(weekEnd)}
-                </span>
-                {weekStartDate === activeCurrentWeekStart && (
-                  <Badge variant="neutral" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
-                    שבוע נוכחי
-                  </Badge>
-                )}
-                {weekStartDate === addDays(activeCurrentWeekStart, 7) && (
-                  <Badge variant="brandYellow" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
-                    שבוע הבא
-                  </Badge>
-                )}
-                {weekStartDate === addDays(activeCurrentWeekStart, 14) && (
-                  <Badge variant="neutral" style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
-                    בעוד שבועיים
-                  </Badge>
-                )}
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(7)}
-                disabled={isNextDisabled}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  opacity: isNextDisabled ? 0.5 : 1,
-                  cursor: isNextDisabled ? 'not-allowed' : 'pointer',
-                }}
-              >
-                <span>שבוע הבא</span>
-                <ChevronLeftIcon size={16} />
-              </Button>
-            </div>
-
-            <div>
-              {initialData ? (
-                <Badge
-                  variant="success"
-                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <CheckIcon size={12} />
-                  <span>הוגשה זמינות לשבוע זה</span>
-                </Badge>
-              ) : (
-                <Badge variant="warning">טרם הוגשה זמינות</Badge>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        {initialData ? (
+          <Badge variant="success">הוגשה זמינות לשבוע זה</Badge>
+        ) : (
+          <Badge variant="warning">טרם הוגשה זמינות</Badge>
+        )}
+      </WeekNavigator>
 
       {/* Global Feedback Banner */}
       {feedback && (
@@ -397,6 +318,8 @@ export function WeeklyAvailabilityForm({
             <Card
               key={day.index}
               style={{
+                padding: 0,
+                overflow: 'hidden',
                 backgroundColor: '#FFFFFF',
                 border: isPastDay
                   ? '1px solid #E5E7EB'
@@ -460,7 +383,7 @@ export function WeeklyAvailabilityForm({
                 </div>
 
                 {/* Direct 1-Tap Toggles */}
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div className="worker-availability-options">
                   <button
                     type="button"
                     disabled={isPastDay || isPending}
@@ -709,6 +632,8 @@ export function WeeklyAvailabilityForm({
       {/* General Week Note */}
       <Card
         style={{
+          padding: 0,
+          overflow: 'hidden',
           backgroundColor: '#FFFFFF',
           border: '1px solid #E5E7EB',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',

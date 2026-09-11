@@ -1,15 +1,14 @@
 'use client';
 
+import { WeekNavigator } from './WeekNavigator';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { WeeklyScheduleDetails, ScheduledShiftWithDetails } from '@yellowshifts/types';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '@yellowshifts/ui';
 import {
   CalendarIcon,
   ClockIcon,
-  ChevronRightIcon,
-  ChevronLeftIcon,
   UsersIcon,
   MoonIcon,
   SunIcon,
@@ -73,85 +72,30 @@ export function WorkerScheduleView({
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Week Navigator Bar */}
-      <Card
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <CardContent style={{ padding: '16px 20px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(-7)}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <ChevronRightIcon size={16} />
-                <span>שבוע קודם</span>
-              </Button>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#F3F4F6',
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                }}
-              >
-                <CalendarIcon size={16} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111827' }}>
-                  שבוע: {formatDateDisplay(selectedWeekStart)} — {formatDateDisplay(weekEnd)}
-                </span>
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigateWeek(7)}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <span>שבוע הבא</span>
-                <ChevronLeftIcon size={16} />
-              </Button>
-            </div>
-
-            <div>
-              {schedule?.status === 'PUBLISHED' ? (
-                <Badge variant="success">סידור עבודה רשמי מפורסם</Badge>
-              ) : (
-                <Badge variant="neutral">טרם פורסם סידור לשבוע זה</Badge>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div
+      className="worker-details"
+      style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+    >
+      <WeekNavigator start={selectedWeekStart} end={weekEnd} onNavigate={navigateWeek}>
+        {schedule?.status === 'PUBLISHED' ? (
+          <Badge variant="success">סידור העבודה פורסם</Badge>
+        ) : (
+          <Badge variant="neutral">טרם פורסם סידור לשבוע זה</Badge>
+        )}
+      </WeekNavigator>
 
       {/* Shifts Content */}
       {myShifts.length === 0 ? (
         <Card
           style={{
+            padding: 0,
+            overflow: 'hidden',
             backgroundColor: '#FFFFFF',
             border: '1px solid #E5E7EB',
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           }}
         >
-          <CardContent style={{ textAlign: 'center', padding: '56px 24px' }}>
+          <CardContent style={{ textAlign: 'center', padding: '28px 20px' }}>
             <BriefcaseIcon size={48} style={{ color: '#9CA3AF', margin: '0 auto 16px' }} />
             <h3
               style={{
@@ -217,10 +161,11 @@ export function WorkerScheduleView({
               <Card
                 key={shift.id}
                 style={{
+                  padding: 0,
+                  overflow: 'hidden',
                   backgroundColor: '#FFFFFF',
                   border: '1px solid #E5E7EB',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                  overflow: 'hidden',
                 }}
               >
                 <CardHeader

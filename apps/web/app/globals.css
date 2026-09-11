@@ -185,3 +185,119 @@ body {
     animation: none;
   }
 }
+
+/* Worker pages use border-box so full-width containers include their gutters. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+.worker-details {
+  min-width: 0;
+}
+.worker-week {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 1px 3px #00000008;
+}
+.worker-week-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.worker-week-date {
+  grid-column: 1 / -1;
+  text-align: center;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 2px 0 4px;
+}
+.worker-week-date > span {
+  font-size: 12px;
+  color: #647084;
+}
+.worker-week-date strong {
+  font-size: clamp(13px, 3.7vw, 16px);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #172033;
+}
+.worker-week-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #dbe1e9;
+  border-radius: 10px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.worker-week-nav button svg {
+  flex-shrink: 0;
+}
+.worker-week-nav button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.worker-week-nav button:focus-visible {
+  outline: 3px solid #a67c0c;
+  outline-offset: 3px;
+}
+.worker-week-status {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.worker-availability-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+.worker-availability-options button {
+  flex: 1;
+  min-height: 44px;
+}
+.worker-details .ys-card-header > div {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.worker-details .ys-card-title {
+  overflow-wrap: anywhere;
+}
+.worker-details input,
+.worker-details textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .worker-week-nav {
+    grid-template-columns: minmax(110px, 1fr) minmax(230px, 2fr) minmax(110px, 1fr);
+    align-items: center;
+  }
+  .worker-week-date {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .worker-week-previous {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .worker-week-next {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
