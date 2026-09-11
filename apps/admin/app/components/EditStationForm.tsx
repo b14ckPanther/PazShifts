@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   Button,
   Input,

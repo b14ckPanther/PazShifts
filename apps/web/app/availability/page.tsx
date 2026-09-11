@@ -1,13 +1,8 @@
+import { getServerContext } from '@/app/lib/server-context';
 import { BrandMark } from '@yellowshifts/ui';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getAvailabilityWeekStart,
-  getWorkerWeeklyAvailability,
-} from '@yellowshifts/database';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { getAvailabilityWeekStart, getWorkerWeeklyAvailability } from '@yellowshifts/database';
 import { Container, PageHeader } from '@yellowshifts/ui';
 import { CalendarIcon, BriefcaseIcon } from '@yellowshifts/icons';
 import { StationSelector } from '../components/StationSelector';
@@ -39,9 +34,7 @@ function getRelevantUpcomingWeek(currentMonday: string): string {
 }
 
 export default async function AvailabilityPage({ searchParams }: AvailabilityPageProps) {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

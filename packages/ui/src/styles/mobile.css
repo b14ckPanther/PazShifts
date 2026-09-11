@@ -592,3 +592,77 @@ html {
     z-index: 81;
   }
 }
+.navigation-pending {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+a:has(> .navigation-pending[data-pending='true']) {
+  cursor: progress;
+}
+.mobile-dock a:has(> .navigation-pending[data-pending='true']) {
+  background: #fff2bd;
+  color: #684d00;
+}
+body:has(.navigation-pending[data-pending='true'])::before {
+  content: '';
+  position: fixed;
+  top: var(--app-safe-top, 0px);
+  inset-inline: 0;
+  height: 3px;
+  z-index: 100;
+  background: linear-gradient(90deg, #fcbc00, #d10040, #fcbc00);
+  background-size: 200% 100%;
+  animation: navigation-progress 900ms linear infinite;
+}
+@keyframes navigation-progress {
+  to {
+    background-position: -200% 0;
+  }
+}
+.route-loading {
+  box-sizing: border-box;
+  padding: 28px 20px;
+  width: min(100%, 900px);
+  margin-inline: auto;
+  min-height: 55dvh;
+  color: #647084;
+}
+.route-loading > p {
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+.route-skeleton {
+  border-radius: 12px;
+  background: #e8ebef;
+  margin-bottom: 14px;
+  animation: route-pulse 1.4s ease-in-out infinite alternate;
+}
+.route-skeleton-title {
+  height: 28px;
+  width: 42%;
+}
+.route-skeleton-subtitle {
+  height: 14px;
+  width: 65%;
+  margin-bottom: 28px;
+}
+.route-skeleton-card {
+  height: 150px;
+  background: #eef0f4;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+}
+@keyframes route-pulse {
+  to {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-skeleton,
+  body:has(.navigation-pending[data-pending='true'])::before {
+    animation: none;
+  }
+}

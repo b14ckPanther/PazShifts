@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { NavigationLink as Link } from './NavigationLink';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
 import { CalendarIcon, BriefcaseIcon } from '@yellowshifts/icons';

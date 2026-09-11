@@ -1,15 +1,9 @@
+import { getServerContext } from '@/app/lib/server-context';
 import { StationAdminSelector } from '../../components/StationAdminSelector';
 import { StationOperations } from '../../components/StationOperations';
-import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getStationById,
-  getStationMembers,
-  listAssignableUsers,
-} from '@yellowshifts/database';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { getStationById } from '@yellowshifts/database';
 import {
   Container,
   PageHeader,
@@ -36,8 +30,6 @@ import {
 } from '@yellowshifts/icons';
 import { LogoutButton } from '../../components/LogoutButton';
 import { StationStatusToggle } from '../../components/StationStatusToggle';
-import { AssignMemberForm } from '../../components/AssignMemberForm';
-import { StaffFilterableList } from '../../components/StaffFilterableList';
 import { EditStationTolerancesModal } from '../../components/EditStationTolerancesModal';
 
 interface StationDetailsPageProps {
@@ -47,9 +39,7 @@ interface StationDetailsPageProps {
 export default async function StationDetailsPage({ params }: StationDetailsPageProps) {
   const { id: stationId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');
@@ -68,17 +58,11 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
     redirect('/');
   }
 
-  const [station, stationMembers, assignableUsers] = await Promise.all([
-    getStationById(supabase, stationId),
-    getStationMembers(supabase, stationId),
-    listAssignableUsers(supabase).catch(() => []),
-  ]);
+  const station = await getStationById(supabase, stationId);
 
   if (!station) {
     notFound();
   }
-
-  const adminMembers = stationMembers.filter((m) => m.membership.role === 'ADMIN');
 
   return (
     <main
@@ -467,33 +451,13 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                       }}
                     >
                       <ShieldCheckIcon size={16} />
-                      <span>{adminMembers.length} מנהלים</span>
+                      <Link href={`/stations/${station.id}/staff`}>צפייה בצוות ובהרשאות</Link>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </details>
-          <details className="station-settings">
-            <summary>הוספת איש צוות</summary>
-            {/* User Assignment Form */}
-            <AssignMemberForm
-              stationId={station.id}
-              assignableUsers={assignableUsers.filter(
-                (user) =>
-                  user.id !== context.user.id &&
-                  !stationMembers.some((member) => member.membership.userId === user.id)
-              )}
-              isPlatformAdmin={isPlatformAdmin}
-            />
-          </details>
-          <StaffFilterableList
-            stationId={station.id}
-            members={stationMembers}
-            canManage
-            currentUserId={context.user.id}
-            isPlatformAdmin={isPlatformAdmin}
-          />
         </div>
       </Container>
     </main>

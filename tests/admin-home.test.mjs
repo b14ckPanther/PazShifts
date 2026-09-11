@@ -20,6 +20,8 @@ function pageFor(context) {
     {
       exports,
       require(name) {
+        if (name === '@/app/lib/server-context')
+          return { getServerContext: async () => ({ supabase: {}, context }) };
         if (name === 'next/headers') return { cookies: async () => ({}) };
         if (name === 'next/navigation')
           return {

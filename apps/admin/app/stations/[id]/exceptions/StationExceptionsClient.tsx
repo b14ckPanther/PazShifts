@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   Card,
   CardHeader,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { Badge, Button } from '@yellowshifts/ui';
 import { UsersIcon, ShieldCheckIcon } from '@yellowshifts/icons';
 import type { StationMemberWithProfile, StationRole, MembershipStatus } from '@yellowshifts/types';

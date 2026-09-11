@@ -9,3 +9,4 @@ export * from './CompactLogin';
 export * from './Brand';
 export * from './BrandSplash';
 export * from './MobileDock';
+export * from './RouteLoading';

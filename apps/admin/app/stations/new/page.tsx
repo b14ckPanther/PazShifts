@@ -1,15 +1,12 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient, getAuthenticatedUserContext } from '@yellowshifts/database';
 import { Container, PageHeader, Badge } from '@yellowshifts/ui';
 import { CreateStationForm } from '../../components/CreateStationForm';
 import { LogoutButton } from '../../components/LogoutButton';
 import { PlatformAdminIcon } from '@yellowshifts/icons';
 
 export default async function NewStationPage() {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

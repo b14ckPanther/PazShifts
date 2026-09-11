@@ -1,13 +1,7 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getStationById,
-  listStationAttendance,
-  getStationMembers,
-} from '@yellowshifts/database';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { getStationById, listStationAttendance, getStationMembers } from '@yellowshifts/database';
 import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
 import {
   StationIcon,
@@ -26,9 +20,7 @@ interface StationAttendancePageProps {
 export default async function StationAttendancePage({ params }: StationAttendancePageProps) {
   const { id: stationId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');
@@ -47,14 +39,15 @@ export default async function StationAttendancePage({ params }: StationAttendanc
     redirect('/');
   }
 
-  const station = await getStationById(supabase, stationId);
+  const [station, { activeRecords, completedRecords }, members] = await Promise.all([
+    getStationById(supabase, stationId),
+    listStationAttendance(supabase, stationId),
+    getStationMembers(supabase, stationId),
+  ]);
   if (!station) {
     notFound();
   }
 
-  const { activeRecords, completedRecords } = await listStationAttendance(supabase, stationId);
-
-  const members = await getStationMembers(supabase, stationId);
   const canManageAttendance = isPlatformAdmin || isStationAdmin;
 
   return (

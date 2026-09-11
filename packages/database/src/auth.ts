@@ -29,12 +29,22 @@ export async function getAuthenticatedUserContext(
     return null;
   }
 
-  // 1. Fetch Profile
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
+  // These independent reads share the authenticated client and retain RLS.
+  const [{ data: profileData }, { data: platformAdminData }, { data: membershipsData }] =
+    await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+      supabase
+        .from('platform_admins')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle(),
+      supabase
+        .from('station_memberships')
+        .select('*, stations(*)')
+        .eq('user_id', user.id)
+        .eq('status', 'ACTIVE'),
+    ]);
 
   const profile: UserProfile | null = profileData
     ? {
@@ -50,22 +60,7 @@ export async function getAuthenticatedUserContext(
       }
     : null;
 
-  // 2. Check Platform Admin status
-  const { data: platformAdminData } = await supabase
-    .from('platform_admins')
-    .select('user_id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .maybeSingle();
-
   const isPlatformAdmin = Boolean(platformAdminData);
-
-  // 3. Fetch Station Memberships with Joined Station Data
-  const { data: membershipsData } = await supabase
-    .from('station_memberships')
-    .select('*, stations(*)')
-    .eq('user_id', user.id)
-    .eq('status', 'ACTIVE');
 
   const memberships: StationWithMembership[] = [];
 

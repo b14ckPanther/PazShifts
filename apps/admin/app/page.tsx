@@ -1,8 +1,8 @@
+import { getServerContext } from '@/app/lib/server-context';
 import { SchedulingHome } from './components/SchedulingHome';
 import { BrandMark } from '@yellowshifts/ui';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { t } from '@yellowshifts/i18n';
 import {
   Card,
@@ -24,12 +24,7 @@ import {
   PlusIcon,
   ShieldCheckIcon,
 } from '@yellowshifts/icons';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  isSupabaseConfigured,
-  listAllStations,
-} from '@yellowshifts/database';
+import { isSupabaseConfigured, listAllStations } from '@yellowshifts/database';
 import { LogoutButton } from './components/LogoutButton';
 import { StationFilterableList } from './components/StationFilterableList';
 
@@ -52,9 +47,7 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
     );
   }
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

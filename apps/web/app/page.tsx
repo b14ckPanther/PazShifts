@@ -1,7 +1,7 @@
+import { getServerContext } from '@/app/lib/server-context';
 import { BrandMark } from '@yellowshifts/ui';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   Card,
   CardHeader,
@@ -17,8 +17,6 @@ import {
 } from '@yellowshifts/ui';
 import { ShieldCheckIcon, BriefcaseIcon, CalendarIcon } from '@yellowshifts/icons';
 import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
   isSupabaseConfigured,
   getWeekStartDate,
   getWeeklySchedule,
@@ -48,9 +46,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
     );
   }
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

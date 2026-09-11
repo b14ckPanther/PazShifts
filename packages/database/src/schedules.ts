@@ -292,24 +292,11 @@ export async function getWeeklySchedule(
 ): Promise<WeeklyScheduleDetails | null> {
   const normWeekStart = getWeekStartDate(weekStartDate);
 
-  // 1. Fetch Schedule row
+  // Embed shifts and assignments in the schedule read: one authenticated round trip.
   const { data: scheduleData, error: scheduleError } = await supabase
     .from('schedules')
-    .select('*')
-    .eq('station_id', stationId)
-    .eq('week_start_date', normWeekStart)
-    .single();
-
-  if (scheduleError) {
-    if (scheduleError.code === 'PGRST116') return null;
-    throw new Error(`שגיאה בטעינת סידור עבודה: ${scheduleError.message}`);
-  }
-
-  // 2. Fetch Scheduled Shifts for this schedule
-  const { data: shiftsData, error: shiftsError } = await supabase
-    .from('scheduled_shifts')
     .select(
-      `
+      `*, scheduled_shifts(
       *,
       shift_templates (
         name
@@ -336,15 +323,18 @@ export async function getWeeklySchedule(
           )
         )
       )
-    `
+    )`
     )
-    .eq('schedule_id', scheduleData.id)
-    .order('shift_date', { ascending: true })
-    .order('start_at', { ascending: true });
-
-  if (shiftsError) {
-    throw new Error(`שגיאה בטעינת משמרות סידור: ${shiftsError.message}`);
+    .eq('station_id', stationId)
+    .eq('week_start_date', normWeekStart)
+    .single();
+  if (scheduleError) {
+    if (scheduleError.code === 'PGRST116') return null;
+    throw new Error(`שגיאה בטעינת סידור עבודה: ${scheduleError.message}`);
   }
+  const shiftsData = [...(scheduleData.scheduled_shifts ?? [])].sort(
+    (a, b) => a.shift_date.localeCompare(b.shift_date) || a.start_at.localeCompare(b.start_at)
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shifts: ScheduledShiftWithDetails[] = (shiftsData ?? []).map((s: any) => {
