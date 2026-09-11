@@ -114,7 +114,7 @@ export const he = {
     assignMember: 'הקצאת משתמש לתחנה',
     assignMemberDesc: 'בחר משתמש רשום במערכת והקצה לו תפקיד בתחנה זו',
     userEmail: 'אימייל משתמש',
-    userEmailPlaceholder: 'user@paz.co.il',
+    userEmailPlaceholder: 'user@example.com',
     selectUser: 'בחר משתמש מהמערכת',
     role: 'תפקיד בתחנה',
     employeeCode: 'קוד עובד בתחנה (אופציונלי)',

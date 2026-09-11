@@ -23,6 +23,7 @@ import {
   CloseIcon,
 } from '@yellowshifts/icons';
 import { adminCorrectAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
+import { configuredAppOrigin } from '@yellowshifts/database';
 import type { Station, AttendanceRecordWithDetails } from '@yellowshifts/types';
 
 interface StationAttendanceClientProps {
@@ -172,17 +173,12 @@ export function StationAttendanceClient({
     };
   };
 
-  // Construct NFC URL strictly targeting worker-facing production origin
-  const isLocalDev =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (isLocalDev ? window.location.origin.replace(':3001', ':3000') : 'https://shifts.paz.co.il');
-  const nfcStationUrl = `${origin}/nfc/${nfcToken}`;
+  // The admin host cannot identify the separate worker project; require its configured origin.
+  const origin = configuredAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  const nfcStationUrl = origin && nfcToken ? `${origin}/nfc/${encodeURIComponent(nfcToken)}` : null;
 
   const handleCopyNfcUrl = () => {
+    if (!nfcStationUrl) return;
     navigator.clipboard.writeText(nfcStationUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -756,12 +752,14 @@ export function StationAttendanceClient({
                       wordBreak: 'break-all',
                     }}
                   >
-                    {nfcStationUrl}
+                    {nfcStationUrl ||
+                      'קישור NFC אינו זמין. יש להגדיר כתובת תקינה לאפליקציית העובדים לפני כתיבת התג.'}
                   </span>
                   <Button
                     variant={copied ? 'primary' : 'secondary'}
                     size="sm"
                     onClick={handleCopyNfcUrl}
+                    disabled={!nfcStationUrl}
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}

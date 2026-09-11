@@ -114,7 +114,7 @@ export const en = {
     assignMember: 'Assign User to Station',
     assignMemberDesc: 'Select an existing user and assign them a station role',
     userEmail: 'User Email',
-    userEmailPlaceholder: 'user@paz.co.il',
+    userEmailPlaceholder: 'user@example.com',
     selectUser: 'Select Registered User',
     role: 'Station Role',
     employeeCode: 'Employee Code (Optional)',

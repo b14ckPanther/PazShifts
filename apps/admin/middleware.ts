@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { Database } from '@yellowshifts/types';
-import { getSupabaseEnv, isSupabaseConfigured } from '@yellowshifts/database';
+import { getSupabaseEnv, isSupabaseConfigured, safeNextPath } from '@yellowshifts/database';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -55,23 +55,8 @@ export async function middleware(request: NextRequest) {
 
   // Authenticated users attempting to access login page
   if (user && isLoginPage) {
-    const rawNext = request.nextUrl.searchParams.get('next');
-    const isSafeNext =
-      rawNext &&
-      rawNext.startsWith('/') &&
-      !rawNext.startsWith('//') &&
-      !rawNext.startsWith('/\\') &&
-      !rawNext.includes(':');
-
-    const redirectUrl = request.nextUrl.clone();
-    if (isSafeNext) {
-      const [pathname, search] = rawNext.split('?');
-      redirectUrl.pathname = pathname || '/';
-      redirectUrl.search = search ? `?${search}` : '';
-    } else {
-      redirectUrl.pathname = '/';
-      redirectUrl.search = '';
-    }
+    const nextPath = safeNextPath(request.nextUrl.searchParams.get('next'));
+    const redirectUrl = new URL(nextPath, request.nextUrl.origin);
     return NextResponse.redirect(redirectUrl);
   }
 

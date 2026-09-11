@@ -21,6 +21,7 @@ import {
   isSupabaseConfigured,
   getWeekStartDate,
   getWeeklySchedule,
+  configuredAppOrigin,
 } from '@yellowshifts/database';
 import { StationSelector } from './components/StationSelector';
 import { LogoutButton } from './components/LogoutButton';
@@ -32,6 +33,7 @@ interface PageProps {
 
 export default async function WebHomePage({ searchParams }: PageProps) {
   const isConfigured = isSupabaseConfigured();
+  const adminOrigin = configuredAppOrigin(process.env.NEXT_PUBLIC_ADMIN_URL);
 
   if (!isConfigured) {
     return (
@@ -166,14 +168,16 @@ export default async function WebHomePage({ searchParams }: PageProps) {
                 <div
                   style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
                 >
-                  {isPlatformAdmin && (
-                    <a
-                      href={process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.shifts.paz.co.il'}
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <Button variant="primary">מעבר לפורטל הניהול</Button>
-                    </a>
-                  )}
+                  {isPlatformAdmin &&
+                    (adminOrigin ? (
+                      <a href={adminOrigin} style={{ textDecoration: 'none' }}>
+                        <Button variant="primary">מעבר לפורטל הניהול</Button>
+                      </a>
+                    ) : (
+                      <Alert variant="warning" title="פורטל הניהול אינו מוגדר">
+                        כתובת פורטל הניהול אינה זמינה. יש לפנות למנהל המערכת.
+                      </Alert>
+                    ))}
                   <LogoutButton variant="secondary" />
                 </div>
               </CardFooter>

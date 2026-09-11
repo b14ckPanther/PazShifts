@@ -46,3 +46,9 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Incremental TypeScript build cache
+*.tsbuildinfo
+
+# Local Vercel project metadata
+.vercel
