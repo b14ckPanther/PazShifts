@@ -251,17 +251,13 @@ export async function assignStationMember(
 
   const { data, error } = await supabase
     .from('station_memberships')
-    .upsert(
-      {
-        station_id: input.stationId,
-        user_id: targetUserId,
-        role: input.role,
-        status: 'ACTIVE',
-        employee_code: input.employeeCode?.trim() || null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'station_id,user_id' }
-    )
+    .insert({
+      station_id: input.stationId,
+      user_id: targetUserId,
+      role: input.role,
+      status: 'ACTIVE',
+      employee_code: input.employeeCode?.trim() || null,
+    })
     .select('*')
     .single();
 
@@ -289,15 +285,8 @@ export async function removeStationMember(
   membershipId: string,
   stationId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('station_memberships')
-    .delete()
-    .eq('id', membershipId)
-    .eq('station_id', stationId);
-
-  if (error) {
-    throw new Error(`שגיאה בהסרת משתמש מהתחנה: ${error.message}`);
-  }
+  // Preserve the membership referenced by attendance and historical schedules.
+  await updateStationMemberStatus(supabase, { stationId, membershipId, status: 'INACTIVE' });
 }
 
 /**

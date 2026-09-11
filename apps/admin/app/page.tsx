@@ -23,7 +23,6 @@ import {
   LockIcon,
   PlusIcon,
   ShieldCheckIcon,
-  UsersIcon,
 } from '@yellowshifts/icons';
 import {
   createServerSupabaseClient,
@@ -37,7 +36,7 @@ import { LogoutButton } from './components/LogoutButton';
 import { StationAdminSelector } from './components/StationAdminSelector';
 import { StationFilterableList } from './components/StationFilterableList';
 import { AssignMemberForm } from './components/AssignMemberForm';
-import { RemoveMemberButton } from './components/RemoveMemberButton';
+import { StaffFilterableList } from './components/StaffFilterableList';
 
 interface PageProps {
   searchParams: Promise<{ stationId?: string }>;
@@ -612,93 +611,23 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
           </Card>
 
           {/* Assign Member Form */}
-          <AssignMemberForm stationId={currentStationId} assignableUsers={assignableUsers} />
+          <AssignMemberForm
+            stationId={currentStationId}
+            assignableUsers={assignableUsers.filter(
+              (user) =>
+                user.id !== context.user.id &&
+                !stationMembers.some((member) => member.membership.userId === user.id)
+            )}
+            isPlatformAdmin={isPlatformAdmin}
+          />
 
-          {/* Station Team Directory */}
-          <Card>
-            <CardHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UsersIcon size={20} color="var(--ys-color-brand-yellow)" />
-                <CardTitle>צוות התחנה ומנהליה ({stationMembers.length})</CardTitle>
-              </div>
-              <CardDescription>
-                משתמשים בעלי הרשאות משויכות לתחנה זו ישירות מתוך טבלת station_memberships.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stationMembers.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: '#AAAAAA' }}>
-                  טרם הוקצו אנשי צוות לתחנה זו.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {stationMembers.map(({ membership, profile: memberProfile }) => (
-                    <div
-                      key={membership.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        backgroundColor: 'var(--ys-color-surface-muted, #F9FAFB)',
-                        border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                        borderRadius: 'var(--ys-radius-sm)',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '14px',
-                              fontWeight: 600,
-                              color: 'var(--ys-color-text-primary, #111827)',
-                            }}
-                          >
-                            {memberProfile.fullName || 'משתמש ללא שם'}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: '12px',
-                              color: 'var(--ys-color-text-secondary, #6B7280)',
-                            }}
-                          >
-                            {memberProfile.email || membership.userId}
-                            {membership.employeeCode && ` • קוד עובד: ${membership.employeeCode}`}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Badge
-                          variant={
-                            membership.role === 'ADMIN'
-                              ? 'brandYellow'
-                              : membership.role === 'SHIFT_MANAGER'
-                                ? 'brandCrimson'
-                                : 'neutral'
-                          }
-                        >
-                          {membership.role === 'ADMIN'
-                            ? 'מנהל תחנה'
-                            : membership.role === 'SHIFT_MANAGER'
-                              ? 'מנהל משמרת'
-                              : 'עובד'}
-                        </Badge>
-
-                        <RemoveMemberButton
-                          stationId={currentStationId}
-                          membershipId={membership.id}
-                          memberName={memberProfile.fullName || memberProfile.email || 'משתמש'}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <StaffFilterableList
+            stationId={currentStationId}
+            members={stationMembers}
+            canManage
+            currentUserId={context.user.id}
+            isPlatformAdmin={isPlatformAdmin}
+          />
         </div>
       </Container>
     </main>

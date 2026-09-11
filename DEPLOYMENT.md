@@ -49,6 +49,19 @@ Configure these variables in the **Production** environment:
 
 Never prefix the service-role key with `NEXT_PUBLIC_`. It must not reach browser code. Local `.env.local` files are not uploaded by Git. If enabling Preview deployments, configure their environments deliberately; do not use arbitrary previews as physical tag destinations.
 
+### Staff permissions migration
+
+Before deploying the updated staff-management screens, apply `supabase/migrations/20260911000009_staff_permission_boundaries.sql` to the intended Supabase project after the preceding migrations. It limits station admins to workers and shift managers, prevents self-edits and physical membership deletion, and protects station identity while retaining operational settings. No existing memberships or attendance records are deleted or reassigned. This migration has been tested locally; that does not mean it has been applied to your hosted project.
+
+Regression checks (repository root):
+
+```sh
+node --test tests/staff-actions.test.mjs
+python3 tests/staff-permissions-db.py
+```
+
+The database test requires PostgreSQL binaries on PATH and creates/removes its own isolated local cluster. It never connects to Supabase. Deploy the code and migration together, then verify with separate super-admin and station-admin accounts.
+
 ## Step D — Deploy once to discover the real domains
 
 Deploy each project with the Supabase variables and Corepack setting. Leave the two application-origin variables **unset** on this initial deployment if the domains are not known. Do not deploy example placeholders or local origins as production configuration.

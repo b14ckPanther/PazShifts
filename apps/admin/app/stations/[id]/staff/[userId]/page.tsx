@@ -144,7 +144,7 @@ export default async function StaffMemberDetailsPage({ params }: StaffMemberDeta
                 }
               >
                 {membership.role === 'ADMIN'
-                  ? 'מנהל תחנה (ADMIN)'
+                  ? 'מנהל תחנה'
                   : membership.role === 'SHIFT_MANAGER'
                     ? 'מנהל משמרת'
                     : 'עובד'}
@@ -265,7 +265,7 @@ export default async function StaffMemberDetailsPage({ params }: StaffMemberDeta
                       }
                     >
                       {membership.role === 'ADMIN'
-                        ? 'מנהל תחנה (ADMIN)'
+                        ? 'מנהל תחנה'
                         : membership.role === 'SHIFT_MANAGER'
                           ? 'מנהל משמרת'
                           : 'עובד'}
@@ -375,12 +375,15 @@ export default async function StaffMemberDetailsPage({ params }: StaffMemberDeta
           <Card>
             <CardHeader>
               <CardTitle>ניהול איש צוות</CardTitle>
-              <CardDescription>
-                שינוי תפקיד, עדכון סטטוס פעילות או הסרה מוחלטת מהתחנה
-              </CardDescription>
+              <CardDescription>הרשאות וגישה לתחנה, תוך שמירה על היסטוריית הפעילות</CardDescription>
             </CardHeader>
             <CardContent>
-              <MemberDetailsActions stationId={station.id} member={member} />
+              <MemberDetailsActions
+                stationId={station.id}
+                member={member}
+                currentUserId={context.user.id}
+                isPlatformAdmin={isPlatformAdmin}
+              />
             </CardContent>
           </Card>
         </div>

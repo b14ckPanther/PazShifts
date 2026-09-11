@@ -13,3 +13,4 @@ export * from './logger';
 export type { Database, Json } from '@yellowshifts/types';
 export * from './origins';
 export * from './redirects';
+export * from './member-permissions';

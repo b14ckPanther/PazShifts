@@ -173,7 +173,11 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
 
           <PageHeader
             title={`ניהול צוות ועובדים — ${station.name}`}
-            description="שליטה מלאה בהרשאות, תפקידים וסטטוסי פעילות של אנשי הצוות בתחנה זו."
+            description={
+              isPlatformAdmin
+                ? 'ניהול צוות התחנה ומינוי מנהלים.'
+                : 'ניהול העובדים ומנהלי המשמרת שלך, במקום אחד.'
+            }
             badge={<Badge variant="brandYellow">{station.code}</Badge>}
           />
         </div>
@@ -321,13 +325,23 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
           </div>
 
           {/* User Assignment Drawer/Form */}
-          <AssignMemberForm stationId={station.id} assignableUsers={assignableUsers} />
+          <AssignMemberForm
+            stationId={station.id}
+            assignableUsers={assignableUsers.filter(
+              (user) =>
+                user.id !== context.user.id &&
+                !stationMembers.some((member) => member.membership.userId === user.id)
+            )}
+            isPlatformAdmin={isPlatformAdmin}
+          />
 
           {/* Filterable Staff List */}
           <StaffFilterableList
             stationId={station.id}
             members={stationMembers}
             canManage={isPlatformAdmin || isStationAdmin}
+            currentUserId={context.user.id}
+            isPlatformAdmin={isPlatformAdmin}
           />
         </div>
       </Container>

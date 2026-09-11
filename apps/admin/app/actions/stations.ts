@@ -14,7 +14,7 @@ import {
   updateStationMemberRole,
   updateStationMemberStatus,
   getStationMemberById,
-  countActiveStationAdmins,
+  canManageMember,
 } from '@yellowshifts/database';
 import type { StationRole, MembershipStatus } from '@yellowshifts/types';
 
@@ -121,10 +121,10 @@ export async function createStationAction(
       success: true,
       stationId: station.id,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בלתי צפויה ביצירת תחנה.',
+      error: 'שגיאה בלתי צפויה ביצירת תחנה.',
     };
   }
 }
@@ -201,10 +201,10 @@ export async function updateStationAction(
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בלתי צפויה בעדכון תחנה.',
+      error: 'שגיאה בלתי צפויה בעדכון תחנה.',
     };
   }
 }
@@ -235,10 +235,10 @@ export async function toggleStationStatusAction(
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בשינוי סטטוס תחנה.',
+      error: 'שגיאה בשינוי סטטוס תחנה.',
     };
   }
 }
@@ -318,7 +318,10 @@ export async function assignStationMemberAction(
   // Authorization check: Platform Admin or Station Admin of this specific station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -333,6 +336,16 @@ export async function assignStationMemberAction(
       success: false,
       error: 'נא לבחור תפקיד תקין בתחנה (ADMIN, SHIFT_MANAGER או WORKER).',
     };
+  }
+
+  if (!isPlatformAdmin && role === 'ADMIN') {
+    return { success: false, error: 'מינוי מנהלי תחנה מתבצע על ידי מנהל המערכת הראשי בלבד.' };
+  }
+  if (
+    userId === context.user.id ||
+    (userEmail && userEmail === context.user.email?.toLowerCase())
+  ) {
+    return { success: false, error: 'לא ניתן לשנות את ההרשאות של החשבון שלך.' };
   }
 
   // CASE A: Create a brand new auth user and assign to station
@@ -359,43 +372,21 @@ export async function assignStationMemberAction(
     try {
       const adminClient = createAdminClient();
 
-      // Check if user already exists in auth
-      const { data: listData, error: listErr } = await adminClient.auth.admin.listUsers();
-      if (listErr) {
-        throw new Error(`שגיאה בבדיקת משתמשים קיימים: ${listErr.message}`);
-      }
-
-      let targetUserId: string;
-      const existingUser = listData.users.find((u) => u.email?.toLowerCase() === userEmail);
-
-      if (existingUser) {
-        targetUserId = existingUser.id;
-        // Update user metadata / password
-        await adminClient.auth.admin.updateUserById(targetUserId, {
-          password,
-          user_metadata: { full_name: fullName },
-        });
-      } else {
-        const { data: createData, error: createErr } = await adminClient.auth.admin.createUser({
-          email: userEmail,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: fullName },
-        });
-
-        if (createErr || !createData.user) {
-          throw new Error(`שגיאה ביצירת משתמש: ${createErr?.message || 'נכשלה יצירת המשתמש'}`);
-        }
-        targetUserId = createData.user.id;
-      }
-
-      // Ensure profile row has email & name
-      await adminClient.from('profiles').upsert({
-        id: targetUserId,
+      // Creating an account must never reset credentials or metadata of an existing user.
+      const { data: createData, error: createErr } = await adminClient.auth.admin.createUser({
         email: userEmail,
-        full_name: fullName,
-        is_active: true,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName },
       });
+      if (createErr || !createData.user) {
+        return {
+          success: false,
+          error:
+            'לא ניתן ליצור את החשבון. אם האימייל כבר רשום, בחרו ״משתמש קיים״. פרטי חשבון קיים לא ישתנו.',
+        };
+      }
+      const targetUserId = createData.user.id;
 
       // Assign station membership
       await assignStationMember(supabase, {
@@ -408,16 +399,16 @@ export async function assignStationMemberAction(
       revalidatePath('/');
       revalidatePath('/stations');
       revalidatePath(`/stations/${stationId}`);
-      revalidatePath(`/stations/${stationId}/staff`);
+      revalidatePath(`/stations/${stationId}/staff`, 'layout');
 
       return {
         success: true,
         stationId,
       };
-    } catch (err: unknown) {
+    } catch {
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'שגיאה ביצירת והקצאת המשתמש.',
+        error: 'שגיאה ביצירת והקצאת המשתמש.',
       };
     }
   }
@@ -442,16 +433,16 @@ export async function assignStationMemberAction(
     revalidatePath('/');
     revalidatePath('/stations');
     revalidatePath(`/stations/${stationId}`);
-    revalidatePath(`/stations/${stationId}/staff`);
+    revalidatePath(`/stations/${stationId}/staff`, 'layout');
 
     return {
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בהקצאת משתמש לתחנה.',
+      error: 'שגיאה בהקצאת משתמש לתחנה.',
     };
   }
 }
@@ -473,7 +464,10 @@ export async function removeStationMemberAction(
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -483,40 +477,38 @@ export async function removeStationMemberAction(
     };
   }
 
-  // Final-admin protection: check if target is last active ADMIN
-  if (!isPlatformAdmin) {
+  try {
     const targetMember = await getStationMemberById(supabase, stationId, membershipId);
     if (
-      targetMember &&
-      targetMember.membership.role === 'ADMIN' &&
-      targetMember.membership.status === 'ACTIVE'
+      !targetMember ||
+      !canManageMember(
+        { currentUserId: context.user.id, isPlatformAdmin, canManage: true },
+        targetMember.membership,
+        targetMember.membership.role
+      )
     ) {
-      const remainingAdmins = await countActiveStationAdmins(supabase, stationId, membershipId);
-      if (remainingAdmins === 0) {
-        return {
-          success: false,
-          error: 'לא ניתן להסיר את מנהל התחנה הפעיל האחרון. יש להקצות מנהל תחנה פעיל נוסף תחילה.',
-        };
-      }
+      return {
+        success: false,
+        error:
+          'אין אפשרות לשנות את החשבון שלך או הרשאות של מנהל תחנה. מינוי מנהלי תחנה מתבצע על ידי מנהל המערכת הראשי.',
+      };
     }
-  }
 
-  try {
     await removeStationMember(supabase, membershipId, stationId);
 
     revalidatePath('/');
     revalidatePath('/stations');
     revalidatePath(`/stations/${stationId}`);
-    revalidatePath(`/stations/${stationId}/staff`);
+    revalidatePath(`/stations/${stationId}/staff`, 'layout');
 
     return {
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בהסרת הרשאת המשתמש מהתחנה.',
+      error: 'שגיאה בהסרת הרשאת המשתמש מהתחנה.',
     };
   }
 }
@@ -539,7 +531,10 @@ export async function updateMemberRoleAction(
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -556,26 +551,23 @@ export async function updateMemberRoleAction(
     };
   }
 
-  // Final-admin protection: cannot demote last active ADMIN
-  if (!isPlatformAdmin && newRole !== 'ADMIN') {
+  try {
     const targetMember = await getStationMemberById(supabase, stationId, membershipId);
     if (
-      targetMember &&
-      targetMember.membership.role === 'ADMIN' &&
-      targetMember.membership.status === 'ACTIVE'
+      !targetMember ||
+      !canManageMember(
+        { currentUserId: context.user.id, isPlatformAdmin, canManage: true },
+        targetMember.membership,
+        newRole
+      )
     ) {
-      const remainingAdmins = await countActiveStationAdmins(supabase, stationId, membershipId);
-      if (remainingAdmins === 0) {
-        return {
-          success: false,
-          error:
-            'לא ניתן לשנות את תפקידו של מנהל התחנה הפעיל האחרון. יש להקצות מנהל תחנה פעיל נוסף תחילה.',
-        };
-      }
+      return {
+        success: false,
+        error:
+          'אין אפשרות לשנות את החשבון שלך או הרשאות של מנהל תחנה. מינוי מנהלי תחנה מתבצע על ידי מנהל המערכת הראשי.',
+      };
     }
-  }
 
-  try {
     await updateStationMemberRole(supabase, {
       stationId,
       membershipId,
@@ -585,16 +577,16 @@ export async function updateMemberRoleAction(
     revalidatePath('/');
     revalidatePath('/stations');
     revalidatePath(`/stations/${stationId}`);
-    revalidatePath(`/stations/${stationId}/staff`);
+    revalidatePath(`/stations/${stationId}/staff`, 'layout');
 
     return {
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בעדכון תפקיד איש הצוות.',
+      error: 'שגיאה בעדכון תפקיד איש הצוות.',
     };
   }
 }
@@ -617,7 +609,10 @@ export async function updateMemberStatusAction(
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -634,26 +629,23 @@ export async function updateMemberStatusAction(
     };
   }
 
-  // Final-admin protection: cannot deactivate or suspend last active ADMIN
-  if (!isPlatformAdmin && newStatus !== 'ACTIVE') {
+  try {
     const targetMember = await getStationMemberById(supabase, stationId, membershipId);
     if (
-      targetMember &&
-      targetMember.membership.role === 'ADMIN' &&
-      targetMember.membership.status === 'ACTIVE'
+      !targetMember ||
+      !canManageMember(
+        { currentUserId: context.user.id, isPlatformAdmin, canManage: true },
+        targetMember.membership,
+        targetMember.membership.role
+      )
     ) {
-      const remainingAdmins = await countActiveStationAdmins(supabase, stationId, membershipId);
-      if (remainingAdmins === 0) {
-        return {
-          success: false,
-          error:
-            'לא ניתן להשבית או להשעות את מנהל התחנה הפעיל האחרון. יש להקצות מנהל תחנה פעיל נוסף תחילה.',
-        };
-      }
+      return {
+        success: false,
+        error:
+          'אין אפשרות לשנות את החשבון שלך או הרשאות של מנהל תחנה. מינוי מנהלי תחנה מתבצע על ידי מנהל המערכת הראשי.',
+      };
     }
-  }
 
-  try {
     await updateStationMemberStatus(supabase, {
       stationId,
       membershipId,
@@ -663,16 +655,16 @@ export async function updateMemberStatusAction(
     revalidatePath('/');
     revalidatePath('/stations');
     revalidatePath(`/stations/${stationId}`);
-    revalidatePath(`/stations/${stationId}/staff`);
+    revalidatePath(`/stations/${stationId}/staff`, 'layout');
 
     return {
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בעדכון סטטוס איש הצוות.',
+      error: 'שגיאה בעדכון סטטוס איש הצוות.',
     };
   }
 }
@@ -695,7 +687,10 @@ export async function updateStationTolerancesAction(
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -755,10 +750,10 @@ export async function updateStationTolerancesAction(
       success: true,
       stationId,
     };
-  } catch (err: unknown) {
+  } catch {
     return {
       success: false,
-      error: err instanceof Error ? err.message : 'שגיאה בעדכון הגדרות סבילות נוכחות.',
+      error: 'שגיאה בעדכון הגדרות סבילות נוכחות.',
     };
   }
 }
