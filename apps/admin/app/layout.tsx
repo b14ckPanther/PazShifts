@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
+import { BrandSplash } from '@yellowshifts/ui';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -36,7 +37,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={`${heebo.variable} ${ubuntu.variable}`}>
-      <body style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>{children}</body>
+      <body style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
+        <BrandSplash />
+        {children}
+      </body>
     </html>
   );
 }

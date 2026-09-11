@@ -7,3 +7,4 @@ export * from './Alert';
 export * from './Container';
 export * from './CompactLogin';
 export * from './Brand';
+export * from './BrandSplash';

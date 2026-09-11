@@ -96,7 +96,7 @@ After obtaining actual domains, open Supabase **Authentication > URL Configurati
 - **Redirect URLs**: add both actual origins, plus `https://<actual-worker-vercel-domain>/**` and `https://<actual-admin-vercel-domain>/**` for application return paths. Replace every placeholder before saving; never allow all `*.vercel.app` domains.
 - Keep `http://localhost:3000/**` and `http://localhost:3001/**` only if that Supabase project also serves local development.
 
-Supabase's [redirect URL documentation](https://supabase.com/docs/guides/auth/redirect-urls) describes Site URL and allow-list matching. Current login uses email/password and application redirects, rather than an OAuth callback. Worker and admin sessions are separate browser-origin sessions. Their login actions accept internal `next` paths, and middleware derives same-app redirects from the incoming request.
+Supabase's [redirect URL documentation](https://supabase.com/docs/guides/auth/redirect-urls) describes Site URL and allow-list matching. Current login uses email/password or phone/password and application redirects, rather than an OAuth callback. Worker and admin sessions are separate browser-origin sessions. Their login actions accept internal `next` paths, and middleware derives same-app redirects from the incoming request.
 
 Verify on the deployed apps before writing the tag:
 
@@ -155,7 +155,7 @@ supabase db push
 supabase migration list
 ```
 
-In Supabase Auth settings, ensure Phone authentication is enabled for phone/password sign-in. Users are created/updated by an authorized admin with their phone confirmed; the login flow calls `signInWithPassword`, never OTP or SMS. Keep public signup restricted according to your existing deployment policy. See [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords). This repository change does not modify hosted Auth provider settings.
+In Supabase Auth settings, ensure Phone authentication is enabled for phone/password sign-in. Users are created/updated by an authorized admin with their phone confirmed; the login flow calls `signInWithPassword`, never OTP or SMS. Keep public signup restricted according to your existing deployment policy. See [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords). The Phone provider was enabled on the linked hosted project on 2026-09-12, and the public Auth settings endpoint confirmed it. For any new Supabase project, enable Phone explicitly; database migrations do not enable providers. SMS confirmation, signup, and other provider settings were left unchanged.
 
 Before enabling a worker's phone login, an admin must check the number belongs to that worker and save it under **צוות התחנה → עריכת פרטים**. Israeli local numbers such as `050-1234567` become `+972501234567`; other countries require a country code. Existing profile contact numbers are not automatically promoted into Auth credentials. Email and phone use the same password and the existing persistent session. A duplicate login identifier is rejected by Supabase Auth. No service-role credential is added to the worker app.
 
@@ -178,3 +178,11 @@ Apply `20260912000013_shift_manager_scheduling_scope.sql` and deploy the admin a
 Shift managers enter a scheduling-only home. Direct attendance and exceptions URLs are rejected before loading dashboard data. Their own attendance records remain readable for their personal worker flow; they cannot read coworkers' attendance through the database API. Suspended station admins are denied administrative actions. Phones and tablets use the day schedule view; the weekly grid remains available on wide screens.
 
 Verification: `node --test tests/*.test.mjs` and `python3 tests/staff-permissions-db.py` cover publishing/reopening, archive denial, cross-station denial, attendance isolation, and admin-only settings. Browser checks cover 320, 375, 430, 768 and 1280 pixel widths; physical Safari verification remains a manual post-deployment check.
+
+## Login switcher and branded startup
+
+The worker login defaults to Phone; admin login defaults to Email. The animated switch preserves each identifier and the shared password. Phone uses the telephone keyboard, email uses the email keyboard, and both authenticate with the same password. Israeli local numbers are normalized before password authentication. A disabled Phone provider now produces a clear message directing the user to Email instead of incorrectly reporting a bad password.
+
+Both apps use the existing YellowShifts artwork for the startup and route-loading screens. The startup animation runs for at most 1.1 seconds once per browser tab/session, dismisses on interaction, and never intercepts input or delays an auth/NFC request. Direct NFC routes skip it. Reduced-motion users skip the startup animation and receive static route-loading artwork. This is an in-app entrance; the operating system controls its native PWA launch screen.
+
+No new database migration is required for this login/splash update. Deploy both apps to receive the UI changes. Verify phone/password with an actual worker account on the hosted app, including a return NFC scan in the same browser session; automated UI checks do not substitute for a physical phone test.
