@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 export default function WebError({
   reset,
 }: {

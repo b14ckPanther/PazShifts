@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { NavigationLink as Link } from './NavigationLink';
 import { CalendarIcon, ClockIcon, NfcIcon, WarningIcon, UsersIcon } from '@yellowshifts/icons';
 
 export function StationOperations({ stationId }: { stationId: string }) {

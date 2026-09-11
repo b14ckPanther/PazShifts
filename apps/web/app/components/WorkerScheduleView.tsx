@@ -3,7 +3,7 @@
 import { WeekNavigator } from './WeekNavigator';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import type { WeeklyScheduleDetails, ScheduledShiftWithDetails } from '@yellowshifts/types';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '@yellowshifts/ui';
 import {

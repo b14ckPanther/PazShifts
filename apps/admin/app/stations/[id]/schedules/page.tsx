@@ -1,9 +1,7 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
   getStationById,
   getWeeklySchedule,
   listShiftTemplates,
@@ -29,9 +27,7 @@ export default async function StationSchedulesPage({
   const { id: stationId } = await params;
   const { week: weekQuery } = await searchParams;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

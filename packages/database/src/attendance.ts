@@ -373,7 +373,7 @@ export async function listStationAttendance(
   completedRecords: AttendanceRecordWithDetails[];
 }> {
   // Query 1: Active records
-  const { data: activeData, error: activeErr } = await supabase
+  const activeQuery = supabase
     .from('attendance_records')
     .select(
       `
@@ -405,10 +405,6 @@ export async function listStationAttendance(
     .eq('station_id', stationId)
     .eq('status', 'ACTIVE')
     .order('clock_in_at', { ascending: false });
-
-  if (activeErr) {
-    throw new Error('Unable to load station attendance');
-  }
 
   // Query 2: Completed / Flagged records for date (default today)
   let completedQuery = supabase
@@ -455,7 +451,9 @@ export async function listStationAttendance(
       .lte('clock_in_at', `${options.date}T23:59:59Z`);
   }
 
-  const { data: completedData, error: completedErr } = await completedQuery;
+  const [{ data: activeData, error: activeErr }, { data: completedData, error: completedErr }] =
+    await Promise.all([activeQuery, completedQuery]);
+  if (activeErr) throw new Error('Unable to load station attendance');
   if (completedErr) {
     throw new Error('Unable to load station attendance history');
   }

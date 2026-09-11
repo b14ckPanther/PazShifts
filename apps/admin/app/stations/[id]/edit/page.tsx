@@ -1,10 +1,6 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getStationById,
-} from '@yellowshifts/database';
+import { getStationById } from '@yellowshifts/database';
 import { Container, PageHeader, Badge } from '@yellowshifts/ui';
 import { EditStationForm } from '../../../components/EditStationForm';
 import { LogoutButton } from '../../../components/LogoutButton';
@@ -17,9 +13,7 @@ interface EditStationPageProps {
 export default async function EditStationPage({ params }: EditStationPageProps) {
   const { id: stationId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

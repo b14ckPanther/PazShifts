@@ -1,12 +1,7 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getStationById,
-  getStationExceptionsForDate,
-} from '@yellowshifts/database';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { getStationById, getStationExceptionsForDate } from '@yellowshifts/database';
 import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
 import { StationIcon, ArrowRightIcon, ClockIcon, CalendarIcon } from '@yellowshifts/icons';
 import { LogoutButton } from '../../../components/LogoutButton';
@@ -19,9 +14,7 @@ interface StationExceptionsPageProps {
 export default async function StationExceptionsPage({ params }: StationExceptionsPageProps) {
   const { id: stationId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

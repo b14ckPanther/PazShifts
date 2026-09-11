@@ -1,12 +1,7 @@
-import { cookies } from 'next/headers';
+import { getServerContext } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
-import {
-  createServerSupabaseClient,
-  getAuthenticatedUserContext,
-  getStationById,
-  getStationMemberByUserId,
-} from '@yellowshifts/database';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { getStationById, getStationMemberByUserId } from '@yellowshifts/database';
 import {
   Container,
   PageHeader,
@@ -28,9 +23,7 @@ interface StaffMemberDetailsPageProps {
 export default async function StaffMemberDetailsPage({ params }: StaffMemberDetailsPageProps) {
   const { id: stationId, userId } = await params;
 
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-  const context = await getAuthenticatedUserContext(supabase);
+  const { supabase, context } = await getServerContext();
 
   if (!context) {
     redirect('/login');

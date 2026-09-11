@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { BrandLogo, Container } from '@yellowshifts/ui';
 import { LogoutButton } from './LogoutButton';
 

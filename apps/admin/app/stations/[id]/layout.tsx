@@ -1,5 +1,4 @@
-import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getAuthenticatedUserContext } from '@yellowshifts/database';
+import { getServerContext } from '@/app/lib/server-context';
 import { StationDock } from '../../components/StationDock';
 export default async function StationLayout({
   children,
@@ -9,7 +8,7 @@ export default async function StationLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const context = await getAuthenticatedUserContext(createServerSupabaseClient(await cookies()));
+  const { context } = await getServerContext();
   const membership = context?.memberships.find(
     (m) => m.station.id === id && m.membership.status === 'ACTIVE'
   );

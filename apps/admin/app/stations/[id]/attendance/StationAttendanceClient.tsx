@@ -69,9 +69,12 @@ export function StationAttendanceClient({
   // Live timer tick for active records
   const [, setTick] = useState<number>(0);
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 1000);
+    if (activeTab !== 'ACTIVE' || activeRecords.length === 0) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') setTick((t) => t + 1);
+    }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeTab, activeRecords.length]);
 
   const formatStationTime = (isoString: string) => {
     try {
