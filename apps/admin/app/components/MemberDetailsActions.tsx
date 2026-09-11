@@ -1,99 +1,63 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@yellowshifts/ui';
-import { EditIcon, PowerIcon, TrashIcon } from '@yellowshifts/icons';
+import { ShieldCheckIcon } from '@yellowshifts/icons';
 import type { StationMemberWithProfile } from '@yellowshifts/types';
+import { canManageMember } from '@yellowshifts/database';
 import { RoleModal, StatusModal } from './MemberActionModals';
-import { removeStationMemberAction } from '../actions/stations';
+import { RemoveMemberButton } from './RemoveMemberButton';
 
-interface MemberDetailsActionsProps {
-  stationId: string;
-  member: StationMemberWithProfile;
-}
-
-export const MemberDetailsActions: React.FC<MemberDetailsActionsProps> = ({
+export function MemberDetailsActions({
   stationId,
   member,
-}) => {
-  const router = useRouter();
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleRemove = async () => {
-    const confirmed = window.confirm(
-      `האם אתה בטוח שברצונך להסיר את "${member.profile.fullName || member.profile.email}" מתחנה זו?`
+  currentUserId,
+  isPlatformAdmin = false,
+}: {
+  stationId: string;
+  member: StationMemberWithProfile;
+  currentUserId: string;
+  isPlatformAdmin?: boolean;
+}) {
+  const [modal, setModal] = useState<'role' | 'status' | null>(null);
+  if (!canManageMember({ currentUserId, isPlatformAdmin, canManage: true }, member.membership)) {
+    return (
+      <div className="staff-protected">
+        <ShieldCheckIcon size={18} />
+        <span>
+          {member.membership.userId === currentUserId ? 'זה החשבון שלך' : 'מנהל תחנה'}
+          <small>ההרשאות מנוהלות על ידי מנהל המערכת הראשי</small>
+        </span>
+      </div>
     );
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    const result = await removeStationMemberAction(stationId, member.membership.id);
-    setIsDeleting(false);
-
-    if (result.success) {
-      router.push(`/stations/${stationId}/staff`);
-    } else if (result.error) {
-      alert(result.error);
-    }
-  };
-
+  }
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <Button
-        variant="secondary"
-        size="md"
-        onClick={() => setIsRoleModalOpen(true)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <EditIcon size={16} />
-        <span>שינוי תפקיד</span>
+    <div className="staff-actions">
+      <Button variant="secondary" size="sm" onClick={() => setModal('role')}>
+        שינוי תפקיד
       </Button>
-
-      <Button
-        variant="secondary"
-        size="md"
-        onClick={() => setIsStatusModalOpen(true)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-      >
-        <PowerIcon size={16} />
-        <span>שינוי סטטוס</span>
+      <Button variant="secondary" size="sm" onClick={() => setModal('status')}>
+        {member.membership.status === 'ACTIVE' ? 'עדכון גישה' : 'הפעלה מחדש'}
       </Button>
-
-      <Button
-        variant="ghost"
-        size="md"
-        onClick={handleRemove}
-        disabled={isDeleting}
-        style={{
-          color: 'var(--ys-color-status-danger)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-        }}
-      >
-        <TrashIcon size={16} />
-        <span>הסרת איש צוות מהתחנה</span>
-      </Button>
-
-      {isRoleModalOpen && (
+      {member.membership.status !== 'INACTIVE' && (
+        <RemoveMemberButton
+          stationId={stationId}
+          membershipId={member.membership.id}
+          memberName={member.profile.fullName || member.profile.email || 'איש הצוות'}
+        />
+      )}
+      {modal === 'role' && (
         <RoleModal
           stationId={stationId}
           member={member}
-          isOpen={isRoleModalOpen}
-          onClose={() => setIsRoleModalOpen(false)}
+          isOpen
+          onClose={() => setModal(null)}
+          isPlatformAdmin={isPlatformAdmin}
         />
       )}
-
-      {isStatusModalOpen && (
-        <StatusModal
-          stationId={stationId}
-          member={member}
-          isOpen={isStatusModalOpen}
-          onClose={() => setIsStatusModalOpen(false)}
-        />
+      {modal === 'status' && (
+        <StatusModal stationId={stationId} member={member} isOpen onClose={() => setModal(null)} />
       )}
     </div>
   );
-};
+}

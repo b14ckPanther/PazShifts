@@ -1,55 +1,67 @@
 'use client';
 
-import React, { useTransition } from 'react';
-import { Button, Spinner } from '@yellowshifts/ui';
-import { TrashIcon } from '@yellowshifts/icons';
+import { useState, useTransition } from 'react';
+import { Button, Alert } from '@yellowshifts/ui';
 import { removeStationMemberAction } from '../actions/stations';
+import { StaffDialog } from './StaffDialog';
 
-interface RemoveMemberButtonProps {
-  stationId: string;
-  membershipId: string;
-  memberName: string;
-}
-
-export const RemoveMemberButton: React.FC<RemoveMemberButtonProps> = ({
+export function RemoveMemberButton({
   stationId,
   membershipId,
   memberName,
-}) => {
-  const [isPending, startTransition] = useTransition();
-
-  const handleRemove = () => {
-    const confirmed = window.confirm(
-      `האם אתה בטוח שברצונך להסיר את הרשאת הגישה של "${memberName}" מתחנה זו?`
-    );
-
-    if (!confirmed) return;
-
-    startTransition(async () => {
-      const res = await removeStationMemberAction(stationId, membershipId);
-      if (!res.success && res.error) {
-        alert(res.error);
-      }
-    });
-  };
-
+}: {
+  stationId: string;
+  membershipId: string;
+  memberName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleRemove}
-      disabled={isPending}
-      title="הסרת הרשאה"
-      style={{
-        color: 'var(--ys-color-status-danger)',
-        padding: '6px 10px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
-      }}
-    >
-      {isPending ? <Spinner size="sm" color="currentColor" /> : <TrashIcon size={15} />}
-      <span>הסר</span>
-    </Button>
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
+      >
+        סיום גישה
+      </Button>
+      {open && (
+        <StaffDialog title="סיום גישה לתחנה" onClose={() => setOpen(false)} busy={pending}>
+          <p className="staff-dialog-description">
+            לסיים את הגישה של <strong>{memberName}</strong> לתחנה?
+          </p>
+          <div className="staff-preservation-note">
+            איש הצוות יסומן כלא פעיל. דיווחי הנוכחות והמשמרות הקודמות נשמרים, וניתן להפעיל את הגישה
+            מחדש בכל עת.
+          </div>
+          {error && <Alert variant="danger">{error}</Alert>}
+          <footer className="staff-dialog-footer">
+            <Button variant="secondary" disabled={pending} onClick={() => setOpen(false)}>
+              ביטול
+            </Button>
+            <Button
+              disabled={pending}
+              onClick={() => {
+                startTransition(async () => {
+                  try {
+                    const result = await removeStationMemberAction(stationId, membershipId);
+                    if (result.success) setOpen(false);
+                    else setError(result.error || 'לא ניתן לסיים את הגישה. נסו שוב.');
+                  } catch {
+                    setError('השינוי לא הושלם. בדקו את החיבור ונסו שוב.');
+                  }
+                });
+              }}
+            >
+              {pending ? 'מעדכן…' : 'אישור סיום גישה'}
+            </Button>
+          </footer>
+        </StaffDialog>
+      )}
+    </>
   );
-};
+}
