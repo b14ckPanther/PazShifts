@@ -80,8 +80,27 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         # Real FK into membership: deactivation preserves attendance/history.
         sql(f"""INSERT INTO public.attendance_records(station_id,user_id,station_membership_id,clock_in_at,clock_out_at,status)
             VALUES ('{station}','{user(4)}','{user(203)}',now()-interval '1 hour',now(),'COMPLETED');""")
+        # Shift managers can publish/reopen schedules, but not access team attendance or settings.
+        sql('GRANT SELECT, UPDATE ON public.attendance_records TO authenticated;')
+        sql(f"""INSERT INTO public.attendance_records(station_id,user_id,station_membership_id,clock_in_at,clock_out_at,status)
+            VALUES ('{station}','{user(5)}','{user(204)}',now()-interval '1 hour',now(),'COMPLETED');
+            INSERT INTO public.schedules(id,station_id,week_start_date,status) VALUES
+            ('{user(301)}','{station}','2026-09-07','DRAFT'),
+            ('{user(302)}','{other}','2026-09-07','DRAFT'),
+            ('{user(303)}','{station}','2026-09-14','PUBLISHED');""")
+        for actor, count in [(1,2),(2,2),(5,1),(6,0)]:
+            output = attempt(actor,'SELECT count(*) AS visible FROM public.attendance_records')
+            assert f'\n{count}\n' in output, output
+        assert 'UPDATE 0' in attempt(5, f"UPDATE public.attendance_records SET clock_out_at=now() WHERE station_id='{station}'")
+        assert 'UPDATE 0' in attempt(5, f"UPDATE public.stations SET allowed_late_minutes=90 WHERE id='{station}'")
+        attempt(5, f"SELECT public.rotate_station_nfc_token('{station}')", True)
+        assert 'UPDATE 1' in attempt(5, f"UPDATE public.schedules SET status='PUBLISHED' WHERE id='{user(301)}'")
+        assert 'UPDATE 1' in attempt(5, f"UPDATE public.schedules SET status='DRAFT' WHERE id='{user(303)}'")
+        attempt(5, f"UPDATE public.schedules SET status='ARCHIVED' WHERE id='{user(303)}'", True)
+        assert 'UPDATE 0' in attempt(5, f"UPDATE public.schedules SET status='PUBLISHED' WHERE id='{user(302)}'")
+        attempt(5, f"INSERT INTO public.shift_templates(station_id,name,start_time,end_time) VALUES ('{station}','Denied','09:00','17:00')", True)
         update(2,4,"status='INACTIVE'",1)
-        assert sql('SELECT count(*) FROM public.attendance_records;').strip() == '1'
+        assert sql('SELECT count(*) FROM public.attendance_records;').strip() == '2'
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
     finally:
         command('pg_ctl', '-D', str(base / 'data'), '-m', 'immediate', '-w', 'stop')

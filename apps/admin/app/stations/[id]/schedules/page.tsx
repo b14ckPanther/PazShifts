@@ -188,7 +188,11 @@ export default async function StationSchedulesPage({
             </Link>
             <span style={{ color: 'var(--ys-color-text-muted, #9CA3AF)' }}>/</span>
             <Link
-              href={`/stations/${station.id}`}
+              href={
+                userMembership?.membership.role === 'SHIFT_MANAGER' && !isPlatformAdmin
+                  ? '/'
+                  : `/stations/${station.id}`
+              }
               style={{
                 color: 'var(--ys-color-text-secondary, #6B7280)',
                 textDecoration: 'none',
@@ -209,7 +213,11 @@ export default async function StationSchedulesPage({
       <Container size="lg" style={{ marginTop: '24px' }}>
         <div style={{ marginBottom: '20px' }}>
           <Link
-            href={`/stations/${station.id}`}
+            href={
+              userMembership?.membership.role === 'SHIFT_MANAGER' && !isPlatformAdmin
+                ? '/'
+                : `/stations/${station.id}`
+            }
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -221,12 +229,16 @@ export default async function StationSchedulesPage({
             }}
           >
             <ArrowRightIcon size={14} />
-            <span>חזרה לסקירת תחנה</span>
+            <span>
+              {userMembership?.membership.role === 'SHIFT_MANAGER' && !isPlatformAdmin
+                ? 'חזרה לתחנות שלי'
+                : 'חזרה לסקירת תחנה'}
+            </span>
           </Link>
 
           <PageHeader
             title="סידור עבודה שבועי"
-            description={`ניהול משמרות שבועיות, שיבוץ עובדי תחנה ופרסום סידור רשמי עבור ${station.name}`}
+            description={`תכנון, שיבוץ ופרסום משמרות עבור ${station.name}`}
           />
         </div>
 

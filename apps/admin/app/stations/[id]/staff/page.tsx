@@ -46,7 +46,10 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
   // Caller authorization: Platform Admin OR Station Admin of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {

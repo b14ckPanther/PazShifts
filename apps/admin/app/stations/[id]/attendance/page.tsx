@@ -35,14 +35,14 @@ export default async function StationAttendancePage({ params }: StationAttendanc
 
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
-  );
-  const isShiftManager = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'SHIFT_MANAGER'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
-  // Authorized: Platform Admin, Station Admin, or Shift Manager (read-only)
-  if (!isPlatformAdmin && !isStationAdmin && !isShiftManager) {
+  // Authorized: Platform Admin or active Station Admin
+  if (!isPlatformAdmin && !isStationAdmin) {
     redirect('/');
   }
 
@@ -125,7 +125,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Badge variant={isPlatformAdmin ? 'brandCrimson' : 'brandYellow'} dot>
-                {isPlatformAdmin ? 'מנהל פלטפורמה' : isStationAdmin ? 'מנהל תחנה' : 'מנהל משמרת'}
+                {isPlatformAdmin ? 'מנהל פלטפורמה' : 'מנהל תחנה'}
               </Badge>
               <LogoutButton variant="outline" />
             </div>

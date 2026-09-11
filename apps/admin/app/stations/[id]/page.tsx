@@ -1,3 +1,4 @@
+import { StationOperations } from '../../components/StationOperations';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -30,7 +31,6 @@ import {
   CalendarIcon,
   ShieldCheckIcon,
   NfcIcon,
-  WarningIcon,
   SettingsIcon,
 } from '@yellowshifts/icons';
 import { LogoutButton } from '../../components/LogoutButton';
@@ -57,7 +57,10 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
   // Verify access: Platform Admin OR Station Admin of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
-    (m) => m.station.id === stationId && m.membership.role === 'ADMIN'
+    (m) =>
+      m.station.id === stationId &&
+      m.membership.role === 'ADMIN' &&
+      m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
@@ -252,256 +255,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Phase 5: Operations & Scheduling Fast Access */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '16px',
-            }}
-          >
-            <Card
-              style={{
-                backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-                border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-              }}
-            >
-              <CardContent style={{ padding: '20px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <NfcIcon size={20} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: '1.125rem',
-                          fontWeight: 700,
-                          color: 'var(--ys-color-text-primary, #111827)',
-                        }}
-                      >
-                        נוכחות ושעון NFC
-                      </h3>
-                    </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        color: 'var(--ys-color-text-secondary, #4B5563)',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      בקרת עובדים פעילים בזמן אמת, משמרות שהסתיימו היום, הגדרת תג NFC ותיקונים
-                      מנהליים.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: '16px' }}>
-                  <Link
-                    href={`/stations/${station.id}/attendance`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="primary" size="sm" style={{ width: '100%' }}>
-                      מעבר ללוח נוכחות
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Phase 9: Exceptions Quick Access */}
-            <Card
-              style={{
-                backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-                border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-              }}
-            >
-              <CardContent style={{ padding: '20px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <WarningIcon size={20} style={{ color: '#F59E0B' }} />
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: '1.125rem',
-                          fontWeight: 700,
-                          color: 'var(--ys-color-text-primary, #111827)',
-                        }}
-                      >
-                        חריגות נוכחות
-                      </h3>
-                    </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        color: 'var(--ys-color-text-secondary, #4B5563)',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      סקירת איחורים, יציאות מוקדמות, אי-הגעות, כניסות לא מתוכננות ומשמרות פתוחות.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: '16px' }}>
-                  <Link
-                    href={`/stations/${station.id}/exceptions`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="secondary" size="sm" style={{ width: '100%' }}>
-                      מעבר לחריגות נוכחות
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              style={{
-                backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-                border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-              }}
-            >
-              <CardContent style={{ padding: '20px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <CalendarIcon size={20} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: '1.125rem',
-                          fontWeight: 700,
-                          color: 'var(--ys-color-text-primary, #111827)',
-                        }}
-                      >
-                        סידור עבודה שבועי
-                      </h3>
-                    </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        color: 'var(--ys-color-text-secondary, #4B5563)',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      בניית סידור שבועי, שיבוץ עובדים פעילים למשמרות ופרסום סידור רשמי לעובדי התחנה.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: '16px' }}>
-                  <Link
-                    href={`/stations/${station.id}/schedules`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="primary" size="sm" style={{ width: '100%' }}>
-                      מעבר לסידור עבודה
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              style={{
-                backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-                border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-              }}
-            >
-              <CardContent style={{ padding: '20px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <ClockIcon size={20} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                      <h3
-                        style={{
-                          margin: 0,
-                          fontSize: '1.125rem',
-                          fontWeight: 700,
-                          color: 'var(--ys-color-text-primary, #111827)',
-                        }}
-                      >
-                        תבניות משמרת (24/7)
-                      </h3>
-                    </div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '0.875rem',
-                        color: 'var(--ys-color-text-secondary, #4B5563)',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      הגדרת מבנה משמרות קבוע (בוקר, ערב, לילה חוצה חצות) עצמאי משעות פתיחת התחנה.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ marginTop: '16px' }}>
-                  <Link
-                    href={`/stations/${station.id}/templates`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    <Button variant="secondary" size="sm" style={{ width: '100%' }}>
-                      ניהול תבניות
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <StationOperations stationId={station.id} />
 
           {/* Phase 9: Attendance Tolerance Settings */}
           <Card>
@@ -521,114 +275,33 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                     <CardTitle>הגדרות סבילות נוכחות</CardTitle>
                   </div>
                   <CardDescription>
-                    ערכי סף להגדרת חריגות נוכחות ברמת תחנה. ניתן לעדכן כדי להתאים לנהלי התחנה.
+                    ניהול איחורים וחריגות — באחריות מנהלי התחנה והמערכת.
                   </CardDescription>
                 </div>
                 <EditStationTolerancesModal station={station} />
               </div>
             </CardHeader>
             <CardContent>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '16px',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '16px',
-                    backgroundColor: 'var(--ys-color-surface-muted, #F9FAFB)',
-                    borderRadius: 'var(--ys-radius-md)',
-                    border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      display: 'block',
-                    }}
-                  >
-                    איחור מותר (דקות)
-                  </span>
-                  <p
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-text-primary, #111827)',
-                      margin: '4px 0 0',
-                    }}
-                  >
-                    {station.allowedLateMinutes}
-                  </p>
-                  <span style={{ fontSize: '11px', color: 'var(--ys-color-text-muted, #9CA3AF)' }}>
-                    כניסה עד {station.allowedLateMinutes} דקות אחרי תחילת משמרת נחשבת בזמן
-                  </span>
+              <dl className="tolerance-summary">
+                <div>
+                  <dt>איחור מותר</dt>
+                  <dd>
+                    {station.allowedLateMinutes} <small>דקות</small>
+                  </dd>
                 </div>
-                <div
-                  style={{
-                    padding: '16px',
-                    backgroundColor: 'var(--ys-color-surface-muted, #F9FAFB)',
-                    borderRadius: 'var(--ys-radius-md)',
-                    border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      display: 'block',
-                    }}
-                  >
-                    יציאה מוקדמת מותרת (דקות)
-                  </span>
-                  <p
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-text-primary, #111827)',
-                      margin: '4px 0 0',
-                    }}
-                  >
-                    {station.allowedEarlyLeaveMinutes}
-                  </p>
-                  <span style={{ fontSize: '11px', color: 'var(--ys-color-text-muted, #9CA3AF)' }}>
-                    יציאה עד {station.allowedEarlyLeaveMinutes} דקות לפני סיום משמרת נחשבת בזמן
-                  </span>
+                <div>
+                  <dt>יציאה מוקדמת מותרת</dt>
+                  <dd>
+                    {station.allowedEarlyLeaveMinutes} <small>דקות</small>
+                  </dd>
                 </div>
-                <div
-                  style={{
-                    padding: '16px',
-                    backgroundColor: 'var(--ys-color-surface-muted, #F9FAFB)',
-                    borderRadius: 'var(--ys-radius-md)',
-                    border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      display: 'block',
-                    }}
-                  >
-                    התראת משמרת פתוחה (שעות)
-                  </span>
-                  <p
-                    style={{
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-text-primary, #111827)',
-                      margin: '4px 0 0',
-                    }}
-                  >
-                    {station.leftOpenWarningHours}
-                  </p>
-                  <span style={{ fontSize: '11px', color: 'var(--ys-color-text-muted, #9CA3AF)' }}>
-                    משמרת פעילה מעל {station.leftOpenWarningHours} שעות מסומנת כלא-נסגרה
-                  </span>
+                <div>
+                  <dt>התראת משמרת פתוחה</dt>
+                  <dd>
+                    {station.leftOpenWarningHours} <small>שעות</small>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </CardContent>
           </Card>
           {/* Station Info Summary Card */}

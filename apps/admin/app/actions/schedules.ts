@@ -260,7 +260,7 @@ export async function updateScheduleStatusAction(
   scheduleId: string,
   status: ScheduleStatus
 ): Promise<ScheduleActionResult> {
-  const requireAdmin = status === 'PUBLISHED' || status === 'ARCHIVED';
+  const requireAdmin = status === 'ARCHIVED';
   const auth = await checkStationAccess(stationId, requireAdmin);
   if (auth.error) return { success: false, error: auth.error };
 
@@ -564,7 +564,7 @@ export async function revertScheduleToDraftAction(
   stationId: string,
   scheduleId: string
 ): Promise<ScheduleActionResult> {
-  const auth = await checkStationAccess(stationId, true);
+  const auth = await checkStationAccess(stationId, false);
   if (auth.error) return { success: false, error: auth.error };
 
   try {
