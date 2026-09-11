@@ -52,11 +52,3 @@ export async function loginAction(
 
   redirect(safeNextPath(formData.get('next')));
 }
-
-export async function logoutAction(): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-
-  await supabase.auth.signOut();
-  redirect('/login');
-}

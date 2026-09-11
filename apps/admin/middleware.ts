@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
 
   if (
     [
+      '/auth/logout',
       '/manifest.webmanifest',
       '/sw.js',
       '/offline.html',

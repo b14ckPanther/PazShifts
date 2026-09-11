@@ -137,5 +137,20 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         attempt(2, manual() + '; DELETE FROM public.attendance_manual_audit', True)
         print('PASS: manual attendance self/staff/platform; worker/shift-manager/cross-station denials; time/overlap/stale validation; immutable audit')
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
+        # Test-account cleanup is opt-in, dependency-aware and reversible by default.
+        sql(f"INSERT INTO public.station_memberships(id,station_id,user_id,role) VALUES ('{user(207)}','{station}','{user(7)}','WORKER');")
+        sql(f"INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,clock_out_at,status) VALUES ('{user(301)}','{station}','{user(207)}','{user(7)}','2020-01-01T08:00:00Z','2020-01-01T16:00:00Z','COMPLETED');")
+        sql(f"INSERT INTO public.attendance_manual_audit(station_id,attendance_record_id,actor_id,reason,after_record) VALUES ('{station}','{user(301)}','{user(2)}','test','{{}}');")
+        sql(f"INSERT INTO public.nfc_scan_receipts(user_id,scan_id,station_id,attendance_id,action,applied_at) VALUES ('{user(7)}','{user(401)}','{station}','{user(301)}','CLOCK_IN',now());")
+        cleanup=(ROOT / 'scripts/delete-test-accounts.sql').read_text()
+        sql(cleanup,True)
+        sql(cleanup.replace('00000000-0000-0000-0000-000000000000',user(2)),True)
+        selected=cleanup.replace('00000000-0000-0000-0000-000000000000',user(7))
+        sql(selected)
+        assert sql(f"SELECT count(*) FROM auth.users WHERE id='{user(7)}'").strip()=='1'
+        sql(selected.replace('ROLLBACK; -- Change','COMMIT; -- Change'))
+        assert sql(f"SELECT count(*) FROM auth.users WHERE id='{user(7)}'").strip()=='0'
+        assert sql('SELECT count(*) FROM auth.users').strip()=='6'
+        print('PASS: test-account cleanup rollback/commit, admin guard and dependent attendance/audit/receipt deletion')
     finally:
         command('pg_ctl', '-D', str(base / 'data'), '-m', 'immediate', '-w', 'stop')
