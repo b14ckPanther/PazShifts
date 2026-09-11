@@ -1,0 +1,9 @@
+{
+  "extends": "@yellowshifts/config/typescript/react-library.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": true
+  },
+  "include": ["src"]
+}

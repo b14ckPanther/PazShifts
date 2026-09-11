@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+.pnp
+.pnpm-store
+
+# Production & Build outputs
+.next
+out
+dist
+build
+coverage
+
+# Turborepo
+.turbo
+
+# Supabase local generated
+.supabase
+supabase/.temp
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS Metadata
+.DS_Store
+*.pem
+Thumbs.db
+
+# IDE & Editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

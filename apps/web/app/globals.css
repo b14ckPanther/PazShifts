@@ -1,0 +1,11 @@
+@import '../../../packages/ui/src/styles/tokens.css';
+
+/* Custom application level styles if needed */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--ys-color-surface-base);
+  color: var(--ys-color-text-primary);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
