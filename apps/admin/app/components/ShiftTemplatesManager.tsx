@@ -200,10 +200,10 @@ export function ShiftTemplatesManager({
         }}
       >
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#FFFFFF' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
             תבניות משמרות — {stationName}
           </h2>
-          <p style={{ fontSize: '0.875rem', color: '#9CA3AF', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: '0.875rem', color: '#4B5563', margin: '4px 0 0 0' }}>
             מבנה משמרות קבוע ועצמאי עבור פעילות 24/7 בתחנה
           </p>
         </div>

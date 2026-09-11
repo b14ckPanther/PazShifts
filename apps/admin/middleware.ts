@@ -10,6 +10,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  if (['/manifest.webmanifest', '/sw.js', '/offline.html'].includes(request.nextUrl.pathname))
+    return response;
+
   // If Supabase environment variables are missing, bypass to let the user view setup guidance
   if (!isSupabaseConfigured()) {
     return response;
