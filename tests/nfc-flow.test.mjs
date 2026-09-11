@@ -119,37 +119,38 @@ test('scan action requires session and forwards the same id on retries; no manua
   assert.equal(calls.length, 2);
 });
 
-test('service worker never caches or replays attendance writes or authenticated pages', async () => {
-  const handlers = {};
-  const cached = [];
-  let response;
-  runInNewContext(readFileSync(new URL('../apps/web/public/sw.js', import.meta.url), 'utf8'), {
-    self: {
-      addEventListener: (name, handler) => {
-        handlers[name] = handler;
+for (const app of ['web', 'admin'])
+  test(`${app} service worker never caches or replays attendance writes or authenticated pages`, async () => {
+    const handlers = {};
+    const cached = [];
+    let response;
+    runInNewContext(readFileSync(new URL(`../apps/${app}/public/sw.js`, import.meta.url), 'utf8'), {
+      self: {
+        addEventListener: (name, handler) => {
+          handlers[name] = handler;
+        },
+        location: { origin: 'https://worker.example.com' },
       },
-      location: { origin: 'https://worker.example.com' },
-    },
-    URL,
-    Response,
-    fetch: async () => new Response('live'),
-    caches: {
-      open: async () => ({ add: async (path) => cached.push(path) }),
-      match: async () => new Response('offline'),
-    },
+      URL,
+      Response,
+      fetch: async () => new Response('live'),
+      caches: {
+        open: async () => ({ add: async (path) => cached.push(path) }),
+        match: async () => new Response('offline'),
+      },
+    });
+    await new Promise((resolve) => handlers.install({ waitUntil: resolve }));
+    assert.deepEqual(cached, ['/offline.html']);
+    handlers.fetch({
+      request: { method: 'POST', mode: 'navigate', url: 'https://worker.example.com/nfc/token' },
+      respondWith: () => assert.fail('Must not intercept writes'),
+    });
+    handlers.fetch({
+      request: { method: 'GET', mode: 'navigate', url: 'https://worker.example.com/login' },
+      respondWith: (value) => {
+        response = value;
+      },
+    });
+    assert.equal(await (await response).text(), 'live');
+    assert.deepEqual(cached, ['/offline.html']);
   });
-  await new Promise((resolve) => handlers.install({ waitUntil: resolve }));
-  assert.deepEqual(cached, ['/offline.html']);
-  handlers.fetch({
-    request: { method: 'POST', mode: 'navigate', url: 'https://worker.example.com/nfc/token' },
-    respondWith: () => assert.fail('Must not intercept writes'),
-  });
-  handlers.fetch({
-    request: { method: 'GET', mode: 'navigate', url: 'https://worker.example.com/login' },
-    respondWith: (value) => {
-      response = value;
-    },
-  });
-  assert.equal(await (await response).text(), 'live');
-  assert.deepEqual(cached, ['/offline.html']);
-});

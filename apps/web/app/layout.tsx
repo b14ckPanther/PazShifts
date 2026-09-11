@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { WorkerDock } from './components/WorkerDock';
 import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
@@ -35,16 +37,19 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   interactiveWidget: 'resizes-content',
-  themeColor: '#f7f8fa',
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={`${heebo.variable} ${ubuntu.variable}`}>
-      <body style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
+      <body className="app-shell" style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
         <PwaRegistration />
         <BrandSplash />
         {children}
+        <Suspense fallback={null}>
+          <WorkerDock />
+        </Suspense>
       </body>
     </html>
   );

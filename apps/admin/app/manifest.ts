@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'YellowShifts — המשמרת שלי',
-    short_name: 'YellowShifts',
-    description: 'המשמרות והנוכחות שלך במקום אחד',
+    name: 'YellowShifts Admin — ניהול התחנה',
+    short_name: 'YS Admin',
+    description: 'ניהול התחנה, סידור העבודה ונוכחות הצוות',
     lang: 'he',
     dir: 'rtl',
     start_url: '/',
