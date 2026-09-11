@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@yellowshifts/database';
+import { createServerSupabaseClient, safeNextPath } from '@yellowshifts/database';
 
 export interface AuthActionResult {
   success: boolean;
@@ -38,15 +38,7 @@ export async function loginAction(
     };
   }
 
-  const rawNext = (formData.get('next') as string)?.trim();
-  const isSafeNext =
-    rawNext &&
-    rawNext.startsWith('/') &&
-    !rawNext.startsWith('//') &&
-    !rawNext.startsWith('/\\') &&
-    !rawNext.includes(':');
-
-  redirect(isSafeNext ? rawNext : '/');
+  redirect(safeNextPath(formData.get('next')));
 }
 
 export async function logoutAction(): Promise<void> {

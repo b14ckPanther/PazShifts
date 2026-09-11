@@ -7,7 +7,7 @@
  *   node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs <email> <password> [fullName]
  *
  * Example:
- *   node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs admin@paz.co.il MySecurePassword123! "מנהל מערכת ראשי"
+ *   node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs admin@example.com MySecurePassword123! "מנהל מערכת ראשי"
  */
 
 import { createRequire } from 'module';
@@ -34,7 +34,7 @@ const fullName = process.argv[4]?.trim() || 'Platform Admin';
 if (!email || !password) {
   console.error('\n❌ Missing arguments.');
   console.error('Usage: node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs <email> <password> [fullName]');
-  console.error('Example: node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs admin@paz.co.il Pass123! "ישראל ישראלי"\n');
+  console.error('Example: node --env-file=apps/admin/.env.local scripts/create-platform-admin.mjs admin@example.com Pass123! "ישראל ישראלי"\n');
   process.exit(1);
 }
 

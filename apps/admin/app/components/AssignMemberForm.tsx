@@ -258,7 +258,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
               <Input
                 id="new-user-email"
                 type="email"
-                placeholder="yossi@paz.co.il"
+                placeholder="yossi@example.com"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
@@ -339,7 +339,7 @@ export const AssignMemberForm: React.FC<AssignMemberFormProps> = ({
               <Input
                 id="assign-user-email"
                 type="email"
-                placeholder="user@paz.co.il"
+                placeholder="user@example.com"
                 value={customEmail}
                 disabled={Boolean(selectedUserId)}
                 onChange={(e) => {

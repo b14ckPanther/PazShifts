@@ -1,76 +1,116 @@
-# YellowShifts — Production Deployment Guide (Vercel)
+# Phase 11 — Deployment preparation (temporary Vercel domains)
 
-This document provides the exact deployment configuration for hosting YellowShifts on Vercel with custom Paz domains.
+The application is **not deployed**. Domain ownership or authorization from Paz is not confirmed. Preparation does not establish production or real-station pilot readiness. The user will push GitHub and create both Vercel projects manually; nothing in this guide requires deployment from the CLI.
 
----
+## Step A — Push the repository to GitHub
 
-## 1. Domain & Routing Topology
+From the repository root, review and commit the preparation changes, then push the existing `main` branch:
 
-| Application                  | Target Domain            | Monorepo Root Directory | Framework            |
-| :--------------------------- | :----------------------- | :---------------------- | :------------------- |
-| **Worker App** (`apps/web`)  | `shifts.paz.co.il`       | `apps/web`              | Next.js (App Router) |
-| **Admin App** (`apps/admin`) | `admin.shifts.paz.co.il` | `apps/admin`            | Next.js (App Router) |
+```sh
+git status --short
+git diff --check
+git add -A
+git diff --cached --stat
+git commit -m "Prepare temporary Vercel deployment and NFC pilot configuration"
+git push -u origin main
+```
 
-- **Physical NFC Tags**: Programmed strictly to `https://shifts.paz.co.il/nfc/<token>`
-- **Supabase Project**: `https://pqbfeilezhtoofjaeobl.supabase.co`
+The configured remote is `https://github.com/b14ckPanther/PazShifts.git`. Review staged paths before committing. `.env.local`, build output, TypeScript caches, and local Vercel metadata are ignored. Never force-add environment files or paste credentials into Git. Use the real Supabase settings privately in Vercel; example files contain placeholders only.
 
----
+## Step B — Create two Vercel projects
 
-## 2. Setting Up Project 1: Worker App (`apps/web`)
+Import the same GitHub repository twice in the [Vercel dashboard](https://vercel.com/new). Select `main` as the production branch and Next.js as the framework. Project names are your choice.
 
-1. In the [Vercel Dashboard](https://vercel.com/new), select the `b14ckPanther/PazShifts` repository.
-2. Configure project settings:
-   - **Project Name**: `yellowshifts-web` (or `shifts-paz`)
-   - **Framework Preset**: `Next.js`
-   - **Root Directory**: `apps/web`
-3. Add Environment Variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`: `https://pqbfeilezhtoofjaeobl.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: _(Value from `apps/web/.env.local`)_
-   - `NEXT_PUBLIC_APP_URL`: `https://shifts.paz.co.il`
-   - `NEXT_PUBLIC_ADMIN_URL`: `https://admin.shifts.paz.co.il`
-4. Deploy project.
-5. In **Settings > Domains**, add:
-   - `shifts.paz.co.il`
+## Step C — Configure roots and builds
 
----
+| Setting                                     | Worker project                   | Admin project                    |
+| ------------------------------------------- | -------------------------------- | -------------------------------- |
+| Root Directory                              | `apps/web`                       | `apps/admin`                     |
+| Framework                                   | Next.js                          | Next.js                          |
+| Build Command (from project root)           | `pnpm build`                     | `pnpm build`                     |
+| Install Command                             | `pnpm install --frozen-lockfile` | `pnpm install --frozen-lockfile` |
+| Output Directory                            | Next.js default                  | Next.js default                  |
+| Include source files outside Root Directory | Enabled                          | Enabled                          |
 
-## 3. Setting Up Project 2: Admin App (`apps/admin`)
+Use Node.js 24.x for both projects. Set `ENABLE_EXPERIMENTAL_COREPACK=1` so Vercel uses the repository's `packageManager` pin (`pnpm@11.24.0`). Confirm the version in the first build log. The root `pnpm-workspace.yaml` and lockfile resolve `workspace:*` packages; both Next.js configs transpile the shared source packages. No separate package publishing or `vercel.json` is required. Root `pnpm build` runs both apps through Turborepo; each project-directory `pnpm build` runs only that app's `next build`.
 
-1. In the [Vercel Dashboard](https://vercel.com/new), import the same `b14ckPanther/PazShifts` repository again.
-2. Configure project settings:
-   - **Project Name**: `yellowshifts-admin` (or `admin-shifts-paz`)
-   - **Framework Preset**: `Next.js`
-   - **Root Directory**: `apps/admin`
-3. Add Environment Variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`: `https://pqbfeilezhtoofjaeobl.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: _(Value from `apps/admin/.env.local`)_
-   - `SUPABASE_SERVICE_ROLE_KEY`: _(Value from `apps/admin/.env.local` — NEVER expose to client)_
-   - `NEXT_PUBLIC_APP_URL`: `https://shifts.paz.co.il`
-   - `NEXT_PUBLIC_ADMIN_URL`: `https://admin.shifts.paz.co.il`
-4. Deploy project.
-5. In **Settings > Domains**, add:
-   - `admin.shifts.paz.co.il`
+These settings follow [Vercel build configuration](https://vercel.com/docs/builds/configure-a-build) and [monorepo source access](https://vercel.com/docs/monorepos/monorepo-faq). A successful local build verifies repository resolution, not Vercel deployment.
 
----
+Configure these variables in the **Production** environment:
 
-## 4. DNS Configuration (Paz IT / Registrar)
+| Variable                        | Worker                            | Admin                             |
+| ------------------------------- | --------------------------------- | --------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Actual Supabase project URL       | Same project URL                  |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Actual anon/public key            | Same anon/public key              |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Do not set                        | Actual secret, server-only        |
+| `NEXT_PUBLIC_APP_URL`           | Actual worker origin after Step D | Actual worker origin after Step D |
+| `NEXT_PUBLIC_ADMIN_URL`         | Actual admin origin after Step D  | Actual admin origin after Step D  |
+| `ENABLE_EXPERIMENTAL_COREPACK`  | `1`                               | `1`                               |
 
-Configure DNS records for `paz.co.il`:
+Never prefix the service-role key with `NEXT_PUBLIC_`. It must not reach browser code. Local `.env.local` files are not uploaded by Git. If enabling Preview deployments, configure their environments deliberately; do not use arbitrary previews as physical tag destinations.
 
-| Type    | Name           | Value                   | Purpose                   |
-| :------ | :------------- | :---------------------- | :------------------------ |
-| `CNAME` | `shifts`       | `cname.vercel-dns.com.` | Worker Portal & NFC Scans |
-| `CNAME` | `admin.shifts` | `cname.vercel-dns.com.` | Admin Portal              |
+## Step D — Deploy once to discover the real domains
 
----
+Deploy each project with the Supabase variables and Corepack setting. Leave the two application-origin variables **unset** on this initial deployment if the domains are not known. Do not deploy example placeholders or local origins as production configuration.
 
-## 5. Supabase Auth Redirect URLs
+Read each project's assigned production `.vercel.app` domain in Vercel. For example only, these might be `yellowshifts-web.vercel.app` and `yellowshifts-admin.vercel.app`; names are not guaranteed. Use stable project production domains, not a commit-specific preview URL.
 
-In Supabase Dashboard (**Authentication > URL Configuration**):
+At this stage, same-app login routing uses the actual request origin. Cross-app admin navigation and NFC URL copying show an unavailable/configuration message until their destination is configured. The admin origin cannot safely identify the separate worker origin. This first deployment is not pilot-ready.
 
-- **Site URL**: `https://shifts.paz.co.il`
-- **Redirect URLs**:
-  - `https://shifts.paz.co.il/**`
-  - `https://admin.shifts.paz.co.il/**`
-  - `http://localhost:3000/**` _(for local development)_
-  - `http://localhost:3001/**` _(for local development)_
+## Step E — Set actual origins and redeploy both
+
+Set the following on **both** projects, replacing the angle-bracket placeholders:
+
+```dotenv
+NEXT_PUBLIC_APP_URL=https://<actual-worker-vercel-domain>
+NEXT_PUBLIC_ADMIN_URL=https://<actual-admin-vercel-domain>
+```
+
+Use HTTPS origins only, with no path, query, credentials, or fragment. A trailing slash is normalized. Redeploy both projects: Next.js public environment values are captured at build time. Verify the worker's admin link opens the actual admin project and the admin's NFC URL starts with the actual worker origin.
+
+For local development only, both ignored `.env.local` files use:
+
+```dotenv
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_ADMIN_URL=http://localhost:3001
+```
+
+## Step F — Supabase Auth and deployed validation
+
+After obtaining actual domains, open Supabase **Authentication > URL Configuration**:
+
+- **Site URL**: `https://<actual-worker-vercel-domain>`.
+- **Redirect URLs**: add both actual origins, plus `https://<actual-worker-vercel-domain>/**` and `https://<actual-admin-vercel-domain>/**` for application return paths. Replace every placeholder before saving; never allow all `*.vercel.app` domains.
+- Keep `http://localhost:3000/**` and `http://localhost:3001/**` only if that Supabase project also serves local development.
+
+Supabase's [redirect URL documentation](https://supabase.com/docs/guides/auth/redirect-urls) describes Site URL and allow-list matching. Current login uses email/password and application redirects, rather than an OAuth callback. Worker and admin sessions are separate browser-origin sessions. Their login actions accept internal `next` paths, and middleware derives same-app redirects from the incoming request.
+
+Verify on the deployed apps before writing the tag:
+
+1. Worker login, logout, and station access work.
+2. Admin login and role restrictions work.
+3. A logged-out `/nfc/<station-token>` visit goes to `/login?next=...` on the worker origin and returns to the same NFC route after login.
+4. External/protocol-relative `next` values do not redirect off-site.
+5. Admin NFC copying produces exactly the worker-origin URL and the existing station token resolves correctly.
+6. Required Supabase migrations and station memberships are present. Verify these separately; a build does not validate the deployed database.
+
+## Step G — Authorized custom domains later
+
+Only after Paz authorizes domain use, add the approved worker and admin custom domains to their respective Vercel projects and complete Vercel's DNS verification with the authorized domain administrator. Replace both origin variables on both projects, redeploy both, and update Supabase Site URL/redirect entries. No application architecture change is needed.
+
+Rewrite the NFC tag with `<authorized-worker-origin>/nfc/<same-station-token>`. A domain change does not require token rotation. Keep the tag writable during the temporary-domain pilot; retain old-domain access while tags are being migrated if needed.
+
+## NFC and physical pilot status
+
+Before deployment, no physical NFC URL is verified or ready to write. After deployment, use `https://<actual-worker-vercel-domain>/nfc/<station-token>` copied from the admin portal. Check it matches the assigned worker domain before programming the tag. See [NFC_PILOT_CHECKLIST.md](NFC_PILOT_CHECKLIST.md).
+
+| Item                       | Status                        |
+| -------------------------- | ----------------------------- |
+| NFC tag hardware available | YES (user has the card/tag)   |
+| NFC URL ready to write     | PENDING ACTUAL DEPLOYMENT URL |
+| NFC tag written            | PENDING USER                  |
+| Physical phone scan        | PENDING USER                  |
+| Clock-in/out physical test | PENDING USER                  |
+| Real station pilot         | NOT READY                     |
+
+Automated code, database, and route checks are separate from physical testing. This preparation does not claim a deployed application, a verified production redirect, a programmed tag, or a completed Phase 11 production deployment.

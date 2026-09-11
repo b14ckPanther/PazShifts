@@ -2,18 +2,30 @@
 
 Step-by-step checklist for testing a physical NFC tag with one real station, one authenticated worker, and one station admin.
 
+The user already has the physical NFC card/tag. Deployment is pending. All scenarios below are **unperformed acceptance checks**, not evidence of physical testing. Recorded station details must be verified against the deployed database before writing.
+
+| Item                       | Status                        |
+| -------------------------- | ----------------------------- |
+| NFC tag hardware available | YES                           |
+| NFC URL ready to write     | PENDING ACTUAL DEPLOYMENT URL |
+| NFC tag written            | PENDING USER                  |
+| Physical phone scan        | PENDING USER                  |
+| Clock-in/out physical test | PENDING USER                  |
+
+Complete [deployment setup](DEPLOYMENT.md) first. Automated database/NFC route tests do not establish physical hardware readiness.
+
 ---
 
 ## 1. Pilot Station Details
 
-| Parameter                    | Value                                                           |
-| :--------------------------- | :-------------------------------------------------------------- |
-| **Station Name**             | **פז כורדני**                                                   |
-| **Station Code**             | `KURDANI`                                                       |
-| **Station ID**               | `7f0dd990-83d8-4588-b3dd-94bf860cdbaf`                          |
-| **Station Address**          | שדרות ירושלים 1, קריית מוצקין                                   |
-| **Active NFC Public Token**  | `c716fc17587a465bbd6dc74997c99db4`                              |
-| **Exact Production NFC URL** | `https://shifts.paz.co.il/nfc/c716fc17587a465bbd6dc74997c99db4` |
+| Parameter                                               | Value                                                                        |
+| :------------------------------------------------------ | :--------------------------------------------------------------------------- |
+| **Station Name**                                        | **פז כורדני**                                                                |
+| **Station Code**                                        | `KURDANI`                                                                    |
+| **Station ID**                                          | `7f0dd990-83d8-4588-b3dd-94bf860cdbaf`                                       |
+| **Station Address**                                     | שדרות ירושלים 1, קריית מוצקין                                                |
+| **Recorded NFC Public Token (verify after deployment)** | `c716fc17587a465bbd6dc74997c99db4`                                           |
+| **NFC URL template (not ready to write)**               | `https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4` |
 
 ---
 
@@ -32,13 +44,13 @@ Step-by-step checklist for testing a physical NFC tag with one real station, one
 1. Open **NFC Tools** app on your phone.
 2. Select **Write** > **Add a record**.
 3. Select **URL / URI**.
-4. Enter the exact URL:
+4. After deployment, copy the actual URL from the admin portal. The following is a template only; replace the domain and verify the station token:
    ```text
-   https://shifts.paz.co.il/nfc/c716fc17587a465bbd6dc74997c99db4
+   https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4
    ```
-5. Tap **OK**, then tap **Write / 13 Bytes**.
+5. Tap **OK**, then tap **Write**.
 6. Hold your phone's NFC antenna (top of iPhone, back-center of Android) against the physical NFC sticker until the app vibrates and displays **Write complete!**.
-7. _(Optional)_ In NFC Tools, select **Other tasks** > **Lock tag** only after the entire pilot has been verified if you wish to prevent accidental overwriting.
+7. Keep the tag writable so its temporary Vercel URL can later be replaced with an authorized custom-domain URL. Changing the domain does not require changing the public station token.
 
 ---
 
@@ -51,14 +63,14 @@ Execute the following 10 real-world steps on-site at Paz Kurdani:
 1. Ensure the worker is logged out (or open an incognito/private browser tab).
 2. Tap the phone against the physical NFC tag.
 3. **Expected**: The browser automatically opens and redirects to:
-   `https://shifts.paz.co.il/login?next=%2Fnfc%2Fc716fc17587a465bbd6dc74997c99db4`
+   `https://<actual-worker-vercel-domain>/login?next=%2Fnfc%2Fc716fc17587a465bbd6dc74997c99db4`
 4. **Verification**: Hebrew login screen appears with Paz Yellow branding and return path preserved.
 
 ### Test 2: Authentication & Auto-Return
 
 1. Enter the worker's credentials on the login screen and submit.
 2. **Expected**: Immediately redirects back to the NFC attendance interface:
-   `https://shifts.paz.co.il/nfc/c716fc17587a465bbd6dc74997c99db4`
+   `https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4`
 3. **Verification**: Displays "פז כורדני", worker's name, current time, and a prominent green "התחלת משמרת (Clock In)" button.
 
 ### Test 3: Authenticated Scan (Subsequent Visits)
@@ -75,7 +87,7 @@ Execute the following 10 real-world steps on-site at Paz Kurdani:
    - Screen transitions to the **Active Shift** view.
    - Live elapsed-time counter starts ticking from `00:00:01`.
    - Displays "משמרת פעילה בתחנת פז כורדני".
-3. **Admin Verification**: In the admin portal (`https://admin.shifts.paz.co.il/stations/7f0dd990-83d8-4588-b3dd-94bf860cdbaf/attendance`), the worker appears in the **נוכחים כעת (Active)** list.
+3. **Admin Verification**: In the admin portal (`https://<actual-admin-vercel-domain>/stations/7f0dd990-83d8-4588-b3dd-94bf860cdbaf/attendance`), the worker appears in the **נוכחים כעת (Active)** list.
 
 ### Test 5: Idempotent Rescan While Active
 

@@ -12,7 +12,7 @@
  *   - WORKER         (עובד תחנה)
  *
  * Example:
- *   node --env-file=apps/admin/.env.local scripts/create-station-user.mjs SSS worker@paz.co.il Pass123! "ישראל ישראלי" WORKER EMP-101
+ *   node --env-file=apps/admin/.env.local scripts/create-station-user.mjs SSS worker@example.com Pass123! "ישראל ישראלי" WORKER EMP-101
  */
 
 import { createRequire } from 'module';
@@ -53,7 +53,7 @@ if (!stationIdentifier || !email || !password || !fullName || !rawRole) {
   console.error('  pnpm create-user <stationCodeOrId> <email> <password> <fullName> <role> [employeeCode]\n');
   console.error('Roles: ADMIN | SHIFT_MANAGER | WORKER');
   console.error('Example:');
-  console.error('  pnpm create-user SSS worker@paz.co.il Pass123! "דני לוי" WORKER EMP-101\n');
+  console.error('  pnpm create-user SSS worker@example.com Pass123! "דני לוי" WORKER EMP-101\n');
   process.exit(1);
 }
 
