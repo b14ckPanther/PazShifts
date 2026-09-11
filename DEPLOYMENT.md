@@ -127,3 +127,20 @@ Before deployment, no physical NFC URL is verified or ready to write. After depl
 | Real station pilot         | NOT READY                     |
 
 Automated code, database, and route checks are separate from physical testing. This preparation does not claim a deployed application, a verified production redirect, a programmed tag, or a completed Phase 11 production deployment.
+
+## Automatic NFC attendance and mobile PWA update
+
+Apply `supabase/migrations/20260911000010_atomic_nfc_scans.sql` after the previous migrations, then deploy the updated worker app. This migration introduces atomic scan receipts and removes workers' direct attendance insert/update policies. The old button-based worker build must be replaced in the same release; otherwise its attendance writes will fail. Admin correction access is retained. No new secret environment variable is required.
+
+The bare NFC URL stays the same. Middleware redirects each fresh opening to a unique receipt URL, preserved through login. The server validates the token, user, active membership and station, serializes scans per worker, and toggles attendance using database time. Persistent receipts prevent replay; a 10-second duplicate window handles rapid rescans. Unprocessed visits expire after 15 minutes. Only eligible published shifts are linked.
+
+The worker app includes a manifest, home-screen icons, safe-area-aware layouts and a service worker that caches only an offline help page. Authenticated pages and attendance writes are never cached or queued for later submission. See [Next.js PWA documentation](https://nextjs.org/docs/app/guides/progressive-web-apps). Check the live HTTPS manifest, icons and service worker after deployment. Static NFC URLs cannot distinguish a physical scan from opening a copied URL; no physical-presence guarantee is claimed.
+
+Additional local regression checks:
+
+```sh
+node --test tests/nfc-flow.test.mjs
+python3 tests/nfc-scans-db.py
+```
+
+See [NFC_PILOT_CHECKLIST.md](NFC_PILOT_CHECKLIST.md) for the updated manual acceptance sequence. Local browser/database tests do not mean the hosted migration, deployment, or physical pilot is complete.

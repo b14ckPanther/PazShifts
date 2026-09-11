@@ -152,3 +152,13 @@ export interface StationExceptionsResult {
   totalScheduledShifts: number;
   totalAttendanceRecords: number;
 }
+
+export type NfcScanResult =
+  | {
+      success: true;
+      action: 'CLOCK_IN' | 'CLOCK_OUT';
+      record: AttendanceRecord;
+      replayed: boolean;
+      duplicate?: boolean;
+    }
+  | { success: false; code: string; error?: string };

@@ -5,3 +5,5 @@ export * from './Card';
 export * from './Badge';
 export * from './Alert';
 export * from './Container';
+export * from './CompactLogin';
+export * from './Brand';

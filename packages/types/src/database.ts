@@ -537,6 +537,10 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      process_nfc_scan: {
+        Args: { p_token: string; p_scan_id: string; p_scanned_at: string };
+        Returns: Json;
+      };
       is_platform_admin: {
         Args: {
           p_user_id?: string;

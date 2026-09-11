@@ -1,6 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
+import { PwaRegistration } from './components/PwaRegistration';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -17,15 +18,32 @@ const ubuntu = Ubuntu({
 });
 
 export const metadata: Metadata = {
+  applicationName: 'YellowShifts',
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'YellowShifts' },
+  icons: {
+    icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    apple: '/icons/apple-touch-icon.png',
+  },
   title: 'YellowShifts | פלטפורמת תפעול משמרות ועבודה',
   description:
     'מערכת ניהול משמרות וכוח אדם מתקדמת לתחנות, מנהלי משמרת ועובדים בסנכרון מלא בזמן אמת.',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+  themeColor: '#f7f8fa',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={`${heebo.variable} ${ubuntu.variable}`}>
-      <body style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>{children}</body>
+      <body style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
+        <PwaRegistration />
+        {children}
+      </body>
     </html>
   );
 }

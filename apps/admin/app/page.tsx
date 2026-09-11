@@ -1,3 +1,4 @@
+import { BrandMark } from '@yellowshifts/ui';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -16,7 +17,6 @@ import {
   PageHeader,
 } from '@yellowshifts/ui';
 import {
-  PlatformAdminIcon,
   StationAdminIcon,
   StationIcon,
   ShieldAlertIcon,
@@ -221,20 +221,7 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: 'var(--ys-radius-sm)',
-                    backgroundColor: 'var(--ys-color-brand-yellow)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--ys-color-text-primary)',
-                  }}
-                >
-                  <PlatformAdminIcon size={22} />
-                </div>
+                <BrandMark size={36} />
                 <div>
                   <h2
                     style={{

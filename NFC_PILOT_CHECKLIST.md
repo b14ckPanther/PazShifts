@@ -1,139 +1,50 @@
-# NFC Real-Device Pilot Checklist — פז כורדני (Paz Kurdani)
+# Physical NFC pilot — automatic scan-in / scan-out
 
-Step-by-step checklist for testing a physical NFC tag with one real station, one authenticated worker, and one station admin.
+The user has the physical tag. The worker origin supplied by the user is `https://paz-shifts.vercel.app`. The tag URL stays unchanged:
 
-The user already has the physical NFC card/tag. Deployment is pending. All scenarios below are **unperformed acceptance checks**, not evidence of physical testing. Recorded station details must be verified against the deployed database before writing.
+```text
+https://paz-shifts.vercel.app/nfc/c716fc17587a465bbd6dc74997c99db4
+```
 
-| Item                       | Status                        |
-| -------------------------- | ----------------------------- |
-| NFC tag hardware available | YES                           |
-| NFC URL ready to write     | PENDING ACTUAL DEPLOYMENT URL |
-| NFC tag written            | PENDING USER                  |
-| Physical phone scan        | PENDING USER                  |
-| Clock-in/out physical test | PENDING USER                  |
+Station: **פז כורדני**, code `KURDANI`, recorded station ID `7f0dd990-83d8-4588-b3dd-94bf860cdbaf`. Verify the token and station against the deployed database before the pilot. Automated tests use isolated fixtures and do not establish physical success.
 
-Complete [deployment setup](DEPLOYMENT.md) first. Automated database/NFC route tests do not establish physical hardware readiness.
+## Before testing the updated flow
 
----
+1. Apply migrations in order, including `20260911000009_staff_permission_boundaries.sql` and `20260911000010_atomic_nfc_scans.sql`, to the intended Supabase project.
+2. Deploy the updated worker app. Set both actual app origins and configure Supabase redirect URLs as described in [DEPLOYMENT.md](DEPLOYMENT.md).
+3. Confirm the worker has an active profile and active membership at the station, and check whether they already have a shift open. The first scan after this update closes an existing active shift at the same station.
+4. Write the **bare tag URL above** using NFC Tools → Write → Add a record → URL / URI. Never write the temporary `?scan=...&at=...` receipt URL from the browser address bar. Keep the tag unlocked for future domain changes.
 
-## 1. Pilot Station Details
+## Expected experience
 
-| Parameter                                               | Value                                                                        |
-| :------------------------------------------------------ | :--------------------------------------------------------------------------- |
-| **Station Name**                                        | **פז כורדני**                                                                |
-| **Station Code**                                        | `KURDANI`                                                                    |
-| **Station ID**                                          | `7f0dd990-83d8-4588-b3dd-94bf860cdbaf`                                       |
-| **Station Address**                                     | שדרות ירושלים 1, קריית מוצקין                                                |
-| **Recorded NFC Public Token (verify after deployment)** | `c716fc17587a465bbd6dc74997c99db4`                                           |
-| **NFC URL template (not ready to write)**               | `https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4` |
+- **Logged in, no active shift:** opening the tag URL automatically registers clock-in and shows a confirmation with start time and elapsed time. No start button.
+- **Logged in, active shift at this station:** a fresh scan automatically clocks out and shows the completed duration. No end-shift button.
+- **Logged out:** compact login opens; the same scan continues automatically after authentication.
+- **Double scan within 10 seconds:** the existing receipt is returned; no accidental reversal. Wait longer than 10 seconds for a deliberate next operation.
+- **Refresh, browser back, or request retry:** the same receipt ID cannot change attendance twice, even after the 10-second window.
+- **Unprocessed scan older than 15 minutes:** scan again; an old background tab must not unexpectedly start/end work.
+- **Offline:** no success is claimed and no action is queued in the background. Reconnect and retry the same scan, then wait for confirmation before leaving.
 
----
+A static URL tag cannot prove physical proximity: opening a copied bare URL is indistinguishable from scanning the tag. The scan flow and token are required for worker attendance; cryptographic proof of a physical scan requires different hardware/protocol support.
 
-## 2. Hardware Prerequisites
+## Physical acceptance checks — user verification required
 
-- **Physical NFC Tag**: NTAG213, NTAG215, or NTAG216 adhesive sticker (standard ISO/IEC 14443 Type A).
-- **Writing Device**: iOS (iPhone 7 or newer) or Android phone with NFC enabled.
-- **Tag Writing Application**: [NFC Tools](https://www.wakdev.com/en/apps/nfc-tools.html) (free on App Store & Google Play).
-- **Worker Device**: Smartphone with NFC reading capability (Safari / Chrome).
-- **Physical Tag Location**: Mounted at eye level near the cashier counter or employee entrance, away from bare metal surfaces (or using anti-metal ferrite foil NFC tags).
+1. Logged-out scan → login → automatic clock-in. Confirm there is only one active database attendance record.
+2. Refresh the receipt and switch away/back: attendance does not toggle.
+3. Immediately rescan within 10 seconds: still only one operation.
+4. After the duplicate window, physically scan again: clock-out occurs without a button; verify both timestamps and duration in the admin portal.
+5. Rescan after a completed shift (after 10 seconds): a new shift starts, leaving history intact.
+6. Test another-station conflict, inactive membership, invalid/rotated token, and a network interruption. No unauthorized or duplicate records should appear.
+7. Test login, password autofill/show-hide, keyboard open, scan receipt, and error states on actual iPhone Safari and Android Chrome. Browser simulations do not reproduce all OS keyboard/NFC behavior.
+8. Test Add to Home Screen / standalone launch. Launching the PWA opens the personal home, not an old scan. The phone OS may open an NFC link in its default browser; that browser must have its own logged-in session.
 
----
+## Verification status
 
-## 3. Physical Tag Programming Instructions
-
-1. Open **NFC Tools** app on your phone.
-2. Select **Write** > **Add a record**.
-3. Select **URL / URI**.
-4. After deployment, copy the actual URL from the admin portal. The following is a template only; replace the domain and verify the station token:
-   ```text
-   https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4
-   ```
-5. Tap **OK**, then tap **Write**.
-6. Hold your phone's NFC antenna (top of iPhone, back-center of Android) against the physical NFC sticker until the app vibrates and displays **Write complete!**.
-7. Keep the tag writable so its temporary Vercel URL can later be replaced with an authorized custom-domain URL. Changing the domain does not require changing the public station token.
-
----
-
-## 4. Operational Pilot Scenarios & Physical Device Validation
-
-Execute the following 10 real-world steps on-site at Paz Kurdani:
-
-### Test 1: Scan While Logged Out
-
-1. Ensure the worker is logged out (or open an incognito/private browser tab).
-2. Tap the phone against the physical NFC tag.
-3. **Expected**: The browser automatically opens and redirects to:
-   `https://<actual-worker-vercel-domain>/login?next=%2Fnfc%2Fc716fc17587a465bbd6dc74997c99db4`
-4. **Verification**: Hebrew login screen appears with Paz Yellow branding and return path preserved.
-
-### Test 2: Authentication & Auto-Return
-
-1. Enter the worker's credentials on the login screen and submit.
-2. **Expected**: Immediately redirects back to the NFC attendance interface:
-   `https://<actual-worker-vercel-domain>/nfc/c716fc17587a465bbd6dc74997c99db4`
-3. **Verification**: Displays "פז כורדני", worker's name, current time, and a prominent green "התחלת משמרת (Clock In)" button.
-
-### Test 3: Authenticated Scan (Subsequent Visits)
-
-1. Close browser tab.
-2. Tap the phone against the physical NFC tag while still logged in.
-3. **Expected**: Opens directly to the clock-in/out screen with zero login prompts.
-
-### Test 4: Clock-In Execution
-
-1. Tap the green **התחלת משמרת** button.
-2. **Expected**:
-   - Audio/haptic confirmation feedback.
-   - Screen transitions to the **Active Shift** view.
-   - Live elapsed-time counter starts ticking from `00:00:01`.
-   - Displays "משמרת פעילה בתחנת פז כורדני".
-3. **Admin Verification**: In the admin portal (`https://<actual-admin-vercel-domain>/stations/7f0dd990-83d8-4588-b3dd-94bf860cdbaf/attendance`), the worker appears in the **נוכחים כעת (Active)** list.
-
-### Test 5: Idempotent Rescan While Active
-
-1. While the shift is active, tap the phone against the NFC tag again.
-2. **Expected**: Re-opens the active shift screen with the live running timer without starting a duplicate shift.
-
-### Test 6: Clock-Out Execution
-
-1. Tap the red/yellow **סיום משמרת** button.
-2. **Expected**:
-   - Summary dialog displays start time, end time, and total shift duration.
-   - Screen returns to idle status ready for next shift.
-3. **Admin Verification**: Worker moves to the **משמרות שהסתיימו** list with clock-in/out source marked as `NFC`.
-
-### Test 7: Rescan After Shift Completion
-
-1. Tap the NFC tag after completing the shift.
-2. **Expected**: Clean interface offering to start a new shift. No stuck or conflicting state.
-
-### Test 8: Non-Station Worker Isolation
-
-1. Attempt to scan the NFC tag with a user account not assigned to Paz Kurdani.
-2. **Expected**: Clean Hebrew message: _"אינך משויך לתחנה זו. אנא פנה למנהל התחנה."_ Access denied.
-
-### Test 9: Offline / Weak Signal Recovery
-
-1. Toggle airplane mode or throttle network, then tap clock-in.
-2. **Expected**: Friendly Hebrew alert stating connection error with a "נסה שנית" button. No crash.
-
-### Test 10: Token Rotation
-
-1. In the admin portal under NFC settings, click **סיבוב מזהה NFC**.
-2. Confirm the rotation prompt.
-3. Scan the old physical NFC tag.
-4. **Expected**: Displays error _"תג NFC אינו מזוהה או שפג תוקפו"_.
-5. Reprogram the physical tag with the newly generated URL.
-6. Verify normal operation resumes.
-
----
-
-## 5. Troubleshooting Matrix
-
-| Symptom                                | Probable Cause                           | Action                                                                      |
-| :------------------------------------- | :--------------------------------------- | :-------------------------------------------------------------------------- |
-| Phone does not detect tag              | Tag placed directly on metal surface     | Use an anti-metal NFC tag or mount with a plastic spacer.                   |
-| Tag opens App Store instead of browser | Custom URL scheme written                | Re-write tag ensuring type is standard **URL / URI** (`https://...`).       |
-| "תג NFC אינו מזוהה"                    | Station token was rotated                | Check the token in the station admin panel and re-write to tag.             |
-| "אין שיוך לתחנה"                       | Worker not assigned to Paz Kurdani       | In Admin > Staff, assign the worker with role `WORKER` and status `ACTIVE`. |
-| Login redirect loop                    | Browser blocking cookies in private mode | Ensure standard mobile browser session is used.                             |
+| Item                                                   | Status                                                |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| NFC hardware                                           | AVAILABLE                                             |
+| Previous physical scan                                 | Reported by user for the old confirmation-button flow |
+| Updated automatic scan-in/out on hardware              | PENDING USER AFTER MIGRATION / DEPLOYMENT             |
+| Actual iPhone / Android keyboard and standalone checks | PENDING USER                                          |
+| Automated scan transaction and responsive-layout tests | Separate from physical verification                   |
+| Real station pilot on this version                     | NOT YET VERIFIED                                      |

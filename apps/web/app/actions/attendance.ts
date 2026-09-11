@@ -1,51 +1,47 @@
 'use server';
 
+import type { TypedSupabaseClient } from '@yellowshifts/database';
+
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, clockInWorker, clockOutWorker } from '@yellowshifts/database';
-import type { ClockInResult, ClockOutResult } from '@yellowshifts/types';
+import { revalidatePath } from 'next/cache';
+import { createServerSupabaseClient } from '@yellowshifts/database';
+import type { NfcScanResult } from '@yellowshifts/types';
 
-export async function clockInAction(
-  stationId: string,
-  membershipId: string
-): Promise<ClockInResult> {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      success: false,
-      error: 'הסשן פג תוקף. יש להתחבר מחדש.',
-    };
+export async function processNfcScanAction(
+  token: string,
+  scanId: string,
+  scannedAt: number
+): Promise<NfcScanResult> {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(scanId) ||
+    !token ||
+    token.length > 256 ||
+    !Number.isFinite(scannedAt) ||
+    Math.abs(scannedAt) > 8.64e15
+  ) {
+    return { success: false, code: 'INVALID_SCAN' };
   }
-
-  return await clockInWorker(supabase, {
-    stationId,
-    membershipId,
-    userId: user.id,
-  });
-}
-
-export async function clockOutAction(attendanceRecordId: string): Promise<ClockOutResult> {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      success: false,
-      error: 'הסשן פג תוקף. יש להתחבר מחדש.',
-    };
+  try {
+    const supabase: TypedSupabaseClient = createServerSupabaseClient(await cookies());
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { success: false, code: 'SESSION_EXPIRED' };
+    const { data, error } = await supabase.rpc('process_nfc_scan', {
+      p_token: token,
+      p_scan_id: scanId,
+      p_scanned_at: new Date(scannedAt).toISOString(),
+    });
+    if (error || !data)
+      return {
+        success: false,
+        code: error?.code === 'PGRST202' ? 'SERVICE_UNAVAILABLE' : 'NETWORK_ERROR',
+      };
+    const result = data as unknown as NfcScanResult;
+    if (result.success) revalidatePath('/');
+    return result;
+  } catch {
+    // Retrying uses the SAME scan ID, including when the database committed but the response was lost.
+    return { success: false, code: 'NETWORK_ERROR' };
   }
-
-  return await clockOutWorker(supabase, {
-    attendanceRecordId,
-    userId: user.id,
-  });
 }

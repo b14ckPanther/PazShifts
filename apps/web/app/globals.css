@@ -1,4 +1,5 @@
 @import '../../../packages/ui/src/styles/tokens.css';
+@import '../../../packages/ui/src/styles/mobile.css';
 
 /* Custom application level styles if needed */
 body {
@@ -8,4 +9,179 @@ body {
   background-color: var(--ys-color-surface-base);
   color: var(--ys-color-text-primary);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+html {
+  max-width: 100%;
+  overflow-x: clip;
+}
+body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.attendance-panel {
+  width: min(100%, 420px);
+  padding: clamp(22px, 5vw, 30px);
+  border: 1px solid #e8ebef;
+  border-radius: 24px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 12px 48px #17203306;
+}
+.attendance-topline {
+  display: flex;
+  align-items: center;
+  text-align: start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.attendance-topline > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.attendance-topline small {
+  display: block;
+  color: #687386;
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 3px;
+}
+.scan-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #866300;
+  background: #fff7d7;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.attendance-symbol {
+  display: grid;
+  place-items: center;
+  margin: 26px auto 18px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #e9f8ef;
+  color: #16824a;
+  font-size: 32px;
+}
+.attendance-warning {
+  background: #fff3dd;
+  color: #a46600;
+}
+.scan-processing {
+  background: #fff7d7;
+  color: #8d6d13;
+  animation: scan-pulse 1.4s ease-in-out infinite;
+}
+.attendance-panel h1 {
+  font-size: clamp(23px, 6vw, 29px);
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  margin: 0 0 8px;
+}
+.attendance-panel p {
+  color: #687386;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0 0 18px;
+}
+.attendance-timer {
+  display: grid;
+  gap: 5px;
+  margin: 20px 0 17px;
+}
+.attendance-timer > span {
+  color: #687386;
+  font-size: 12px;
+}
+.attendance-timer strong {
+  font-size: clamp(35px, 10vw, 44px);
+  line-height: 1.2;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+.attendance-times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f7f9fb;
+  border-radius: 12px;
+  margin: 0;
+  padding: 13px 0;
+}
+.attendance-times > div + div {
+  border-inline-start: 1px solid #e5e9ef;
+}
+.attendance-times dt {
+  font-size: 11px;
+  color: #687386;
+}
+.attendance-times dd {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 3px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.scan-instruction {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  text-align: start;
+  padding: 15px 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.65;
+}
+.scan-instruction > svg {
+  flex-shrink: 0;
+  color: #907112;
+}
+.scan-instruction small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+.attendance-home {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #536073;
+  font-size: 13px;
+  text-decoration: none;
+  margin-top: 6px;
+}
+@keyframes scan-pulse {
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+@media (max-height: 650px) {
+  .attendance-panel {
+    padding: 20px;
+  }
+  .attendance-symbol {
+    width: 58px;
+    height: 58px;
+    margin: 17px auto 12px;
+  }
+  .attendance-timer {
+    margin: 13px 0;
+  }
+  .attendance-panel h1 {
+    font-size: 24px;
+  }
+  .scan-instruction {
+    padding: 12px 0 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-processing {
+    animation: none;
+  }
 }
