@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { NavigationLink as Link } from '@/app/components/NavigationLink';
+
 import {
   Container,
   Card,
@@ -72,7 +72,12 @@ export default function AdminError({ error, reset }: ErrorProps) {
           </CardHeader>
 
           <CardContent>
-            <Alert variant="danger">{error.message || 'שגיאה בלתי צפויה בתקשורת עם השרת.'}</Alert>
+            <Alert variant="danger">לא הצלחנו לטעון את העמוד. נסו שוב, או חזרו למסך הראשי.</Alert>
+            {error.digest && (
+              <p style={{ color: '#64748b', overflowWrap: 'anywhere' }}>
+                קוד לפנייה לתמיכה: <bdi>{error.digest}</bdi>
+              </p>
+            )}
           </CardContent>
 
           <CardFooter>
@@ -93,14 +98,14 @@ export default function AdminError({ error, reset }: ErrorProps) {
                 </span>
               </Button>
 
-              <Link href="/" style={{ textDecoration: 'none' }}>
+              <a href="/" style={{ textDecoration: 'none' }}>
                 <Button variant="secondary">
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <ArrowRightIcon size={16} />
-                    חזרה לרשימת התחנות
+                    חזרה למסך הראשי
                   </span>
                 </Button>
-              </Link>
+              </a>
             </div>
           </CardFooter>
         </Card>
