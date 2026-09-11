@@ -28,6 +28,13 @@ export async function loginAction(
   const supabase = createServerSupabaseClient(cookieStore);
 
   const credentials = passwordCredentials(identifier, password);
+  const method = formData.get('method');
+  if ((method === 'phone' && !credentials?.phone) || (method === 'email' && !credentials?.email)) {
+    return {
+      success: false,
+      error: method === 'phone' ? 'נא להזין מספר טלפון תקין.' : 'נא להזין כתובת אימייל תקינה.',
+    };
+  }
   if (!credentials) return { success: false, error: 'פרטי ההתחברות אינם תקינים.' };
   const { error } = await supabase.auth.signInWithPassword(credentials);
 
@@ -35,9 +42,11 @@ export async function loginAction(
     return {
       success: false,
       error:
-        error.status === 429
-          ? 'יותר מדי ניסיונות. נסו שוב בעוד רגע.'
-          : 'פרטי ההתחברות אינם נכונים. נסו שוב.',
+        error.code === 'phone_provider_disabled'
+          ? 'כניסה בטלפון אינה פעילה כרגע. אפשר להתחבר באימייל.'
+          : error.status === 429
+            ? 'יותר מדי ניסיונות. נסו שוב בעוד רגע.'
+            : 'פרטי ההתחברות אינם נכונים. נסו שוב.',
     };
   }
 

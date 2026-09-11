@@ -186,3 +186,255 @@
     font-size: 22px;
   }
 }
+
+/* A tactile two-position switch, with an independent identity field. */
+.login-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  isolation: isolate;
+  padding: 4px;
+  border: 1px solid #e8ebef;
+  border-radius: 14px;
+  background: #f3f5f8;
+}
+.login-methods::before {
+  content: '';
+  position: absolute;
+  inset-block: 4px;
+  right: 4px;
+  width: calc(50% - 4px);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 2px 8px #17203312,
+    inset 0 -2px #fcbc00;
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: -1;
+}
+.login-methods[data-method='email']::before {
+  transform: translateX(-100%);
+}
+.login-methods button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #687386;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 180ms;
+}
+.login-methods button[aria-selected='true'] {
+  color: #172033;
+}
+.login-methods button:disabled {
+  cursor: wait;
+}
+.login-identity {
+  animation: identity-enter 220ms ease-out;
+}
+@keyframes identity-enter {
+  from {
+    opacity: 0.4;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.login-flow .login-heading {
+  margin: 18px 0;
+}
+.login-flow .compact-login-form {
+  gap: 14px;
+}
+
+.brand-splash,
+.brand-loading {
+  box-sizing: border-box;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  background: radial-gradient(ellipse at 50% 40%, #fff 20%, #fff8de 100%);
+  color: #172033;
+  padding: 24px;
+}
+.brand-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  animation: splash-finish 1100ms both;
+}
+.brand-loading {
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+.brand-loading > p {
+  font-size: 13px;
+  color: #687386;
+  margin: 18px 0 0;
+}
+.brand-entrance {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+.brand-entrance > img {
+  animation: brand-wordmark 700ms both;
+}
+.brand-orbit {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+}
+.brand-orbit > img {
+  position: relative;
+  object-fit: contain;
+  animation: brand-reveal 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.brand-orbit-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #fcbc0045;
+  border-radius: 50%;
+}
+.brand-orbit-ring::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed #d1004026;
+  border-radius: 50%;
+}
+.brand-orbit-dot {
+  position: absolute;
+  inset: 0;
+  animation: brand-orbit 1100ms cubic-bezier(0.25, 0.65, 0.3, 1) both;
+}
+.brand-orbit-dot::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: calc(50% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fcbc00;
+  box-shadow: 0 0 20px #fcbc0080;
+}
+.brand-entrance-caption {
+  font-size: 12px;
+  color: #687386;
+  animation: brand-wordmark 800ms both;
+}
+.brand-entrance-track {
+  width: 80px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #fcbc0033;
+}
+.brand-entrance-track > span {
+  display: block;
+  height: 100%;
+  background: #d10040;
+  transform-origin: right;
+  animation: brand-progress 950ms both;
+}
+@keyframes splash-finish {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes brand-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.75) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes brand-wordmark {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes brand-orbit {
+  from {
+    transform: rotate(-160deg);
+  }
+  to {
+    transform: rotate(200deg);
+  }
+}
+@keyframes brand-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (max-height: 620px) {
+  .login-flow .login-heading {
+    margin: 12px 0;
+  }
+  .login-flow .compact-login-form {
+    gap: 11px;
+  }
+  .login-flow .login-help {
+    margin-top: 12px;
+  }
+}
+@media (max-height: 450px) {
+  .login-flow .login-heading {
+    margin: 0 0 10px;
+  }
+  .login-flow .login-heading p {
+    display: none;
+  }
+  .login-flow .login-panel {
+    padding-block: 12px;
+  }
+  .login-flow .compact-login-form {
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-splash {
+    display: none;
+  }
+  .brand-entrance *,
+  .login-identity {
+    animation: none !important;
+  }
+  .login-methods::before,
+  .login-methods button {
+    transition: none;
+  }
+}

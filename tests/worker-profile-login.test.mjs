@@ -184,3 +184,34 @@ test('invalid data and duplicate credentials fail without false success; partial
   assert.equal(r.success, false);
   assert.match(r.error, /פרטי החשבון נשמרו/);
 });
+
+for (const app of ['web', 'admin']) {
+  test(`${app} login enforces the selected method and explains disabled phone auth`, async () => {
+    let calls = 0;
+    const action = load(`../apps/${app}/app/actions/auth.ts`, {
+      'next/headers': { cookies: async () => ({}) },
+      'next/navigation': { redirect: () => assert.fail('Must not redirect on failure') },
+      '@yellowshifts/database': {
+        ...identifiers,
+        safeNextPath: (p) => p,
+        createServerSupabaseClient: () => ({
+          auth: {
+            signInWithPassword: async () => {
+              calls++;
+              return { error: { code: 'phone_provider_disabled', status: 400 } };
+            },
+          },
+        }),
+      },
+    }).loginAction;
+    const form = new FormData();
+    form.set('method', 'phone');
+    form.set('identifier', 'worker@example.com');
+    form.set('password', 'unchanged-password');
+    assert.equal((await action(null, form)).success, false);
+    assert.equal(calls, 0);
+    form.set('identifier', '0501234567');
+    assert.match((await action(null, form)).error, /אפשר להתחבר באימייל/);
+    assert.equal(calls, 1);
+  });
+}
