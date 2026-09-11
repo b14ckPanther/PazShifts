@@ -16,6 +16,12 @@ export function StationOperations({ stationId }: { stationId: string }) {
       Icon: NfcIcon,
     },
     {
+      path: 'reports',
+      title: 'דוח שעות עבודה',
+      text: 'סיכומים יומיים ושבועיים, ייצוא PDF ו־CSV לחשבונאות.',
+      Icon: ClockIcon,
+    },
+    {
       path: 'staff',
       title: 'צוות התחנה',
       text: 'פרטי עובדים, תפקידים וגישה לתחנה.',

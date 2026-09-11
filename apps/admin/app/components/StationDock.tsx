@@ -2,7 +2,7 @@
 import { NavigationLink as Link } from './NavigationLink';
 import { usePathname } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
-import { StationIcon, CalendarIcon, NfcIcon, UsersIcon } from '@yellowshifts/icons';
+import { StationIcon, CalendarIcon, NfcIcon, UsersIcon, ClockIcon } from '@yellowshifts/icons';
 export function StationDock({ stationId, admin }: { stationId: string; admin: boolean }) {
   const path = usePathname();
   const base = `/stations/${stationId}`;
@@ -11,6 +11,7 @@ export function StationDock({ stationId, admin }: { stationId: string; admin: bo
         { href: base, label: 'התחנה', Icon: StationIcon },
         { href: `${base}/schedules`, label: 'סידור', Icon: CalendarIcon },
         { href: `${base}/attendance`, label: 'נוכחות', Icon: NfcIcon },
+        { href: `${base}/reports`, label: 'שעות', Icon: ClockIcon },
         { href: `${base}/staff`, label: 'צוות', Icon: UsersIcon },
       ]
     : [

@@ -1,0 +1,229 @@
+.hours-report {
+  max-width: 1080px;
+  margin: auto;
+  padding: 24px 20px 120px;
+  color: #111827;
+  min-width: 0;
+}
+.hours-report * {
+  box-sizing: border-box;
+}
+.hours-report header {
+  margin: 24px 0;
+}
+.hours-report h1 {
+  font-size: clamp(26px, 5vw, 36px);
+  margin: 4px 0;
+}
+.hours-report p {
+  color: #475569;
+  line-height: 1.6;
+}
+.report-eyebrow {
+  font-weight: 700;
+  color: #8a6500 !important;
+}
+.report-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.report-panel h2 {
+  font-size: 19px;
+  margin: 0;
+}
+.report-filters {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.hours-report label {
+  display: grid;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  flex: 1;
+}
+.hours-report input,
+.hours-report select,
+.hours-report button {
+  font: inherit;
+  color: #111827;
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 12px;
+  min-height: 46px;
+  padding: 10px 14px;
+  min-width: 0;
+  max-width: 100%;
+}
+.hours-report input,
+.hours-report select {
+  width: 100%;
+  font-size: 16px;
+}
+.hours-report button {
+  cursor: pointer;
+  font-weight: 600;
+}
+.hours-report button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.hours-report button:focus-visible,
+.hours-report summary:focus-visible {
+  outline: 3px solid #ffbf00;
+  outline-offset: 3px;
+}
+.report-filters button,
+.report-exports button:first-child {
+  background: #cf0044;
+  color: white;
+  border-color: #cf0044;
+}
+.report-week-buttons,
+.report-exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.report-week-buttons button {
+  flex: 1;
+  font-size: 13px;
+}
+.report-person {
+  margin-top: 16px;
+}
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.report-stats section {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  background: #fff8dc;
+  border-radius: 16px;
+}
+.report-stats strong {
+  font-size: clamp(20px, 4vw, 30px);
+  text-align: right;
+}
+.report-stats small,
+.report-panel small {
+  color: #64748b;
+  font-size: 12px;
+}
+.report-note {
+  font-size: 13px;
+}
+.report-refresh {
+  border: 0 !important;
+  padding: 0 6px !important;
+  font-size: 12px !important;
+}
+.report-workers summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.report-workers summary > span:first-child {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.report-workers summary:before {
+  content: '+';
+  font-size: 23px;
+  color: #9b7400;
+}
+.report-workers details[open] > summary:before {
+  content: '−';
+}
+.report-workers summary > span:last-child {
+  margin-inline-start: auto;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.report-week h3,
+.report-day h4 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 15px;
+}
+.report-week {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 18px;
+}
+.report-day {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+.report-day h4 {
+  margin: 0 0 12px;
+}
+.report-entry {
+  display: flex;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.report-entry small {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.report-warning {
+  color: #9a3412;
+  font-weight: 600;
+}
+@media (max-width: 500px) {
+  .hours-report {
+    padding: 16px 12px 110px;
+  }
+  .report-panel {
+    padding: 16px;
+  }
+  .report-filters label {
+    flex-basis: calc(50% - 6px);
+  }
+  .report-filters button {
+    width: 100%;
+  }
+  .report-stats {
+    gap: 6px;
+  }
+  .report-stats section {
+    padding: 12px 8px;
+  }
+  .report-stats span,
+  .report-stats small {
+    font-size: 11px;
+  }
+  .report-stats strong {
+    font-size: 18px;
+  }
+  .report-exports button {
+    flex: 1 1 100%;
+  }
+  .report-week-buttons button {
+    padding: 8px 5px;
+  }
+  .report-workers summary {
+    font-size: 14px;
+  }
+}
