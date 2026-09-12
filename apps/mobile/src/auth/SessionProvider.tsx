@@ -25,7 +25,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const generation = useRef(0);
   const resolve = useCallback(async (session: Session | null, run: number) => {
     if (run !== generation.current) return;
-    setState({ phase: session ? 'loading' : 'signedOut', context: null, error: null });
+    setState((previous) =>
+      session && previous.phase === 'ready' && previous.context?.userId === session.user.id
+        ? previous
+        : { phase: session ? 'loading' : 'signedOut', context: null, error: null }
+    );
     if (!session || !supabase) return;
     try {
       const context = await getNativeWorkerContext(supabase, session.user.id);

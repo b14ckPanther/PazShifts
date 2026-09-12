@@ -1,9 +1,9 @@
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { duration, addDays } from '@yellowshifts/reports';
-import { Screen, Label, Surface } from '../../src/ui';
+import { Screen, Label, Surface, Button } from '../../src/ui';
 import { colors } from '../../src/ui/theme';
-import { AppHeader, DataState, RefreshStamp, WebAction } from '../../src/home/Patterns';
+import { AppHeader, DataState, RefreshStamp } from '../../src/home/Patterns';
 import { Hero } from '../../src/home/Hero';
 import { useWorker } from '../../src/home/WorkerProvider';
 export default function Home() {
@@ -25,7 +25,19 @@ export default function Home() {
         <DataState />
       ) : (
         <>
-          <Hero />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="פתיחת המשמרת בסידור"
+            onPress={() => {
+              const next = data.shifts.find((s) => Date.parse(s.end_at) > Date.now());
+              router.navigate({
+                pathname: '/schedule',
+                params: next ? { day: next.shift_date } : {},
+              });
+            }}
+          >
+            <Hero />
+          </Pressable>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Pressable
               accessibilityRole="button"
@@ -82,10 +94,15 @@ export default function Home() {
             <Label>
               {data.availabilitySubmitted
                 ? 'אפשר לנשום. הזמינות שלך אצל מנהל התחנה.'
-                : 'עדיין לא שלחת זמינות. אפשר להשלים אותה באתר.'}
+                : 'עדיין לא שלחת זמינות. אפשר להשלים אותה כאן.'}
             </Label>
             {!data.availabilitySubmitted && (
-              <WebAction title="שליחת זמינות באתר" path="availability" />
+              <Button
+                title="שליחת זמינות"
+                onPress={() =>
+                  router.navigate({ pathname: '/availability', params: { week: data.nextWeek } })
+                }
+              />
             )}
           </Surface>
           {data.reviewCount > 0 && (

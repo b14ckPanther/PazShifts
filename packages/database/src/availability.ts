@@ -16,14 +16,6 @@ import type {
 } from '@yellowshifts/types';
 import type { TypedSupabaseClient } from './auth';
 
-function normalizeTimeString(timeStr: string): string {
-  const trimmed = timeStr.trim();
-  if (trimmed.length === 5) {
-    return `${trimmed}:00`;
-  }
-  return trimmed.slice(0, 8);
-}
-
 function mapAvailabilityWeekRow(
   row: Database['public']['Tables']['availability_weeks']['Row']
 ): AvailabilityWeek {
@@ -164,83 +156,23 @@ export async function saveWeeklyAvailability(
   supabase: TypedSupabaseClient,
   input: SaveWeeklyAvailabilityInput
 ): Promise<WeeklyAvailabilityWithEntries> {
-  const normWeekStart = getAvailabilityWeekStart(input.weekStartDate);
-
-  // 1. Upsert availability_weeks row
-  const now = new Date().toISOString();
-  const { data: weekData, error: weekErr } = await supabase
-    .from('availability_weeks')
-    .upsert(
-      {
-        station_id: input.stationId,
-        station_membership_id: input.stationMembershipId,
-        week_start_date: normWeekStart,
-        notes: input.notes !== undefined ? (input.notes ? input.notes.trim() : null) : null,
-        submitted_at: now,
-        updated_at: now,
-      },
-      { onConflict: 'station_membership_id,week_start_date' }
-    )
-    .select()
-    .single();
-
-  if (weekErr || !weekData) {
-    throw new Error(`שגיאה בשמירת שבוע זמינות: ${weekErr?.message || ''}`);
-  }
-
-  const weekId = weekData.id;
-
-  // 2. Delete existing entries for this availability_week_id
-  const { error: delErr } = await supabase
-    .from('availability_entries')
-    .delete()
-    .eq('availability_week_id', weekId);
-
-  if (delErr) {
-    throw new Error(`שגיאה בניקוי רשומות זמינות קודמות: ${delErr.message}`);
-  }
-
-  // 3. Insert new entries
-  if (input.entries.length > 0) {
-    const entriesToInsert = input.entries.map((entry) => {
-      const startTime =
-        entry.availabilityType === 'TIME_WINDOW' && entry.startTime
-          ? normalizeTimeString(entry.startTime)
-          : null;
-      const endTime =
-        entry.availabilityType === 'TIME_WINDOW' && entry.endTime
-          ? normalizeTimeString(entry.endTime)
-          : null;
-
-      return {
-        availability_week_id: weekId,
-        date: entry.date,
-        availability_type: entry.availabilityType,
-        start_time: startTime,
-        end_time: endTime,
-        notes: entry.notes ? entry.notes.trim() : null,
-      };
-    });
-
-    const { error: insErr } = await supabase.from('availability_entries').insert(entriesToInsert);
-
-    if (insErr) {
-      throw new Error(`שגיאה בשמירת פירוט זמינות יומית: ${insErr.message}`);
-    }
-  }
-
-  // 4. Fetch the full created/updated structure
-  const updated = await getWorkerWeeklyAvailability(
-    supabase,
-    input.stationMembershipId,
-    normWeekStart
-  );
-
-  if (!updated) {
-    throw new Error('שגיאה בשליפת זמינות מעודכנת לאחר שמירה');
-  }
-
-  return updated;
+  const { data, error } = await supabase.rpc('submit_worker_availability', {
+    p_station_id: input.stationId,
+    p_membership_id: input.stationMembershipId,
+    p_week: getAvailabilityWeekStart(input.weekStartDate),
+    p_entries:
+      input.entries as unknown as Database['public']['Functions']['submit_worker_availability']['Args']['p_entries'],
+    p_notes: input.notes ?? null,
+  });
+  if (error || !data) throw new Error('לא הצלחנו לשמור את הזמינות');
+  const result = data as unknown as {
+    week: Database['public']['Tables']['availability_weeks']['Row'];
+    entries: Database['public']['Tables']['availability_entries']['Row'][];
+  };
+  return {
+    week: mapAvailabilityWeekRow(result.week),
+    entries: result.entries.map(mapAvailabilityEntryRow),
+  };
 }
 
 /**

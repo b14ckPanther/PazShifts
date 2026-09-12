@@ -11,8 +11,10 @@ type Value = {
   error: boolean;
   refresh: () => void;
   loading: boolean;
+  proceed: (action: () => void) => void;
+  setGuard: (guard: ((action: () => void) => void) | null) => void;
 };
-const Worker = createContext<Value | null>(null);
+export const Worker = createContext<Value | null>(null);
 export function WorkerProvider({
   context,
   children,
@@ -27,6 +29,8 @@ export function WorkerProvider({
     [revision, setRevision] = useState(0);
   const id = selectStation(context.stations, selected);
   const generation = useRef(0);
+  const guard = useRef<((action: () => void) => void) | null>(null);
+  const proceed = (action: () => void) => (guard.current ? guard.current(action) : action());
   useEffect(() => {
     let alive = true;
     const run = ++generation.current;
@@ -64,11 +68,17 @@ export function WorkerProvider({
     <Worker.Provider
       value={{
         context,
+        proceed,
+        setGuard: (next) => {
+          guard.current = next;
+        },
         station: context.stations.find((s) => s.id === id),
         select: (next) => {
           if (next !== id && context.stations.some((s) => s.id === next)) {
-            setData(null);
-            setSelected(next);
+            proceed(() => {
+              setData(null);
+              setSelected(next);
+            });
           }
         },
         data: data?.stationId === id ? data : null,

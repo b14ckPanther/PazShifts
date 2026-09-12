@@ -302,6 +302,13 @@ export interface Database {
         };
         Relationships: [
           {
+            foreignKeyName: 'scheduled_shifts_shift_template_id_fkey';
+            columns: ['shift_template_id'];
+            isOneToOne: false;
+            referencedRelation: 'shift_templates';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'scheduled_shifts_schedule_id_fkey';
             columns: ['schedule_id'];
             isOneToOne: false;
@@ -546,6 +553,16 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      submit_worker_availability: {
+        Args: {
+          p_station_id: string;
+          p_membership_id: string;
+          p_week: string;
+          p_entries: Json;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
       get_station_hour_rules: { Args: { p_station_id: string }; Returns: Json };
       save_station_hour_rules: {
         Args: {

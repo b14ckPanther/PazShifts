@@ -46,7 +46,15 @@ export function Label({
     />
   );
 }
-export function Screen({ children, tabbed = false }: { children: ReactNode; tabbed?: boolean }) {
+export function Screen({
+  children,
+  tabbed = false,
+  footer,
+}: {
+  children: ReactNode;
+  tabbed?: boolean;
+  footer?: ReactNode;
+}) {
   return (
     <SafeAreaView
       edges={tabbed ? ['top', 'left', 'right'] : ['top', 'bottom', 'left', 'right']}
@@ -71,6 +79,7 @@ export function Screen({ children, tabbed = false }: { children: ReactNode; tabb
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
+      {footer}
     </SafeAreaView>
   );
 }

@@ -15,6 +15,7 @@
   "dependencies": {
     "@expo-google-fonts/heebo": "^0.4.2",
     "@expo-google-fonts/ubuntu": "^0.4.1",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@supabase/supabase-js": "^2.49.1",
     "@yellowshifts/database": "workspace:*",
     "@yellowshifts/reports": "workspace:*",
