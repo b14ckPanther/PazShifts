@@ -1,7 +1,7 @@
 .worker-hours {
   max-width: 1040px;
   margin: auto;
-  padding: 20px 16px 110px;
+  padding: 20px 16px 0;
   color: #111827;
   min-width: 0;
 }
@@ -128,7 +128,7 @@
 }
 @media (max-width: 500px) {
   .worker-hours {
-    padding: 16px 12px 110px;
+    padding: 16px 12px 0;
   }
   .worker-hours-controls,
   .worker-hours-table,
@@ -136,7 +136,7 @@
     padding: 14px;
   }
   .worker-hours form label {
-    flex-basis: calc(50% - 5px);
+    flex-basis: 100%;
   }
   .worker-hours form button {
     width: 100%;
@@ -149,4 +149,16 @@
   .worker-hours form label {
     flex-basis: 100%;
   }
+}
+
+/* Native Safari date controls must shrink within their label, including RTL. */
+.worker-hours input[type='date'] {
+  appearance: none;
+  -webkit-appearance: none;
+  min-inline-size: 0;
+  text-align: center;
+}
+.worker-hours input[type='date']::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: center;
 }
