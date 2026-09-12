@@ -111,7 +111,10 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
               gap: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              className="worker-header-identity"
+              style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+            >
               <BrandMark size={36} />
               <div>
                 <h2
@@ -173,7 +176,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
               </Link>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="worker-header-actions">
               {memberships.length > 1 && (
                 <StationSelector
                   memberships={memberships}
