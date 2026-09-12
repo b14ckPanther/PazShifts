@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 
 import { BrandLogo } from './Brand';
+import { LoginCredit } from './DarbFooter';
 
 interface LoginState {
   success: boolean;
@@ -155,6 +156,7 @@ export function CompactLogin({
           </button>
         </form>
         <p className="login-help">אין לך פרטי כניסה? פנה למנהל התחנה.</p>
+        <LoginCredit />
       </section>
     </main>
   );

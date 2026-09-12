@@ -123,3 +123,99 @@
     transform: none;
   }
 }
+
+/* Login owns an in-card credit; do not append the full-page credit as well. */
+.app-shell:has(.login-flow) > .darb-footer {
+  display: none;
+}
+.login-credit {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #e8ebef;
+  text-align: center;
+}
+.login-credit a {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: #172033;
+  text-decoration: none;
+  background: linear-gradient(110deg, #fff, #fff9e5, #fff);
+}
+.login-credit a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, #fcbc0026 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.login-credit a:hover::after,
+.login-credit a:focus-visible::after {
+  animation: darb-shimmer 750ms ease both;
+}
+.login-credit-label {
+  font-size: 10px;
+  color: #687386;
+}
+.login-credit-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-ubuntu), sans-serif;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.login-credit-name strong {
+  font-size: 21px;
+  letter-spacing: -0.7px;
+}
+.login-credit-launch {
+  display: grid;
+  place-items: center;
+  color: #8a6500;
+}
+.login-credit small {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: #687386;
+}
+@media (max-height: 700px) {
+  .login-credit {
+    margin-top: 10px;
+    padding-top: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-credit a:hover::after,
+  .login-credit a:focus-visible::after {
+    animation: none;
+  }
+}
+/* Keep the complete login card visible on shorter phones, without shrinking inputs. */
+@media (max-height: 620px) {
+  .login-flow .login-panel {
+    padding: 16px;
+  }
+  .login-flow .mobile-brand img {
+    width: 126px !important;
+  }
+  .login-flow .login-heading {
+    margin: 8px 0;
+  }
+  .login-flow .compact-login-form {
+    gap: 10px;
+  }
+  .login-flow .login-help {
+    margin-top: 10px;
+  }
+}
