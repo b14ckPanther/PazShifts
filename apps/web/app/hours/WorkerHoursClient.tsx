@@ -171,13 +171,22 @@ export function WorkerHoursClient({
           משמרות פתוחות או מסומנות לבדיקה אינן נספרות. משמרות לילה מחולקות לפי יום באזור הזמן של
           התחנה. שעות נוכחות אינן חישוב שכר.
         </p>
-        <small>
-          נכון ל־
-          {new Date(report.generatedAt).toLocaleString('he-IL', { timeZone: report.timezone })}
-        </small>
-        <button disabled={pending} onClick={() => startTransition(() => router.refresh())}>
-          רענון
-        </button>
+        <footer className="worker-hours-refresh">
+          <small>
+            עודכן לאחרונה:{' '}
+            <bdi>
+              {new Date(report.generatedAt).toLocaleString('he-IL', { timeZone: report.timezone })}
+            </bdi>
+          </small>
+          <button
+            type="button"
+            disabled={pending}
+            aria-busy={pending}
+            onClick={() => startTransition(() => router.refresh())}
+          >
+            {pending ? 'מרעננים…' : 'רענון הנתונים'}
+          </button>
+        </footer>
       </section>
     </main>
   );

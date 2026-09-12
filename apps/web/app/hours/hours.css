@@ -162,3 +162,24 @@
   min-width: 0;
   text-align: center;
 }
+
+.worker-hours-refresh {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+.worker-hours-refresh small {
+  line-height: 1.6;
+}
+.worker-hours-refresh button {
+  justify-self: start;
+  min-width: 140px;
+}
+@media (max-width: 500px) {
+  .worker-hours-refresh button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
