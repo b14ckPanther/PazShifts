@@ -28,6 +28,7 @@ export function Label({
   bold = false,
   ...props
 }: TextProps & { english?: boolean; bold?: boolean }) {
+  const fontSize = StyleSheet.flatten(style)?.fontSize ?? 16;
   return (
     <Text
       {...props}
@@ -35,6 +36,7 @@ export function Label({
         {
           fontFamily: english ? (bold ? fonts.enBold : fonts.en) : bold ? fonts.heBold : fonts.he,
           fontSize: 16,
+          lineHeight: english ? Math.ceil(fontSize * 1.3) : undefined,
           color: colors.text,
           textAlign: 'auto',
           writingDirection: english ? 'ltr' : 'rtl',
@@ -44,9 +46,12 @@ export function Label({
     />
   );
 }
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({ children, tabbed = false }: { children: ReactNode; tabbed?: boolean }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.base }}>
+    <SafeAreaView
+      edges={tabbed ? ['top', 'left', 'right'] : ['top', 'bottom', 'left', 'right']}
+      style={{ flex: 1, backgroundColor: colors.base }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
