@@ -1,4 +1,5 @@
 'use client';
+import { StationLocationFields } from './StationLocationFields';
 
 import React, { useState, useEffect, useTransition } from 'react';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
@@ -74,6 +75,15 @@ export const CreateStationForm: React.FC = () => {
     startTransition(async () => {
       try {
         const result = await createStationAction({
+          latitude: Number(
+            (document.getElementById('station-latitude') as HTMLInputElement)?.value || NaN
+          ),
+          longitude: Number(
+            (document.getElementById('station-longitude') as HTMLInputElement)?.value || NaN
+          ),
+          attendanceRadiusM: Number(
+            (document.getElementById('station-attendanceRadiusM') as HTMLInputElement)?.value || NaN
+          ),
           code: finalCode,
           name: finalName,
           address: finalAddress || null,
@@ -281,6 +291,7 @@ export const CreateStationForm: React.FC = () => {
               </div>
             </div>
           </div>
+          <StationLocationFields />
         </CardContent>
 
         <CardFooter>

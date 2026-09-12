@@ -27,6 +27,9 @@ export interface StationActionResult {
 }
 
 export interface CreateStationActionInput {
+  latitude?: number;
+  longitude?: number;
+  attendanceRadiusM?: number;
   code?: string;
   name?: string;
   address?: string | null;
@@ -93,6 +96,27 @@ export async function createStationAction(
     isActive = typeof raw.isActive === 'boolean' ? raw.isActive : true;
   }
 
+  const numberField = (key: 'latitude' | 'longitude' | 'attendanceRadiusM') => {
+    const value = raw instanceof FormData ? raw.get(key) : raw?.[key];
+    return value === null || value === undefined || value === '' ? NaN : Number(value);
+  };
+  const latitude = numberField('latitude');
+  const longitude = numberField('longitude');
+  const attendanceRadiusM = numberField('attendanceRadiusM');
+  if (
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isInteger(attendanceRadiusM) ||
+    attendanceRadiusM < 30 ||
+    attendanceRadiusM > 200
+  ) {
+    return { success: false, error: 'יש להזין מיקום תקין ורדיוס בין 30 ל־200 מטר.' };
+  }
+
   if (!code || code.length < 2) {
     return {
       success: false,
@@ -111,6 +135,9 @@ export async function createStationAction(
     const station = await createStation(supabase, {
       code,
       name,
+      latitude,
+      longitude,
+      attendanceRadiusM,
       address,
       phone,
       timezone,

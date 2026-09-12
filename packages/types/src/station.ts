@@ -12,6 +12,9 @@ export interface Station {
   readonly phone: string | null;
   readonly timezone: string;
   readonly isActive: boolean;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
+  readonly attendanceRadiusM?: number;
   readonly nfcPublicToken?: string;
   readonly allowedLateMinutes: number;
   readonly allowedEarlyLeaveMinutes: number;
@@ -21,6 +24,9 @@ export interface Station {
 }
 
 export interface CreateStationInput {
+  readonly latitude: number;
+  readonly longitude: number;
+  readonly attendanceRadiusM: number;
   readonly code: string;
   readonly name: string;
   readonly address?: string | null;
