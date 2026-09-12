@@ -79,6 +79,9 @@ export interface Database {
       stations: {
         Row: {
           id: string;
+          latitude: number | null;
+          longitude: number | null;
+          attendance_radius_m: number;
           code: string;
           name: string;
           address: string | null;
@@ -93,6 +96,9 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
+          latitude?: number | null;
+          longitude?: number | null;
+          attendance_radius_m?: number;
           id?: string;
           code: string;
           name: string;
@@ -108,6 +114,9 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          latitude?: number | null;
+          longitude?: number | null;
+          attendance_radius_m?: number;
           id?: string;
           code?: string;
           name?: string;
@@ -569,8 +578,21 @@ export interface Database {
         };
         Returns: Json;
       };
+      set_station_location: {
+        Args: { p_station_id: string; p_latitude: number; p_longitude: number; p_radius: number };
+        Returns: undefined;
+      };
       process_nfc_scan: {
-        Args: { p_token: string; p_scan_id: string; p_scanned_at: string; p_decision?: string };
+        Args: {
+          p_token: string;
+          p_scan_id: string;
+          p_scanned_at: string;
+          p_decision: string;
+          p_latitude: number | null;
+          p_longitude: number | null;
+          p_accuracy: number | null;
+          p_location_at: string | null;
+        };
         Returns: Json;
       };
       is_platform_admin: {

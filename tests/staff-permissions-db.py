@@ -39,6 +39,7 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         """)
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
             sql(migration.read_text())
+        sql("ALTER TABLE public.stations ALTER COLUMN latitude SET DEFAULT 32.858784, ALTER COLUMN longitude SET DEFAULT 35.090755;")
         # Supabase's default table privileges; local PostgreSQL has none by default.
         sql('GRANT SELECT, INSERT, UPDATE ON public.stations TO authenticated;')
         user = lambda n: f'00000000-0000-0000-0000-{n:012d}'
@@ -136,6 +137,9 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
           FROM public.attendance_records WHERE station_membership_id='{user(201)}'""", True)
         attempt(2, manual() + '; DELETE FROM public.attendance_manual_audit', True)
         print('PASS: manual attendance self/staff/platform; worker/shift-manager/cross-station denials; time/overlap/stale validation; immutable audit')
+        attempt(2, f"SELECT public.set_station_location('{station}',32.858784,35.090755,50)")
+        attempt(2, f"SELECT public.set_station_location('{other}',32,35,50)",True)
+        attempt(2, f"SELECT public.set_station_location('{station}',32,35,201)",True)
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
         # Removal/stop use the same worker lock, retain replay tombstones and clear overlap.
         sql(f"""INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status)
@@ -153,7 +157,7 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         result=attempt(2,manage.replace("'DELETE'","'CLOSE'")+f"; SELECT status FROM public.attendance_records WHERE id='{user(601)}'; SELECT count(*) FROM public.attendance_manual_audit WHERE attendance_record_id='{user(601)}'")
         assert 'COMPLETED' in result and '\n1\n' in result,result
         attempt(2,manual(),True)
-        result=attempt(2,manage+';'+manual()+f"; SELECT public.process_nfc_scan((SELECT nfc_public_token FROM public.stations WHERE id='{station}'),'{user(602)}',now(),'scan')")
+        result=attempt(2,manage+';'+manual()+f"; SELECT public.process_nfc_scan((SELECT nfc_public_token FROM public.stations WHERE id='{station}'),'{user(602)}',now(),'scan',32.858784,35.090755,5,clock_timestamp())")
         assert 'STALE_CHECKOUT' in result,result
         attempt(2,manage+';'+manage) # safe retry after deletion
         attempt(2,'DELETE FROM public.attendance_removals',True)

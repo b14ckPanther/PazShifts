@@ -8,6 +8,28 @@ import { processNfcScanAction } from '../../actions/attendance';
 import type { NfcScanResult, ResolvedNfcStation } from '@yellowshifts/types';
 
 const errors: Record<string, { title: string; text: string }> = {
+  LOCATION_REQUIRED: {
+    title: 'נדרש אישור מיקום',
+    text: 'אפשרו גישה למיקום כדי לדווח נוכחות בתחנה.',
+  },
+  LOCATION_TIMEOUT: {
+    title: 'המיקום לא התקבל בזמן',
+    text: 'בדקו שהמיקום מופעל, התקרבו לאזור פתוח ונסו שוב.',
+  },
+  LOCATION_UNAVAILABLE: { title: 'המיקום אינו זמין', text: 'הפעילו שירותי מיקום בטלפון ונסו שוב.' },
+  LOCATION_STALE: { title: 'נדרש מיקום עדכני', text: 'נסו שוב לקבלת מיקום חדש.' },
+  LOCATION_INACCURATE: {
+    title: 'המיקום אינו מדויק מספיק',
+    text: 'נסו להתקרב לאזור פתוח בתחנה ולנסות שוב. לא בוצע דיווח.',
+  },
+  OUTSIDE_STATION: {
+    title: 'נראה שאינכם בתחנה',
+    text: 'דיווח נוכחות אפשרי רק בטווח המותר של התחנה. התקרבו ונסו שוב.',
+  },
+  LOCATION_NOT_CONFIGURED: {
+    title: 'מיקום התחנה טרם הוגדר',
+    text: 'פנו למנהל התחנה להגדרת המיקום.',
+  },
   SERVICE_UNAVAILABLE: {
     title: 'הדיווח עדיין לא זמין',
     text: 'פנו למנהל התחנה להפעלת דיווח הנוכחות.',
@@ -59,7 +81,46 @@ export function NfcAttendanceClient({
         setResult({ success: false, code: 'NETWORK_ERROR' });
         return;
       }
-      const response = await processNfcScanAction(nfcToken, scanId, scannedAt, decisionRef.current);
+      let location:
+        { latitude: number; longitude: number; accuracy: number; timestamp: number } | undefined;
+      if (decisionRef.current !== 'cancel') {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            if (!navigator.geolocation) return reject(new Error('unavailable'));
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 12000,
+            });
+          });
+          location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          };
+        } catch (error) {
+          const code =
+            typeof error === 'object' && error !== null && 'code' in error ? error.code : 2;
+          setResult({
+            success: false,
+            code:
+              code === 1
+                ? 'LOCATION_REQUIRED'
+                : code === 3
+                  ? 'LOCATION_TIMEOUT'
+                  : 'LOCATION_UNAVAILABLE',
+          });
+          return;
+        }
+      }
+      const response = await processNfcScanAction(
+        nfcToken,
+        scanId,
+        scannedAt,
+        decisionRef.current,
+        location
+      );
       setResult(response);
       if (response.success && !response.replayed) navigator.vibrate?.(60);
     } catch {
@@ -141,7 +202,7 @@ export function NfcAttendanceClient({
       <div role="status" aria-live="polite">
         <h1 id="attendance-heading">
           {pending
-            ? 'רושמים נוכחות…'
+            ? 'בודקים מיקום ונוכחות…'
             : error
               ? error.title
               : confirmCheckout
@@ -156,7 +217,7 @@ export function NfcAttendanceClient({
         </h1>
         <p className="attendance-subtitle">
           {pending
-            ? 'רק רגע, אין צורך ללחוץ על דבר.'
+            ? 'אפשרו גישה למיקום. הדיווח יאושר רק לאחר הבדיקה.'
             : error
               ? error.text
               : confirmCheckout
@@ -219,11 +280,22 @@ export function NfcAttendanceClient({
           </button>
         </div>
       )}
-      {!pending && result && !result.success && result.code === 'NETWORK_ERROR' && (
-        <button className="mobile-primary" onClick={() => void processScan()}>
-          ניסיון חוזר לאותה סריקה
-        </button>
-      )}
+      {!pending &&
+        result &&
+        !result.success &&
+        [
+          'NETWORK_ERROR',
+          'LOCATION_REQUIRED',
+          'LOCATION_TIMEOUT',
+          'LOCATION_UNAVAILABLE',
+          'LOCATION_STALE',
+          'LOCATION_INACCURATE',
+          'OUTSIDE_STATION',
+        ].includes(result.code) && (
+          <button className="mobile-primary" onClick={() => void processScan()}>
+            ניסיון חוזר לאותה סריקה
+          </button>
+        )}
       {!pending && result && !result.success && result.code === 'SESSION_EXPIRED' && (
         <Link className="mobile-primary" href={`/login?next=${encodeURIComponent(returnPath)}`}>
           התחברות

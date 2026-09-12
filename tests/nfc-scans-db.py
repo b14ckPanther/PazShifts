@@ -30,15 +30,31 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         GRANT USAGE ON SCHEMA auth TO authenticated, anon;""")
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
             sql(migration.read_text())
+        sql("ALTER TABLE public.stations ALTER COLUMN latitude SET DEFAULT 32.858784, ALTER COLUMN longitude SET DEFAULT 35.090755;")
         uid = lambda n: f'00000000-0000-0000-0000-{n:012d}'
         sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(1)}','worker@example.com'),('{uid(2)}','other@example.com');
         INSERT INTO public.stations(id,code,name,nfc_public_token) VALUES ('{uid(101)}','NFC-A','Test A','token-a'),('{uid(102)}','NFC-B','Test B','token-b');
         INSERT INTO public.station_memberships(id,station_id,user_id,role) VALUES ('{uid(201)}','{uid(101)}','{uid(1)}','WORKER'),('{uid(202)}','{uid(102)}','{uid(1)}','WORKER');
         GRANT SELECT,INSERT,UPDATE ON public.attendance_records TO authenticated;""")
-        def scan(scan_id=None, token='token-a', actor=1, timestamp='clock_timestamp()', decision='scan'):
+        def scan(scan_id=None, token='token-a', actor=1, timestamp='clock_timestamp()', decision='scan', geo='32.858784,35.090755,5,clock_timestamp()'):
             identity = str(scan_id or uuid.uuid4())
-            output = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(actor)}',true); SELECT public.process_nfc_scan('{token}','{identity}',{timestamp},'{decision}'); COMMIT;")
+            output = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(actor)}',true); SELECT public.process_nfc_scan('{token}','{identity}',{timestamp},'{decision}',{geo}); COMMIT;")
             return json.loads(next(line for line in output.splitlines() if line.startswith('{')))
+        for geo, code in [
+            ('NULL,NULL,NULL,NULL','LOCATION_REQUIRED'),
+            ('32.86,35.09,5,clock_timestamp()','OUTSIDE_STATION'),
+            ('32.858784,35.090755,100,clock_timestamp()','LOCATION_INACCURATE'),
+            ("32.858784,35.090755,5,clock_timestamp()-interval '2 minutes'",'LOCATION_STALE'),
+            ("'NaN'::float,35.09,5,clock_timestamp()",'LOCATION_REQUIRED')]:
+            assert scan(geo=geo)['code'] == code
+        assert sql('SELECT count(*) FROM public.attendance_records;').strip() == '0'
+        sql("SELECT public.process_nfc_scan('token-a',gen_random_uuid(),now(),'scan');", fails=True)
+        sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',false); SELECT public.set_station_location('{uid(101)}',0,0,200);", fails=True)
+        sql("INSERT INTO public.stations(code,name,latitude,longitude) VALUES ('NO-LOCATION','Test',NULL,NULL);", fails=True)
+        for offset, expected in [(0.00044, None), (0.00046, 'OUTSIDE_STATION')]:
+            verdict = sql(f"SELECT coalesce(public.check_station_location(s,latitude+{offset},longitude,5,clock_timestamp()),'OK') FROM public.stations s WHERE code='NFC-A';").strip()
+            assert verdict == (expected or 'OK'), verdict
+        print('PASS: location missing, distant, inaccurate, stale, NaN and old RPC bypass denied')
         def cool_down():
             sql("UPDATE public.nfc_scan_receipts SET applied_at=clock_timestamp()-interval '11 seconds';")
 
@@ -62,8 +78,9 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         assert scan(cancelled_id, decision='cancel')['action'] == 'CANCELLED'
         assert scan(cancelled_id, decision='confirm')['record']['status'] == 'ACTIVE'
         legacy = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',true); SELECT public.process_nfc_scan('token-a',gen_random_uuid(),clock_timestamp()); COMMIT;")
-        assert 'CHECKOUT_PENDING' in legacy and 'COMPLETED' not in legacy
+        assert 'LOCATION_REQUIRED' in legacy and 'COMPLETED' not in legacy
         pending = scan(checkout_id)
+        assert scan(checkout_id, decision='confirm', geo='32.86,35.09,5,clock_timestamp()')['code'] == 'OUTSIDE_STATION'
         assert pending['action'] == 'CHECKOUT_PENDING' and pending['record']['clock_out_at'] is None
         assert scan(checkout_id)['action'] == 'CHECKOUT_PENDING'
         stale_id = uuid.uuid4()

@@ -15,6 +15,9 @@ import type { TypedSupabaseClient } from './auth';
 function mapStationRow(row: Database['public']['Tables']['stations']['Row']): Station {
   return {
     id: row.id,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    attendanceRadiusM: row.attendance_radius_m,
     code: row.code,
     name: row.name,
     address: row.address,
@@ -101,6 +104,9 @@ export async function createStation(
     .insert({
       code,
       name,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      attendance_radius_m: input.attendanceRadiusM,
       address: input.address?.trim() || null,
       phone: input.phone?.trim() || null,
       timezone: input.timezone || 'Asia/Jerusalem',

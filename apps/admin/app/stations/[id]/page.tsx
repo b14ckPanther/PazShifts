@@ -1,3 +1,4 @@
+import { StationLocationSettings } from '@/app/components/StationLocationSettings';
 import { getServerContext } from '@/app/lib/server-context';
 import { StationAdminSelector } from '../../components/StationAdminSelector';
 import { StationOperations } from '../../components/StationOperations';
@@ -255,6 +256,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
 
           <details className="station-settings">
             <summary>הגדרות התחנה ופרטי קשר</summary>
+            <StationLocationSettings station={station} />
             {/* Phase 9: Attendance Tolerance Settings */}
             <Card>
               <CardHeader>

@@ -11,7 +11,8 @@ export async function processNfcScanAction(
   token: string,
   scanId: string,
   scannedAt: number,
-  decision: 'scan' | 'confirm' | 'cancel' = 'scan'
+  decision: 'scan' | 'confirm' | 'cancel' = 'scan',
+  location?: { latitude: number; longitude: number; accuracy: number; timestamp: number }
 ): Promise<NfcScanResult> {
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(scanId) ||
@@ -34,6 +35,13 @@ export async function processNfcScanAction(
       p_scan_id: scanId,
       p_scanned_at: new Date(scannedAt).toISOString(),
       p_decision: decision,
+      p_latitude: location?.latitude ?? null,
+      p_longitude: location?.longitude ?? null,
+      p_accuracy: location?.accuracy ?? null,
+      p_location_at:
+        location && Number.isFinite(location.timestamp) && Math.abs(location.timestamp) <= 8.64e15
+          ? new Date(location.timestamp).toISOString()
+          : null,
     });
     if (error || !data)
       return {

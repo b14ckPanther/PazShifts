@@ -333,3 +333,63 @@ required. Local contract tests cover all three routes, filters, login return,
 missing stations, cookie refresh, and POST handling. Verify signed-in navigation,
 station switching, and an availability save after deployment. Revert the worker
 routing change and redeploy to restore query-only URLs.
+
+### Station location enforcement — migration 17
+
+Apply `20260912000017_station_geofence.sql` and deploy **both apps** in a coordinated
+maintenance window. Old clients without coordinates cannot clock in/out after this
+migration; reload the worker app after deployment. New clients against the old DB
+also fail closed. Do not leave mismatched deployments active.
+
+The migration sets the user-supplied station points:
+
+| Code       | Latitude  | Longitude | Radius |
+| ---------- | --------- | --------- | ------ |
+| KURDANI    | 32.858784 | 35.090755 | 50 m   |
+| KIRYAT-ATA | 32.804492 | 35.075356 | 50 m   |
+
+Other existing stations without coordinates cannot report NFC attendance until
+configured. New station creation requires coordinates. Station and platform admins
+can edit coordinates and a 30–200 m radius under station settings; shift managers
+and workers cannot. The 50 m default needs physical testing at the tag location.
+Coordinates identify the center of the fence, not the property's boundary.
+
+Check-in and confirmed checkout enforce distance in the atomic database RPC, under
+the existing worker lock and membership checks. A fresh location (up to 60 seconds,
+10-second future clock tolerance) is required, with reported accuracy no worse
+than the radius. Accuracy does not enlarge the fence. Cancellation and completed
+receipt replay do not create attendance and remain possible without a location
+check in the RPC. Server timestamps, replay protection and manual admin correction
+remain unchanged. The old no-location RPC cannot perform attendance mutations.
+
+Browser location requires permission and HTTPS on either worker domain. Denied,
+unavailable, timeout, stale, inaccurate and outside readings show retry guidance;
+no attendance success is displayed before server confirmation. Worker coordinates
+are not persisted or logged by this feature. Browser-supplied coordinates can be
+spoofed: this is a deterrent to casual remote use, not proof of physical presence.
+No background tracking is introduced. NFC URLs/tokens and old-host compatibility
+are unchanged; the physical tag does not need rewriting for this upgrade.
+
+Manual rollout:
+
+```sh
+supabase db push --dry-run
+supabase db push
+```
+
+Review the dry run for other pending migrations first. Then deploy both apps and
+verify each station location/radius in admin. Physically test inside/outside the
+fence, denied permission, an inaccurate reading, checkout confirmation and retry.
+These physical checks have not been performed by the agent.
+
+Local verification covers full migrations, distance boundaries around 50 m, missing/
+invalid/stale/inaccurate readings, missing-coordinate creation denial, denied remote
+checkout, old-RPC bypass denial, configuration permissions, cancellation/replay,
+concurrent checkout, isolation and manual attendance corrections.
+
+DDL briefly locks the stations table and replaces the NFC function signature.
+Rollback requires a coordinated database/app rollback: restore the four-argument
+RPC from migration 16 and the three-argument wrapper from migration 11, remove the
+new eight-argument RPC and location-required trigger, then redeploy the prior app.
+This removes geofence protection; do not do it as a silent workaround. Location
+columns may remain for recovery. No new environment variables or paid service.
