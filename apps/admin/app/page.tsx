@@ -444,5 +444,5 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
     redirect('/login');
   }
 
-  redirect(`/stations/${activeAdminStation.station.id}`);
+  redirect(`/stations/${encodeURIComponent(activeAdminStation.station.code)}`);
 }

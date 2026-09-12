@@ -47,7 +47,7 @@ function pageFor(context) {
   return exports.default;
 }
 const membership = (id, status = 'ACTIVE') => ({
-  station: { id },
+  station: { id, code: id.toUpperCase() },
   membership: { role: 'ADMIN', status },
 });
 test('station admins enter the shared operational dashboard, preserving authorized station selection', async () => {
@@ -57,15 +57,15 @@ test('station admins enter the shared operational dashboard, preserving authoriz
     isPlatformAdmin: false,
     memberships: [membership('one'), membership('two'), membership('inactive', 'SUSPENDED')],
   });
-  await assert.rejects(page({ searchParams: Promise.resolve({}) }), /REDIRECT:\/stations\/one/);
+  await assert.rejects(page({ searchParams: Promise.resolve({}) }), /REDIRECT:\/stations\/ONE/);
   await assert.rejects(
     page({ searchParams: Promise.resolve({ stationId: 'two' }) }),
-    /REDIRECT:\/stations\/two/
+    /REDIRECT:\/stations\/TWO/
   );
   for (const stationId of ['not-their-station', 'inactive'])
     await assert.rejects(
       page({ searchParams: Promise.resolve({ stationId }) }),
-      /REDIRECT:\/stations\/one/
+      /REDIRECT:\/stations\/ONE/
     );
 });
 test('signed-out admin entry requires authentication', async () => {

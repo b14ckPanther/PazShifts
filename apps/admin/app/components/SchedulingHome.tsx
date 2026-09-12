@@ -2,7 +2,11 @@ import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { BrandLogo, Container } from '@yellowshifts/ui';
 import { LogoutButton } from './LogoutButton';
 
-export function SchedulingHome({ stations }: { stations: { id: string; name: string }[] }) {
+export function SchedulingHome({
+  stations,
+}: {
+  stations: { id: string; code: string; name: string }[];
+}) {
   return (
     <main className="scheduling-home" dir="rtl">
       <Container size="md">
@@ -17,7 +21,7 @@ export function SchedulingHome({ stations }: { stations: { id: string; name: str
             <Link
               className="station-operation"
               key={station.id}
-              href={`/stations/${station.id}/schedules`}
+              href={`/stations/${encodeURIComponent(station.code)}/schedules`}
             >
               <span>
                 <strong>{station.name}</strong>
