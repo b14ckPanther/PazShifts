@@ -12,7 +12,9 @@ export function DarbFooter() {
         aria-label="פותח על ידי Darb — לאתר Darb, נפתח בלשונית חדשה"
       >
         <span className="darb-credit-copy">
-          <span className="darb-credit-caption">נבנה עם מחשבה. עד הפרט האחרון.</span>
+          <span className="darb-credit-caption">
+            <bdi dir="ltr">© 2026 Darb.</bdi> כל הזכויות שמורות.
+          </span>
           <span className="darb-credit-signature">
             <span>עיצוב ופיתוח</span>
             <strong dir="ltr">
