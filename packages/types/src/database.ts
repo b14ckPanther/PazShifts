@@ -547,6 +547,16 @@ export interface Database {
         };
         Returns: Json;
       };
+      manage_attendance_record: {
+        Args: {
+          p_station_id: string;
+          p_record_id: string;
+          p_action: string;
+          p_reason: string;
+          p_expected_updated_at: string;
+        };
+        Returns: Json;
+      };
       save_manual_attendance: {
         Args: {
           p_station_id: string;

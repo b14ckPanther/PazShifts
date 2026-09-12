@@ -709,6 +709,7 @@ export function WeeklyAvailabilityForm({
           </div>
 
           <Button
+            isLoading={isPending}
             type="button"
             variant="primary"
             onClick={handleSave}
@@ -722,7 +723,7 @@ export function WeeklyAvailabilityForm({
             }}
           >
             <CheckIcon size={16} />
-            <span>{isPending ? 'שומר...' : 'שמור זמינות שבועית'}</span>
+            <span>שמור זמינות שבועית</span>
           </Button>
         </div>
       )}

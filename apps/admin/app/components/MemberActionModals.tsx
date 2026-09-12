@@ -70,8 +70,12 @@ export function RoleModal({ stationId, member, isOpen, onClose, isPlatformAdmin 
           <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
             ביטול
           </Button>
-          <Button type="submit" disabled={pending || role === member.membership.role}>
-            {pending ? 'שומר…' : 'שמירת תפקיד'}
+          <Button
+            type="submit"
+            disabled={pending || role === member.membership.role}
+            isLoading={pending}
+          >
+            שמירת תפקיד
           </Button>
         </footer>
       </form>
@@ -141,8 +145,12 @@ export function StatusModal({ stationId, member, isOpen, onClose }: Props) {
           <Button type="button" variant="secondary" disabled={pending} onClick={onClose}>
             ביטול
           </Button>
-          <Button type="submit" disabled={pending || status === member.membership.status}>
-            {pending ? 'שומר…' : 'שמירת שינוי'}
+          <Button
+            type="submit"
+            disabled={pending || status === member.membership.status}
+            isLoading={pending}
+          >
+            שמירת שינוי
           </Button>
         </footer>
       </form>

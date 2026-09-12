@@ -202,8 +202,8 @@ export function CopyPreviousWeekModal({
             <Button type="button" variant="secondary" onClick={onClose}>
               ביטול
             </Button>
-            <Button type="submit" variant="primary" disabled={isPending}>
-              {isPending ? 'מעתיק משמרות...' : 'אשר והעתק שבוע'}
+            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+              אשר והעתק שבוע
             </Button>
           </div>
         </form>

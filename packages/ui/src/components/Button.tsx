@@ -103,6 +103,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       disabled={isDisabled}
       aria-busy={isLoading}
+      aria-label={isLoading && typeof children === 'string' ? children : undefined}
       className={`ys-button ys-button--${variant} ${className}`}
       style={{
         display: 'inline-flex',
@@ -112,7 +113,8 @@ export const Button: React.FC<ButtonProps> = ({
         fontWeight: 600,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         opacity: isDisabled ? 0.6 : 1,
-        transition: 'all var(--ys-transition-fast)',
+        transition: 'background-color var(--ys-transition-fast), color var(--ys-transition-fast)',
+        position: 'relative',
         outline: 'none',
         width: fullWidth ? '100%' : 'auto',
         ...getVariantStyles(),
@@ -121,14 +123,25 @@ export const Button: React.FC<ButtonProps> = ({
       }}
       {...props}
     >
-      {isLoading ? (
-        <Spinner size={size === 'lg' ? 'md' : 'sm'} />
-      ) : (
-        <>
-          {rightIcon && <span style={{ display: 'inline-flex' }}>{rightIcon}</span>}
-          <span>{children}</span>
-          {leftIcon && <span style={{ display: 'inline-flex' }}>{leftIcon}</span>}
-        </>
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          opacity: isLoading ? 0 : 1,
+        }}
+      >
+        {rightIcon && <span style={{ display: 'inline-flex' }}>{rightIcon}</span>}
+        <span>{children}</span>
+        {leftIcon && <span style={{ display: 'inline-flex' }}>{leftIcon}</span>}
+      </span>
+      {isLoading && (
+        <span
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}
+        >
+          <Spinner size={size === 'lg' ? 'md' : 'sm'} />
+        </span>
       )}
     </button>
   );

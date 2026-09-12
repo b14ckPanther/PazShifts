@@ -191,7 +191,6 @@ body {
 }
 .staff-dialog::backdrop {
   background: #14203566;
-  backdrop-filter: blur(3px);
 }
 .staff-dialog-heading {
   display: flex;
@@ -734,4 +733,15 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.staff-dialog-footer,
+.staff-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.staff-dialog-footer > button,
+.staff-dialog-actions > button {
+  min-width: 104px;
 }

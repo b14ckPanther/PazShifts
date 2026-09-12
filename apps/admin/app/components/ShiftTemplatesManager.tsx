@@ -723,8 +723,8 @@ export function ShiftTemplatesManager({
                 >
                   ביטול
                 </Button>
-                <Button type="submit" variant="primary" disabled={isPending}>
-                  {isPending ? 'יוצר תבנית...' : 'הקם תבנית'}
+                <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+                  הקם תבנית
                 </Button>
               </div>
             </form>
@@ -966,8 +966,8 @@ export function ShiftTemplatesManager({
                 <Button type="button" variant="secondary" onClick={() => setEditingTemplate(null)}>
                   ביטול
                 </Button>
-                <Button type="submit" variant="primary" disabled={isPending}>
-                  {isPending ? 'שומר שינויים...' : 'שמור שינויים'}
+                <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+                  שמור שינויים
                 </Button>
               </div>
             </form>
@@ -1035,8 +1035,9 @@ export function ShiftTemplatesManager({
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 disabled={isPending}
+                isLoading={isPending}
               >
-                {isPending ? 'מוחק...' : 'אשר מחיקה'}
+                אשר מחיקה
               </Button>
             </div>
           </div>

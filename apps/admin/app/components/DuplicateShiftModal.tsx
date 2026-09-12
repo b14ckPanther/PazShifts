@@ -262,8 +262,8 @@ export function DuplicateShiftModal({
             <Button type="button" variant="secondary" onClick={onClose}>
               ביטול
             </Button>
-            <Button type="submit" variant="primary" disabled={isPending}>
-              {isPending ? 'משכפל...' : 'שכפל משמרת'}
+            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+              שכפל משמרת
             </Button>
           </div>
         </form>

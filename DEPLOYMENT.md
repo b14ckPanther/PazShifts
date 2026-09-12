@@ -221,3 +221,20 @@ Auth context now runs the independent profile, role and membership reads concurr
 Station overview no longer downloads the full staff directory and account editor. These remain available under the Staff tab. Station routes have a loading boundary inside the persistent station layout, so the dock stays usable and Next can prefetch the loading shell. Ordinary navigation uses lightweight placeholders instead of replaying the full branding screen. Navigation links show pending feedback immediately; NFC routes are excluded from the new link wrapper and retain their scan/receipt handling. No authenticated page data is added to the service-worker cache.
 
 Validation on 2026-09-12: three alternating reads against the same hosted project measured auth-context medians of 784 ms before and 293 ms after. This measures that server-data step from the development machine, not end-to-end Vercel or iPhone navigation. The joined schedule query returned identical data to the previous implementation for a hosted six-shift schedule. No new migration or Vercel configuration is needed; deploy both apps and verify tab response on a physical phone.
+
+## Stop or remove mistaken attendance (migration 16)
+
+Apply `20260912000016_attendance_removal.sql` before deploying the admin attendance actions. It adds authenticated station-admin/platform-admin `CLOSE` and `DELETE` operations with a required reason, stale-record checks and the same per-worker lock as NFC/manual attendance. No existing attendance is removed by applying the migration.
+
+```sh
+supabase db push --dry-run
+supabase db push
+```
+
+On active attendance, choose **סיום משמרת עכשיו** to close at database time, or **מחיקת דיווח שגוי** to remove a mistaken entry. Recent completed records can also be removed. Confirm the worker and supply a reason. Use the existing time editor for a specific checkout time. Removal frees the overlap interval and excludes the row from worker/admin reports after refresh. Workers and shift managers cannot perform these operations.
+
+Deletion preserves the original snapshot/actor/reason in the RLS-protected `attendance_removals` table and existing manual audit entries. NFC receipts retain original identifiers as replay tombstones: replaying a deleted record returns a stale-checkout error, never a new attendance write. A new scan can start a new shift. No physical attendance/security checks were relaxed. There is no restore button; an administrator can enter a corrected report afterward.
+
+This transactional migration briefly locks the audit and receipt tables when replacing their foreign-key enforcement with retained historical identifiers. Apply during a quiet period. Deployment rollback can revert the UI while leaving migration 16 in place. Do not blindly re-add the old foreign keys after removals: archived identifiers intentionally no longer exist in attendance. Restoring those constraints requires a reviewed data restoration/archival plan. Never delete receipt tombstones to resolve a constraint error.
+
+Local verification includes authorization, stale edits, audit retention, same-range replacement after deletion, old-scan replay denial, and existing NFC concurrency tests. Hosted migration/application and physical phone verification remain owner actions. Shared loading buttons now retain their geometry and the staff dialog uses a dim backdrop without blur; deploy both apps for shared-button updates.
