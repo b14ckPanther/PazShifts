@@ -372,8 +372,8 @@ export function AddShiftModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               ביטול
             </Button>
-            <Button type="submit" variant="primary" disabled={isPending}>
-              {isPending ? 'מוסיף...' : 'הוסף משמרת לסידור'}
+            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+              הוסף משמרת לסידור
             </Button>
           </div>
         </form>

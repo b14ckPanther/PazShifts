@@ -137,6 +137,28 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         attempt(2, manual() + '; DELETE FROM public.attendance_manual_audit', True)
         print('PASS: manual attendance self/staff/platform; worker/shift-manager/cross-station denials; time/overlap/stale validation; immutable audit')
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
+        # Removal/stop use the same worker lock, retain replay tombstones and clear overlap.
+        sql(f"""INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status)
+          VALUES ('{user(601)}','{station}','{user(201)}','{user(2)}','2020-01-02 08:00Z','ACTIVE');
+          INSERT INTO public.nfc_scan_receipts(user_id,scan_id,station_id,attendance_id,action,applied_at)
+          VALUES ('{user(2)}','{user(602)}','{station}','{user(601)}','CLOCK_IN',now());""")
+        manage = f"SELECT public.manage_attendance_record('{station}','{user(601)}','DELETE','Mistaken test',(SELECT updated_at FROM public.attendance_records WHERE id='{user(601)}'))"
+        for actor in [4,5,6]: attempt(actor,manage,True)
+        attempt(2,manage.replace(station,other),True)
+        attempt(2,manage.replace("'Mistaken test'","''"),True)
+        attempt(2,manage.replace("(SELECT updated_at FROM public.attendance_records WHERE id='"+user(601)+"')","'1990-01-01'"),True)
+        for actor in [1,2]:
+            result=attempt(actor,manage+f"; SELECT count(*) FROM public.attendance_removals WHERE attendance_record_id='{user(601)}'")
+            assert '\n1\n' in result,result
+        result=attempt(2,manage.replace("'DELETE'","'CLOSE'")+f"; SELECT status FROM public.attendance_records WHERE id='{user(601)}'; SELECT count(*) FROM public.attendance_manual_audit WHERE attendance_record_id='{user(601)}'")
+        assert 'COMPLETED' in result and '\n1\n' in result,result
+        attempt(2,manual(),True)
+        result=attempt(2,manage+';'+manual()+f"; SELECT public.process_nfc_scan((SELECT nfc_public_token FROM public.stations WHERE id='{station}'),'{user(602)}',now(),'scan')")
+        assert 'STALE_CHECKOUT' in result,result
+        attempt(2,manage+';'+manage) # safe retry after deletion
+        attempt(2,'DELETE FROM public.attendance_removals',True)
+        sql(f"DELETE FROM public.nfc_scan_receipts WHERE scan_id='{user(602)}'; DELETE FROM public.attendance_records WHERE id='{user(601)}';")
+        print('PASS: stop/delete admin/platform, scope and stale denials, removal audit, replay denial and cleared overlap')
         # Station-owned hour rules: database authorization and immutable versions.
         rules = '{"dailyMinutes":[480,480,480,480,480,480,480],"firstOvertimeMinutes":120,"firstRate":125,"secondRate":150,"weeklyMinutes":2520,"weekStartsOn":1,"breakMinutes":0,"breakAfterMinutes":360,"nightStart":1320,"nightEnd":360,"nightRate":100,"restDays":[],"restRate":150,"holidays":[],"holidayRate":150}'
         save_rules = f"SELECT public.save_station_hour_rules('{station}','2020-01-06','{rules}',true)"

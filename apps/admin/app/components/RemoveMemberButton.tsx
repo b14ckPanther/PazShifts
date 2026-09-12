@@ -56,8 +56,9 @@ export function RemoveMemberButton({
                   }
                 });
               }}
+              isLoading={pending}
             >
-              {pending ? 'מעדכן…' : 'אישור סיום גישה'}
+              אישור סיום גישה
             </Button>
           </footer>
         </StaffDialog>

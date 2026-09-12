@@ -313,7 +313,7 @@ export const CreateStationForm: React.FC = () => {
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <PlusIcon size={16} />
-                {isPending ? 'יוצר תחנה...' : 'צור תחנה'}
+                צור תחנה
               </span>
             </Button>
           </div>

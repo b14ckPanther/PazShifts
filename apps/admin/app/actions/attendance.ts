@@ -170,3 +170,51 @@ export async function refreshStationAttendanceAction(stationId: string) {
   const { listStationAttendance } = await import('@yellowshifts/database');
   return listStationAttendance(supabase, stationId);
 }
+
+export async function manageAttendanceRecordAction(input: {
+  stationId: string;
+  recordId: string;
+  action: 'CLOSE' | 'DELETE';
+  reason: string;
+  expectedUpdatedAt: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase: TypedSupabaseClient = createServerSupabaseClient(await cookies());
+  const context = await getAuthenticatedUserContext(supabase);
+  if (
+    !context ||
+    (!context.isPlatformAdmin &&
+      !context.memberships.some(
+        (m) =>
+          m.station.id === input.stationId &&
+          m.membership.role === 'ADMIN' &&
+          m.membership.status === 'ACTIVE'
+      ))
+  )
+    return { success: false, error: 'אין הרשאה לניהול נוכחות בתחנה זו.' };
+  if (
+    !['CLOSE', 'DELETE'].includes(input.action) ||
+    !input.reason.trim() ||
+    input.reason.length > 1000
+  )
+    return { success: false, error: 'יש לבחור פעולה ולהזין סיבה (עד 1,000 תווים).' };
+  const { error } = await supabase.rpc('manage_attendance_record', {
+    p_station_id: input.stationId,
+    p_record_id: input.recordId,
+    p_action: input.action,
+    p_reason: input.reason.trim(),
+    p_expected_updated_at: input.expectedUpdatedAt,
+  });
+  if (error)
+    return {
+      success: false,
+      error: error.message.includes('MANUAL_STALE')
+        ? 'הרשומה השתנתה. סגרו את החלון, רעננו ונסו שוב.'
+        : error.code === 'PGRST202'
+          ? 'נדרש עדכון מסד הנתונים לפני ביצוע פעולה זו.'
+          : 'לא ניתן להשלים את הפעולה. נסו שוב.',
+    };
+  for (const path of ['attendance', 'exceptions', 'reports'])
+    revalidatePath(`/stations/${input.stationId}/${path}`);
+  revalidatePath(`/stations/${input.stationId}`);
+  return { success: true };
+}

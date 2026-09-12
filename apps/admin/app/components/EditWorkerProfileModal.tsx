@@ -101,8 +101,8 @@ export function EditWorkerProfileModal({
           <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
             ביטול
           </Button>
-          <Button type="submit" disabled={pending}>
-            {pending ? 'שומר…' : 'שמירת פרטים'}
+          <Button type="submit" isLoading={pending}>
+            שמירת פרטים
           </Button>
         </footer>
       </form>

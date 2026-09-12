@@ -272,8 +272,8 @@ export function EditShiftModal({ stationId, shift, onClose, onSuccess }: EditShi
             <Button type="button" variant="secondary" onClick={onClose}>
               ביטול
             </Button>
-            <Button type="submit" variant="primary" disabled={isPending}>
-              {isPending ? 'שומר...' : 'שמור שינויים'}
+            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
+              שמור שינויים
             </Button>
           </div>
         </form>

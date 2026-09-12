@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useRef } from 'react';
 import {
   Card,
   CardHeader,
@@ -23,6 +23,7 @@ import {
 } from '@yellowshifts/icons';
 import { refreshStationAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
 import { configuredAppOrigin } from '@yellowshifts/database';
+import { AttendanceRecordActions } from '../../../components/AttendanceRecordActions';
 import { ManualAttendanceDialog } from '../../../components/ManualAttendanceDialog';
 import { ElapsedDuration } from '../../../components/ElapsedDuration';
 import type {
@@ -62,6 +63,7 @@ export function StationAttendanceClient({
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecordWithDetails | null>(null);
   const [showManual, setShowManual] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
+  const refreshVersion = useRef(0);
   const [isPending, startTransition] = useTransition();
 
   // Rotate Token Confirm Modal State
@@ -191,8 +193,10 @@ export function StationAttendanceClient({
   };
 
   async function refreshAttendance() {
+    const version = ++refreshVersion.current;
     try {
       const fresh = await refreshStationAttendanceAction(station.id);
+      if (version !== refreshVersion.current) return;
       if (!fresh) {
         setRefreshError(true);
         return;
@@ -201,7 +205,7 @@ export function StationAttendanceClient({
       setCompletedRecords(fresh.completedRecords);
       setRefreshError(false);
     } catch {
-      setRefreshError(true);
+      if (version === refreshVersion.current) setRefreshError(true);
     }
   }
   useEffect(() => {
@@ -210,9 +214,10 @@ export function StationAttendanceClient({
     async function poll() {
       if (busy || document.visibilityState === 'hidden') return;
       busy = true;
+      const version = ++refreshVersion.current;
       try {
         const fresh = await refreshStationAttendanceAction(station.id);
-        if (!cancelled) {
+        if (!cancelled && version === refreshVersion.current) {
           if (fresh) {
             setActiveRecords(fresh.activeRecords);
             setCompletedRecords(fresh.completedRecords);
@@ -220,7 +225,7 @@ export function StationAttendanceClient({
           } else setRefreshError(true);
         }
       } catch {
-        if (!cancelled) setRefreshError(true);
+        if (!cancelled && version === refreshVersion.current) setRefreshError(true);
       } finally {
         busy = false;
       }
@@ -486,6 +491,14 @@ export function StationAttendanceClient({
                           עריכת זמנים
                         </Button>
                       )}
+                      {canManageAttendance && (
+                        <AttendanceRecordActions
+                          record={record}
+                          onSaved={() => {
+                            void refreshAttendance();
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -616,6 +629,14 @@ export function StationAttendanceClient({
                       >
                         עריכת זמני כניסה ויציאה
                       </Button>
+                    )}
+                    {canManageAttendance && (
+                      <AttendanceRecordActions
+                        record={record}
+                        onSaved={() => {
+                          void refreshAttendance();
+                        }}
+                      />
                     )}
                     {/* Audited Correction Footnote if corrected */}
                     {record.corrected_by && (
