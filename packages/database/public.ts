@@ -10,3 +10,10 @@ export {
   type NativeShift,
   type NativeSchedule,
 } from './src/mobile-week';
+export {
+  getMobileWorkerHours,
+  hoursRange,
+  HoursScopeError,
+  type MobileHours,
+  type HoursPeriod,
+} from './src/mobile-hours';

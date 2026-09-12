@@ -12,6 +12,7 @@ import {
   type TextProps,
   type TextInputProps,
   type ViewStyle,
+  type ScrollViewProps,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -50,10 +51,12 @@ export function Screen({
   children,
   tabbed = false,
   footer,
+  refreshControl,
 }: {
   children: ReactNode;
   tabbed?: boolean;
   footer?: ReactNode;
+  refreshControl?: ScrollViewProps['refreshControl'];
 }) {
   return (
     <SafeAreaView
@@ -65,6 +68,7 @@ export function Screen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
+          refreshControl={refreshControl}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           contentContainerStyle={{
