@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Container,
@@ -20,9 +20,10 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function AdminError({ error, reset }: ErrorProps) {
+export default function AdminError({ error }: ErrorProps) {
+  const [retrying, setRetrying] = useState(false);
   useEffect(() => {
-    console.error('Admin Application Error:', error);
+    console.error('Admin Application Error', { digest: error.digest || 'client-error' });
   }, [error]);
 
   return (
@@ -91,7 +92,14 @@ export default function AdminError({ error, reset }: ErrorProps) {
                 gap: '10px',
               }}
             >
-              <Button variant="primary" onClick={() => reset()}>
+              <Button
+                variant="primary"
+                isLoading={retrying}
+                onClick={() => {
+                  setRetrying(true);
+                  window.location.reload();
+                }}
+              >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <RefreshIcon size={16} />
                   נסה שנית
