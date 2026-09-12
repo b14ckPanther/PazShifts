@@ -153,11 +153,11 @@ export function HoursReportClient({
       <RateBreakdown entries={filtered.entries} />
       <section className="report-panel">
         <h2>ייצוא {personId ? 'העובד שנבחר' : 'כל הצוות'}</h2>
-        <p>
+        <p className="report-period">
           <bdi>
             {report.from} — {report.to}
-          </bdi>{' '}
-          · {report.timezone}
+          </bdi>
+          <bdi>{report.timezone}</bdi>
         </p>
         <div className="report-exports">
           <button disabled={busy || pending} onClick={pdf}>
@@ -183,17 +183,22 @@ export function HoursReportClient({
           </button>
         </div>
         {error && <p role="alert">{error}</p>}
-        <p className="report-note">
-          שעות נוכחות וסיווג לפי כללי התחנה, ללא חישוב שכר כספי. ניכוי הפסקות מוצג בנפרד. רשומות
-          פתוחות, מסומנות וחופפות אינן נספרות. משמרות לילה מחולקות לפי יום ואזור הזמן של התחנה.
-          תיקונים ידניים כלולים ומסומנים.
-        </p>
-        <small>
-          הדוח נכון ל־
-          {new Date(report.generatedAt).toLocaleString('he-IL', {
-            timeZone: report.timezone,
-          })}
-          .{' '}
+        <details className="report-explanation">
+          <summary>מה נכלל בדוח?</summary>
+          <p className="report-note">
+            שעות נוכחות וסיווג לפי כללי התחנה, ללא חישוב שכר כספי. ניכוי הפסקות מוצג בנפרד. רשומות
+            פתוחות, מסומנות וחופפות אינן נספרות. משמרות לילה מחולקות לפי יום ואזור הזמן של התחנה.
+            תיקונים ידניים כלולים ומסומנים.
+          </p>
+        </details>
+        <small className="report-updated">
+          <span>
+            הדוח נכון ל־
+            {new Date(report.generatedAt).toLocaleString('he-IL', {
+              timeZone: report.timezone,
+            })}
+            .
+          </span>
           <button
             className="report-refresh"
             disabled={pending}

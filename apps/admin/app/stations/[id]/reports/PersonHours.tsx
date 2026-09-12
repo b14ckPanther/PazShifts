@@ -22,11 +22,13 @@ export function PersonHours({
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        <span>
+        <span className="report-worker-name">
           <strong>{person.name}</strong>
           <small>{person.code || 'ללא קוד עובד'}</small>
         </span>
-        <span dir="ltr">{duration(entries.reduce((sum, e) => sum + e.seconds, 0))}</span>
+        <span className="report-worker-total" dir="ltr">
+          {duration(entries.reduce((sum, e) => sum + e.seconds, 0))}
+        </span>
       </summary>
       {open && (
         <>
