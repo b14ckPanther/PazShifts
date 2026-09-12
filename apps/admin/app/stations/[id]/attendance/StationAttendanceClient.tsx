@@ -24,6 +24,7 @@ import {
 import { refreshStationAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
 import { configuredAppOrigin } from '@yellowshifts/database';
 import { ManualAttendanceDialog } from '../../../components/ManualAttendanceDialog';
+import { ElapsedDuration } from '../../../components/ElapsedDuration';
 import type {
   Station,
   AttendanceRecordWithDetails,
@@ -66,16 +67,6 @@ export function StationAttendanceClient({
   // Rotate Token Confirm Modal State
   const [showRotateModal, setShowRotateModal] = useState<boolean>(false);
 
-  // Live timer tick for active records
-  const [, setTick] = useState<number>(0);
-  useEffect(() => {
-    if (activeTab !== 'ACTIVE' || activeRecords.length === 0) return;
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') setTick((t) => t + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [activeTab, activeRecords.length]);
-
   const formatStationTime = (isoString: string) => {
     try {
       return new Intl.DateTimeFormat('he-IL', {
@@ -86,17 +77,6 @@ export function StationAttendanceClient({
     } catch {
       return isoString.slice(11, 16);
     }
-  };
-
-  const getElapsedDuration = (clockInAt: string) => {
-    const startMs = new Date(clockInAt).getTime();
-    const diffSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-    const hours = Math.floor(diffSec / 3600);
-    const minutes = Math.floor((diffSec % 3600) / 60);
-    const seconds = diffSec % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const getTotalDuration = (startAt: string, endAt: string | null) => {
@@ -490,7 +470,7 @@ export function StationAttendanceClient({
                             margin: '2px 0 0 0',
                           }}
                         >
-                          {getElapsedDuration(record.clock_in_at)}
+                          <ElapsedDuration start={record.clock_in_at} />
                         </p>
                       </div>
 

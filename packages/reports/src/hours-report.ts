@@ -28,13 +28,26 @@ export type HoursReport = {
   policies?: { id: string; effectiveFrom: string }[];
   rateWeekStartsOn?: number;
 };
+// Cache formatting machinery only: no employee data, calculated results, or authorization.
+// Bounded to avoid unbounded timezone keys in a long-lived process/browser.
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function dateFormatter(timezone: string, kind: 'date' | 'clock'): Intl.DateTimeFormat {
+  const key = `${kind}:${timezone}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(kind === 'date' ? 'en-CA' : 'he-IL', {
+      timeZone: timezone,
+      ...(kind === 'date'
+        ? { year: 'numeric', month: '2-digit', day: '2-digit' }
+        : { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }),
+    });
+    if (formatters.size >= 32) formatters.delete(formatters.keys().next().value!);
+    formatters.set(key, formatter);
+  }
+  return formatter;
+}
 export function localDate(value: Date, timezone: string): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(value);
+  const parts = dateFormatter(timezone, 'date').formatToParts(value);
   return ['year', 'month', 'day']
     .map((type) => parts.find((p) => p.type === type)!.value)
     .join('-');
@@ -72,15 +85,7 @@ export function duration(seconds: number): string {
     .padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 }
 export function clock(value: string | null, timezone: string): string {
-  return value
-    ? new Intl.DateTimeFormat('he-IL', {
-        timeZone: timezone,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hourCycle: 'h23',
-      }).format(new Date(value))
-    : '—';
+  return value ? dateFormatter(timezone, 'clock').format(new Date(value)) : '—';
 }
 export function buildEntries(
   records: AttendanceRecord[],
@@ -94,6 +99,18 @@ export function buildEntries(
     boundaries.set(date, dayBoundary(date, timezone));
   const periodStart = boundaries.get(from)!;
   const periodEnd = boundaries.get(addDays(to, 1))!;
+  const dates = [...boundaries.keys()];
+  const instants = [...boundaries.values()];
+  function firstDay(start: number): number {
+    let low = 0;
+    let high = dates.length - 1;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (instants[middle + 1]! <= start) low = middle + 1;
+      else high = middle;
+    }
+    return low;
+  }
   const overlaps = new Set<string>();
   const sorted = [...records].sort((a, b) => Date.parse(a.clock_in_at) - Date.parse(b.clock_in_at));
   const previous = new Map<string, AttendanceRecord[]>();
@@ -148,9 +165,10 @@ export function buildEntries(
           },
         ];
       const rows: ReportEntry[] = [];
-      for (let date = from; date <= to; date = addDays(date, 1)) {
-        const a = Math.max(start, boundaries.get(date)!);
-        const b = Math.min(end!, boundaries.get(addDays(date, 1))!, periodEnd);
+      for (let i = firstDay(start); i < dates.length - 1 && instants[i]! < end!; i++) {
+        const date = dates[i]!;
+        const a = Math.max(start, instants[i]!);
+        const b = Math.min(end!, instants[i + 1]!, periodEnd);
         if (b > a)
           rows.push({
             ...common,

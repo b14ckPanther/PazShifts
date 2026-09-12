@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { HoursTable, RateBreakdown } from '@yellowshifts/ui';
+import { RateBreakdown } from '@yellowshifts/ui';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   addDays,
@@ -13,6 +13,7 @@ import {
   type HoursReport,
 } from '@/app/lib/hours-report';
 import './reports.css';
+import { PersonHours } from './PersonHours';
 
 function download(text: string, name: string) {
   const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
@@ -207,18 +208,12 @@ export function HoursReportClient({
         {filtered.people.map((person) => {
           const entries = filtered.entries.filter((e) => e.personId === person.id);
           return (
-            <details className="report-panel" key={person.id} open={!!personId}>
-              <summary>
-                <span>
-                  <strong>{person.name}</strong>
-                  <small>{person.code || 'ללא קוד עובד'}</small>
-                </span>
-                <span dir="ltr">{duration(entries.reduce((sum, e) => sum + e.seconds, 0))}</span>
-              </summary>
-              {!entries.length && <p>לא נרשמו שעות בתקופה שנבחרה.</p>}
-              <RateBreakdown entries={entries} />
-              <HoursTable report={{ ...filtered, people: [person], entries }} />
-            </details>
+            <PersonHours
+              key={`${person.id}:${personId}:${report.from}:${report.to}`}
+              person={person}
+              initiallyOpen={!!personId}
+              report={{ ...filtered, people: [person], entries }}
+            />
           );
         })}
       </section>
