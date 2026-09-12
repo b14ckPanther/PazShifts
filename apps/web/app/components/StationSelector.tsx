@@ -25,14 +25,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        direction: 'rtl',
-      }}
-    >
+    <div className="worker-station-selector">
       <label
         htmlFor="station-select"
         style={{
@@ -55,7 +48,6 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
           color: 'var(--ys-color-text-primary)',
           fontSize: '13px',
           fontWeight: 600,
-          outline: 'none',
           cursor: 'pointer',
           direction: 'rtl',
         }}

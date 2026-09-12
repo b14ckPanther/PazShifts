@@ -339,3 +339,62 @@ body {
     margin-bottom: 12px;
   }
 }
+
+/* Station names may be long; never let the native select squeeze sibling text. */
+.worker-header-identity,
+.worker-header-identity > div {
+  min-width: 0;
+}
+.worker-header-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+.worker-header-actions > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.worker-station-selector {
+  display: grid;
+  gap: 6px;
+  direction: rtl;
+  min-width: 0;
+  flex: 1;
+}
+.worker-station-selector label {
+  white-space: nowrap;
+}
+.worker-station-selector select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  text-overflow: ellipsis;
+}
+.worker-station-selector select:focus-visible {
+  outline: 3px solid #b48a19;
+  outline-offset: 2px;
+}
+@media (max-width: 767px) {
+  .worker-header-actions {
+    width: 100%;
+  }
+  .worker-station-selector select {
+    font-size: 16px !important;
+  }
+}
+@media (max-width: 359px) {
+  .worker-header-actions {
+    flex-wrap: wrap;
+  }
+  .worker-station-selector {
+    flex-basis: 100%;
+  }
+  .worker-header-actions > button {
+    margin-inline-start: auto;
+  }
+}
