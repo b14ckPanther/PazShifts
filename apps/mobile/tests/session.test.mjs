@@ -71,7 +71,7 @@ function mount({
               return [
                 value,
                 (next) => {
-                  state = next;
+                  state = typeof next === 'function' ? next(state) : next;
                 },
               ];
             },
@@ -172,6 +172,27 @@ test('failed logout stays explicit and clears private presentation data', async 
   });
   await app.flush();
   await app.actions.logout();
+  assert.equal(app.state.phase, 'error');
+  assert.equal(app.state.context, null);
+});
+
+test('same-account foreground verification preserves the mounted app until checked, then clears revoked access', async () => {
+  let calls = 0,
+    reject;
+  const app = mount({
+    context: async () =>
+      ++calls === 1
+        ? { userId: 'a', fullName: 'a', stations: [] }
+        : new Promise((_resolve, fail) => {
+            reject = fail;
+          }),
+  });
+  await app.flush();
+  app.app('active');
+  await app.flush();
+  assert.equal(app.state.phase, 'ready');
+  reject(Error('revoked'));
+  await tick();
   assert.equal(app.state.phase, 'error');
   assert.equal(app.state.context, null);
 });

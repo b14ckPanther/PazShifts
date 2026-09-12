@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
 import { AppState, View } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
-import { clock, duration, addDays } from '@yellowshifts/reports';
+import { duration, addDays } from '@yellowshifts/reports';
 import { Label } from '../ui';
 import { colors } from '../ui/theme';
 import { useWorker } from './WorkerProvider';
 import { heroState } from './model';
+export const nativeTime = (value: string, timezone: string) =>
+  new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: timezone,
+  }).format(new Date(value));
 export function Elapsed({ start }: { start: string }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -48,13 +55,13 @@ export function ShiftTime({
       }}
     >
       <Label english bold style={{ fontSize: 32, fontVariant: ['tabular-nums'] }}>
-        {clock(start, timezone).slice(0, 5)}
+        {nativeTime(start, timezone)}
       </Label>
       <Label english style={{ fontSize: 24 }}>
         –
       </Label>
       <Label english bold style={{ fontSize: 32, fontVariant: ['tabular-nums'] }}>
-        {clock(end, timezone).slice(0, 5)}
+        {nativeTime(end, timezone)}
       </Label>
     </View>
   );
@@ -96,10 +103,10 @@ export function Hero() {
         <>
           <Elapsed start={data.active.clock_in_at} />
           <Label>
-            כניסה ב־{clock(data.active.clock_in_at, data.activeTimezone).slice(0, 5)} ·{' '}
+            כניסה ב־{nativeTime(data.active.clock_in_at, data.activeTimezone)} ·{' '}
             {data.activeStation ?? 'תחנה אחרת'}
           </Label>
-          {shift && <Label>סיום מתוכנן: {clock(shift.end_at, data.timezone).slice(0, 5)}</Label>}
+          {shift && <Label>סיום מתוכנן: {nativeTime(shift.end_at, data.timezone)}</Label>}
           <Label style={{ fontSize: 12, color: colors.secondary }}>
             לפי הדיווח האחרון שהתקבל מהשרת
           </Label>

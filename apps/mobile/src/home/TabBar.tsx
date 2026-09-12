@@ -9,6 +9,7 @@ import User from 'lucide-react-native/icons/user-round';
 import { Label } from '../ui';
 import { colors } from '../ui/theme';
 import { tabs } from './model';
+import { useWorker } from './WorkerProvider';
 const icons = [Home, Calendar, Check, Clock, User];
 type Props = {
   state: { index: number; routes: { key: string; name: string }[] };
@@ -21,6 +22,7 @@ type Props = {
 };
 export function TabBar({ state, navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { proceed } = useWorker();
   return (
     <View
       style={{
@@ -52,7 +54,7 @@ export function TabBar({ state, navigation }: Props) {
               });
               if (!active && !event.defaultPrevented) {
                 void Haptics.selectionAsync().catch(() => {});
-                navigation.navigate(tab.name);
+                proceed(() => navigation.navigate(tab.name));
               }
             }}
             style={({ pressed }) => ({

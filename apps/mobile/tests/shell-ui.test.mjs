@@ -37,6 +37,8 @@ function moduleAt(path, mocks = {}, initial = []) {
             },
           };
         if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
+        if (name === './WorkerProvider')
+          return { useWorker: () => ({ proceed: (action) => action() }) };
         if (name === 'react-native')
           return {
             View: 'View',
@@ -229,6 +231,6 @@ test('Home shows the availability action only when submission is missing', () =>
       '../../src/home/Hero': { Hero: 'Hero' },
     });
     const tree = m.exports.default();
-    assert.equal(find(tree, (n) => n.type === 'WebAction').length, submitted ? 0 : 1);
+    assert.equal(find(tree, (n) => n.props?.title === 'שליחת זמינות').length, submitted ? 0 : 1);
   }
 });

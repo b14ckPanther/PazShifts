@@ -5,5 +5,11 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "app.config.ts"]
+  "include": [
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "app.config.ts",
+    "tests/visual/**/*.tsx"
+  ]
 }

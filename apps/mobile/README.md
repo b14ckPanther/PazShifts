@@ -1,5 +1,7 @@
 # YellowShifts mobile
 
+Phase 3 adds native Schedule and Availability. See [Phase 3 delivery and migration instructions](PHASE3.md). Apply its RPC migration before deploying the updated availability caller.
+
 Native Expo foundation. Existing worker/admin websites and NFC links remain supported and unchanged. No database migrations, production mutations, new accounts, push delivery or background location are included in this phase.
 
 ## Architecture
