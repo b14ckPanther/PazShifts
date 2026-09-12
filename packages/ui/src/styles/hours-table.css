@@ -1,0 +1,153 @@
+.hours-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overscroll-behavior-x: contain;
+}
+.hours-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  color: #111827;
+  background: white;
+}
+.hours-table caption {
+  text-align: right;
+  padding: 12px;
+  color: #64748b;
+  font-size: 12px;
+}
+.hours-table th,
+.hours-table td {
+  padding: 12px;
+  text-align: right;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.hours-table thead {
+  background: #f1f5f9;
+}
+.hours-table td[dir='ltr'] {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.hours-table td:last-child {
+  white-space: normal;
+  min-width: 130px;
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+.hours-table small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.hours-table-warning {
+  color: #9a3412;
+}
+.hours-table-week,
+.hours-table tfoot {
+  background: #fff5cc;
+  font-weight: 700;
+}
+.hours-table-subtotal {
+  background: #f8fafc;
+}
+.hours-table-scroll:focus-visible {
+  outline: 3px solid #ffbf00;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .hours-table,
+  .hours-table thead,
+  .hours-table tbody,
+  .hours-table tfoot {
+    display: block;
+    width: 100%;
+  }
+  .hours-table caption {
+    display: block;
+  }
+  .hours-table tr {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr 1fr 1.15fr;
+    width: 100%;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .hours-table th,
+  .hours-table td {
+    padding: 10px 5px;
+    font-size: 11px;
+    min-width: 0;
+    border-bottom: 0;
+  }
+  .hours-table thead th:last-child {
+    display: none;
+  }
+  .hours-table td:last-child {
+    grid-column: 1/-1;
+    min-width: 0;
+    max-width: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding-top: 0;
+    color: #64748b;
+  }
+  .hours-table td:last-child small {
+    margin: 0;
+  }
+  .hours-table th[colspan] {
+    grid-column: 1/4;
+    white-space: normal;
+  }
+  .hours-table tr.hours-table-week td:last-child,
+  .hours-table tr.hours-table-subtotal td:last-child,
+  .hours-table tfoot td:last-child {
+    display: none;
+  }
+  .hours-table th[scope='row'] bdi {
+    font-variant-numeric: tabular-nums;
+  }
+}
+.hour-rates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+  color: #111827;
+}
+.hour-rates > span {
+  display: grid;
+  gap: 5px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 85px;
+  font-size: 13px;
+}
+.hour-rates.compact {
+  gap: 5px;
+  margin: 6px 0;
+  width: 100%;
+}
+.hour-rates.compact > span {
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+.hour-rates .hour-rates-unconfigured {
+  background: #fff5cc;
+}
+.hour-rates bdi {
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.hours-rate-row td {
+  display: block !important;
+  grid-column: 1/-1 !important;
+  max-width: none !important;
+}

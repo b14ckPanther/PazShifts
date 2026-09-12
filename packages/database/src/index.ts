@@ -15,3 +15,5 @@ export * from './origins';
 export * from './redirects';
 export * from './member-permissions';
 export * from './login-identifier';
+
+export * from './hours-query';

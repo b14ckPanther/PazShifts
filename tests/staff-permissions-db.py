@@ -137,6 +137,23 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         attempt(2, manual() + '; DELETE FROM public.attendance_manual_audit', True)
         print('PASS: manual attendance self/staff/platform; worker/shift-manager/cross-station denials; time/overlap/stale validation; immutable audit')
         print('PASS: all migrations; role changes; protected/self/cross-station/worker denial; admin creation denial; super-admin rights; station configuration; history preservation')
+        # Station-owned hour rules: database authorization and immutable versions.
+        rules = '{"dailyMinutes":[480,480,480,480,480,480,480],"firstOvertimeMinutes":120,"firstRate":125,"secondRate":150,"weeklyMinutes":2520,"weekStartsOn":1,"breakMinutes":0,"breakAfterMinutes":360,"nightStart":1320,"nightEnd":360,"nightRate":100,"restDays":[],"restRate":150,"holidays":[],"holidayRate":150}'
+        save_rules = f"SELECT public.save_station_hour_rules('{station}','2020-01-06','{rules}',true)"
+        for actor in (1,2,3): attempt(actor,save_rules)
+        for actor in (4,5,6,7): attempt(actor,save_rules,True)
+        attempt(2,save_rules.replace('2020-01-06','2020-01-07'),True)
+        attempt(2,save_rules.replace('125','99'),True)
+        attempt(2,save_rules.replace(',true)',',false)'),True)
+        attempt(2,save_rules+'; '+save_rules,True)
+        future_rules = save_rules.replace("'2020-01-06'", "(date_trunc('week',current_date+interval '14 days'))::date")
+        result = attempt(2,save_rules+'; '+future_rules+'; '+future_rules+f"; SELECT jsonb_array_length(public.get_station_hour_rules('{station}'))")
+        assert '\n3\n' in result, result
+        attempt(4,f"SELECT public.get_station_hour_rules('{station}')")
+        attempt(6,f"SELECT public.get_station_hour_rules('{station}')",True)
+        attempt(2,"DELETE FROM public.station_hour_rules",True)
+        attempt(2,"UPDATE public.station_hour_rules SET rules='{}'",True)
+        print('PASS: hour-rule validation, admin/platform writes, own-member reads, immutable past versions and cross-station denials')
         # Test-account cleanup is opt-in, dependency-aware and reversible by default.
         sql(f"INSERT INTO public.station_memberships(id,station_id,user_id,role) VALUES ('{user(207)}','{station}','{user(7)}','WORKER');")
         sql(f"INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,clock_out_at,status) VALUES ('{user(301)}','{station}','{user(207)}','{user(7)}','2020-01-01T08:00:00Z','2020-01-01T16:00:00Z','COMPLETED');")

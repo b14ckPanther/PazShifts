@@ -41,15 +41,15 @@ importers:
       '@yellowshifts/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@yellowshifts/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@yellowshifts/types':
         specifier: workspace:*
         version: link:../../packages/types
       '@yellowshifts/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      jspdf:
-        specifier: ^4.2.1
-        version: 4.2.1
       next:
         specifier: ^16.3.4
         version: 16.3.4(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -96,6 +96,9 @@ importers:
       '@yellowshifts/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@yellowshifts/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@yellowshifts/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -144,6 +147,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.1
         version: 2.115.0
+      '@yellowshifts/reports':
+        specifier: workspace:*
+        version: link:../reports
       '@yellowshifts/types':
         specifier: workspace:*
         version: link:../types
@@ -196,6 +202,22 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/reports:
+    dependencies:
+      '@yellowshifts/types':
+        specifier: workspace:*
+        version: link:../types
+      jspdf:
+        specifier: ^4.2.1
+        version: 4.2.1
+    devDependencies:
+      '@yellowshifts/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
   packages/types:
     devDependencies:
       '@yellowshifts/config':
@@ -213,6 +235,9 @@ importers:
       '@yellowshifts/icons':
         specifier: workspace:*
         version: link:../icons
+      '@yellowshifts/reports':
+        specifier: workspace:*
+        version: link:../reports
       '@yellowshifts/types':
         specifier: workspace:*
         version: link:../types

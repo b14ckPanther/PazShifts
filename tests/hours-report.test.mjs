@@ -19,7 +19,7 @@ function load(path, mocks = {}) {
   );
   return exports;
 }
-const helpers = load('../apps/admin/app/lib/hours-report.ts');
+const helpers = load('../packages/reports/src/hours-report.ts');
 const record = (overrides = {}) => ({
   id: 'r',
   user_id: 'u',
@@ -114,7 +114,7 @@ test('CSV is Excel UTF-8, escapes formulas/quotes and retains duplicate worker i
   assert.equal(helpers.summaryCsv(report).split('\r\n').length, 3);
 });
 test('report pagination fetches all rows past Supabase default 1000 and scopes every query', async () => {
-  const { readReportAttendance } = load('../apps/admin/app/lib/report-query.ts');
+  const { readReportAttendance } = load('../packages/database/src/hours-query.ts');
   const ranges = [];
   const client = {
     from(table) {

@@ -1,9 +1,9 @@
 import { redirect, notFound } from 'next/navigation';
-import { getStationById } from '@yellowshifts/database';
+import { getStationById, getHourPolicies } from '@yellowshifts/database';
 import { getServerContext } from '@/app/lib/server-context';
 import {
   addDays,
-  buildEntries,
+  classifiedEntries,
   dayBoundary,
   localDate,
   validDate,
@@ -34,22 +34,25 @@ export default async function ReportsPage({
   if (!station) notFound();
   const today = localDate(new Date(), station.timezone);
   const query = await searchParams;
-  const from =
-    typeof query.from === 'string' && validDate(query.from) ? query.from : weekStart(today);
-  const to = typeof query.to === 'string' && validDate(query.to) ? query.to : addDays(from, 6);
-  if (to < from || Date.parse(to) - Date.parse(from) > 92 * 86400000)
-    return (
-      <main dir="rtl" style={{ padding: 24 }}>
-        יש לבחור טווח של עד 93 ימים, עם תאריך סיום אחרי תאריך ההתחלה.{' '}
-        <a href={`/stations/${id}/reports`}>חזרה לדוח השבועי</a>
-      </main>
-    );
   try {
+    const policies = await getHourPolicies(supabase, id);
+    const from =
+      typeof query.from === 'string' && validDate(query.from)
+        ? query.from
+        : weekStart(today, policies[0]?.rules.weekStartsOn);
+    const to = typeof query.to === 'string' && validDate(query.to) ? query.to : addDays(from, 6);
+    if (to < from || Date.parse(to) - Date.parse(from) > 92 * 86400000)
+      return (
+        <main dir="rtl" style={{ padding: 24 }}>
+          יש לבחור טווח של עד 93 ימים, עם תאריך סיום אחרי תאריך ההתחלה.{' '}
+          <a href={`/stations/${id}/reports`}>חזרה לדוח השבועי</a>
+        </main>
+      );
     const [records, people] = await Promise.all([
       readReportAttendance(
         supabase,
         id,
-        new Date(dayBoundary(from, station.timezone)).toISOString(),
+        new Date(dayBoundary(addDays(from, -7), station.timezone)).toISOString(),
         new Date(dayBoundary(addDays(to, 1), station.timezone)).toISOString()
       ),
       readReportPeople(supabase, id),
@@ -69,7 +72,9 @@ export default async function ReportsPage({
           to,
           generatedAt: new Date().toISOString(),
           people,
-          entries: buildEntries(records, from, to, station.timezone),
+          entries: classifiedEntries(records, from, to, station.timezone, policies),
+          policies,
+          rateWeekStartsOn: policies[0]?.rules.weekStartsOn,
         }}
       />
     );

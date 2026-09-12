@@ -537,6 +537,16 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      get_station_hour_rules: { Args: { p_station_id: string }; Returns: Json };
+      save_station_hour_rules: {
+        Args: {
+          p_station_id: string;
+          p_effective_from: string;
+          p_rules: Json;
+          p_ack_history?: boolean;
+        };
+        Returns: Json;
+      };
       save_manual_attendance: {
         Args: {
           p_station_id: string;

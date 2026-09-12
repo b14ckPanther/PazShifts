@@ -1,0 +1,77 @@
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.rules-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.hour-rules summary {
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.hour-rules textarea {
+  width: 100%;
+  font: inherit;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.hour-rules p {
+  font-size: 14px;
+}
+.hour-rules input[type='checkbox'] {
+  width: 20px;
+  min-height: 20px;
+  accent-color: #cf0044;
+}
+.hour-rules .rules-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rules-save {
+  background: #cf0044 !important;
+  color: white !important;
+  width: 100%;
+}
+.rules-explanation {
+  border-color: #f4d66b;
+  background: #fffbeb;
+}
+.rules-version {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+}
+.rules-message {
+  min-height: 22px;
+}
+.hour-rules fieldset {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+}
+@media (max-width: 500px) {
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hour-rules details > summary::after {
+  content: '+';
+  margin-inline-start: auto;
+  font-size: 20px;
+}
+.hour-rules details[open] > summary::after {
+  content: '−';
+}

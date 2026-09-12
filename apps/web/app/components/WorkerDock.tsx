@@ -2,11 +2,11 @@
 import { NavigationLink as Link } from './NavigationLink';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
-import { CalendarIcon, BriefcaseIcon } from '@yellowshifts/icons';
+import { CalendarIcon, BriefcaseIcon, ClockIcon } from '@yellowshifts/icons';
 export function WorkerDock() {
   const path = usePathname();
   const params = useSearchParams();
-  if (path !== '/' && path !== '/availability') return null;
+  if (path !== '/' && path !== '/availability' && path !== '/hours') return null;
   const station = params.get('stationId');
   const query = station ? `?stationId=${encodeURIComponent(station)}` : '';
   return (
@@ -21,6 +21,10 @@ export function WorkerDock() {
       >
         <CalendarIcon size={22} />
         <span>הזמינות שלי</span>
+      </Link>
+      <Link href={`/hours${query}`} aria-current={path === '/hours' ? 'page' : undefined}>
+        <ClockIcon size={22} />
+        <span>השעות שלי</span>
       </Link>
     </MobileDock>
   );
