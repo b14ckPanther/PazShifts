@@ -1,0 +1,125 @@
+.darb-footer {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 32px;
+  min-width: 0;
+}
+.darb-credit {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(100%, 340px);
+  box-sizing: border-box;
+  padding: 18px 22px;
+  border: 1px solid #303846;
+  border-radius: 20px;
+  background: #111827;
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 8px 24px #11182712;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.darb-credit::before {
+  content: '';
+  position: absolute;
+  inset: 0 20% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ffbf00, transparent);
+}
+.darb-credit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, #ffffff0d 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.darb-credit-copy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.darb-credit-caption {
+  color: #cbd5e1;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.darb-credit-signature {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+.darb-credit-signature strong {
+  color: #fff;
+  font:
+    700 30px/1 var(--font-ubuntu),
+    sans-serif;
+  letter-spacing: -1px;
+}
+.darb-credit-dot {
+  color: #ffbf00;
+}
+.darb-credit-founder {
+  justify-self: start;
+  font-size: 10px;
+  color: #cbd5e1;
+}
+.darb-credit-arrow {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff0d;
+  color: #ffbf00;
+  transition: transform 180ms ease;
+}
+.darb-credit:hover,
+.darb-credit:focus-visible {
+  border-color: #b48a19;
+  box-shadow: 0 8px 28px #11182720;
+}
+.darb-credit:focus-visible {
+  outline: 3px solid #ffbf00;
+  outline-offset: 4px;
+}
+.darb-credit:hover::after,
+.darb-credit:focus-visible::after {
+  animation: darb-shimmer 900ms ease both;
+}
+.darb-credit:hover .darb-credit-arrow {
+  transform: translate(2px, -2px);
+}
+@keyframes darb-shimmer {
+  to {
+    transform: translateX(120%);
+  }
+}
+@media (max-width: 767px) {
+  .app-shell:has(.mobile-dock-space) .darb-footer {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .darb-credit,
+  .darb-credit-arrow {
+    transition: none;
+  }
+  .darb-credit:hover::after,
+  .darb-credit:focus-visible::after {
+    animation: none;
+  }
+  .darb-credit:hover .darb-credit-arrow {
+    transform: none;
+  }
+}

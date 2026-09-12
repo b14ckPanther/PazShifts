@@ -3,7 +3,7 @@ import { WorkerDock } from './components/WorkerDock';
 import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
-import { BrandSplash } from '@yellowshifts/ui';
+import { BrandSplash, DarbFooter } from '@yellowshifts/ui';
 import { PwaRegistration } from './components/PwaRegistration';
 
 const heebo = Heebo({
@@ -47,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegistration />
         <BrandSplash />
         {children}
+        <DarbFooter />
         <Suspense fallback={null}>
           <WorkerDock />
         </Suspense>
