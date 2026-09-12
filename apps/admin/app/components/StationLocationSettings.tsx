@@ -3,12 +3,14 @@ import { useState, useTransition } from 'react';
 import type { Station } from '@yellowshifts/types';
 import { Button } from '@yellowshifts/ui';
 import { saveStationLocation } from '../actions/station-location';
+import './station-location.css';
 import { StationLocationFields } from './StationLocationFields';
 export function StationLocationSettings({ station }: { station: Station }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState('');
   return (
     <form
+      className="station-location-settings"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -36,11 +38,16 @@ export function StationLocationSettings({ station }: { station: Station }) {
         latitude={station.latitude}
         longitude={station.longitude}
         radius={station.attendanceRadiusM}
-      />
-      <Button type="submit" isLoading={pending}>
-        שמירת מיקום וטווח
-      </Button>
-      <p role="status">{message}</p>
+      >
+        <div className="station-location-actions">
+          <Button type="submit" isLoading={pending}>
+            שמירת מיקום וטווח
+          </Button>
+          <p role="status" hidden={!message}>
+            {message}
+          </p>
+        </div>
+      </StationLocationFields>
     </form>
   );
 }

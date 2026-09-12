@@ -1,11 +1,14 @@
+import type { ReactNode } from 'react';
 export function StationLocationFields({
   latitude,
   longitude,
   radius = 50,
+  children,
 }: {
   latitude?: number | null;
   longitude?: number | null;
   radius?: number;
+  children?: ReactNode;
 }) {
   return (
     <fieldset
@@ -68,6 +71,7 @@ export function StationLocationFields({
           </label>
         ))}
       </div>
+      {children}
     </fieldset>
   );
 }
