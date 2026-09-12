@@ -1,0 +1,6 @@
+.expo/
+ios/
+android/
+*.ipa
+*.apk
+*.aab
