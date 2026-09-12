@@ -1,6 +1,53 @@
-# Phase 11 — Deployment preparation (temporary Vercel domains)
+# Deployment — Darb domains and legacy NFC compatibility
 
-This guide covers deployment preparation and subsequent manual updates. The user has supplied the worker domain `https://paz-shifts.vercel.app`; the latest changes still need deployment verification. Domain ownership or authorization from Paz is not confirmed. Preparation does not establish production or real-station pilot readiness. The user will push GitHub and create both Vercel projects manually; nothing in this guide requires deployment from the CLI.
+The user reports connecting the worker to `https://paz.darb.co.il` and admin to
+`https://admin.paz.darb.co.il`. Keep `https://paz-shifts.vercel.app` assigned to the
+worker project and serving the same deployment while existing physical NFC tags
+use it. Do not configure a domain-wide redirect from that host during this transition.
+The following current settings supersede the original temporary-domain preparation
+instructions below; hosted configuration and physical scans were not changed here.
+
+## Current domain transition settings
+
+In **both Vercel projects**, set Production variables:
+
+```dotenv
+NEXT_PUBLIC_APP_URL=https://paz.darb.co.il
+NEXT_PUBLIC_ADMIN_URL=https://admin.paz.darb.co.il
+```
+
+In the **admin project**, also set:
+
+```dotenv
+NEXT_PUBLIC_NFC_APP_URL=https://paz-shifts.vercel.app
+```
+
+Redeploy both projects after changing environment variables. The optional NFC origin
+only controls the admin's displayed/copied tag URL; when omitted it uses the worker
+origin. An invalid configured origin disables the link. It does not redirect scans,
+rotate tokens, or change attendance behavior. App navigation stays relative to the
+host being used. Local ignored `.env.local` files remain local-only.
+
+Supabase Authentication → URL Configuration:
+
+- Site URL: `https://paz.darb.co.il`.
+- Allow the origins and return paths for `https://paz.darb.co.il/**` and
+  `https://admin.paz.darb.co.il/**`.
+- Retain `https://paz-shifts.vercel.app/**` while old tags are active, and the old
+  admin origin if that host is still used. Never allow arbitrary Vercel projects.
+
+Browser sessions and installed PWAs are host-scoped. Logging in on the new worker
+host does not log the user in on the old NFC host; an old-tag scan may require one
+login there, after which its own session persists. No credentials or cookies are
+copied across domains. Install the PWA from the new domain when migrating it.
+
+Later, rewrite each tag to `https://paz.darb.co.il/nfc/<same-station-token>` and set
+`NEXT_PUBLIC_NFC_APP_URL=https://paz.darb.co.il` in admin, then redeploy admin.
+Keep old-domain access until all tags/users have migrated. No database migration
+or token rotation is required. To roll back, restore the previous origin variables
+and redeploy; retain both domain assignments during the transition.
+
+## Original deployment preparation reference
 
 ## Step A — Push the repository to GitHub
 

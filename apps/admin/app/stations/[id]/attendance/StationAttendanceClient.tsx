@@ -165,7 +165,9 @@ export function StationAttendanceClient({
   };
 
   // The admin host cannot identify the separate worker project; require its configured origin.
-  const origin = configuredAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  const origin = configuredAppOrigin(
+    process.env.NEXT_PUBLIC_NFC_APP_URL || process.env.NEXT_PUBLIC_APP_URL
+  );
   const nfcStationUrl = origin && nfcToken ? `${origin}/nfc/${encodeURIComponent(nfcToken)}` : null;
 
   const handleCopyNfcUrl = () => {
