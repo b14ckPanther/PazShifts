@@ -17,13 +17,14 @@ export type WorkerContext = {
 /** Presentation only. Every operation still relies on the user's token and database RLS. */
 export async function getNativeWorkerContext(
   client: SupabaseClient<Database>,
-  expectedUserId: string
+  expectedUserId?: string
 ): Promise<WorkerContext> {
   const {
     data: { user },
     error,
   } = await client.auth.getUser();
-  if (error || !user || user.id !== expectedUserId) throw new Error('Session unavailable');
+  if (error || !user || (expectedUserId !== undefined && user.id !== expectedUserId))
+    throw new Error('Session unavailable');
   const [profile, memberships] = await Promise.all([
     client.from('profiles').select('full_name,is_active,email,phone').eq('id', user.id).single(),
     client

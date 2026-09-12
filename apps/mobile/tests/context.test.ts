@@ -68,3 +68,19 @@ test('membership revocation is reflected on subsequent read with no shared cache
     0
   );
 });
+test('derived identity performs one Auth read and still scopes all context queries', async () => {
+  const c = client({ user: 'worker-b' });
+  let calls = 0;
+  c.value.auth.getUser = (async () => {
+    calls++;
+    return { data: { user: { id: 'worker-b' } }, error: null };
+  }) as typeof c.value.auth.getUser;
+  assert.equal((await getNativeWorkerContext(c.value)).userId, 'worker-b');
+  assert.equal(calls, 1);
+  assert.deepEqual(c.filters, [
+    ['profiles', 'id', 'worker-b'],
+    ['station_memberships', 'user_id', 'worker-b'],
+    ['station_memberships', 'status', 'ACTIVE'],
+  ]);
+  await assert.rejects(getNativeWorkerContext(client({ active: false }).value));
+});

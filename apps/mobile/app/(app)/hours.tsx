@@ -1,4 +1,1 @@
-import { Preview } from '../../src/home/Preview';
-export default function Page() {
-  return <Preview kind="hours" />;
-}
+export { default } from '../../src/hours/Hours';
