@@ -7,3 +7,8 @@ coverage
 *.min.js
 *.d.ts
 pnpm-lock.yaml
+
+# Generated native projects
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/.expo
