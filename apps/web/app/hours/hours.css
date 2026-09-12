@@ -1,0 +1,152 @@
+.worker-hours {
+  max-width: 1040px;
+  margin: auto;
+  padding: 20px 16px 110px;
+  color: #111827;
+  min-width: 0;
+}
+.worker-hours * {
+  box-sizing: border-box;
+}
+.worker-hours header {
+  margin-bottom: 20px;
+}
+.worker-hours header p {
+  color: #8a6500;
+  font-weight: 700;
+  margin: 16px 0 4px;
+}
+.worker-hours h1 {
+  margin: 0;
+  font-size: 30px;
+}
+.worker-hours header span,
+.worker-hours small {
+  color: #64748b;
+}
+.worker-hours h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+.worker-hours-controls,
+.worker-hours-table,
+.worker-hours-exports {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 18px;
+  margin: 16px 0;
+  min-width: 0;
+}
+.worker-hours form {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.worker-hours label {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+.worker-hours button,
+.worker-hours input,
+.worker-hours select {
+  font: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 11px;
+  background: #fff;
+  color: #111827;
+  padding: 10px 12px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+}
+.worker-hours input,
+.worker-hours select {
+  font-size: 16px;
+  width: 100%;
+}
+.worker-hours button {
+  font-weight: 600;
+  cursor: pointer;
+}
+.worker-hours button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.worker-hours form button,
+.worker-hours-exports button:first-child {
+  background: #cf0044;
+  color: white;
+  border-color: #cf0044;
+}
+.hours-week-nav,
+.worker-hours-exports > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.hours-week-nav button {
+  flex: 1;
+  font-size: 13px;
+  padding: 8px;
+}
+.worker-hours-total {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+.worker-hours-total > div {
+  display: grid;
+  gap: 8px;
+  background: #fff5cc;
+  border-radius: 16px;
+  padding: 18px;
+}
+.worker-hours-total strong {
+  font-size: 28px;
+  text-align: right;
+}
+.worker-hours-total span {
+  font-size: 13px;
+}
+.worker-hours-exports p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475569;
+}
+.worker-hours a {
+  color: #475569;
+}
+.worker-hours button:focus-visible {
+  outline: 3px solid #ffbf00;
+  outline-offset: 2px;
+}
+@media (max-width: 500px) {
+  .worker-hours {
+    padding: 16px 12px 110px;
+  }
+  .worker-hours-controls,
+  .worker-hours-table,
+  .worker-hours-exports {
+    padding: 14px;
+  }
+  .worker-hours form label {
+    flex-basis: calc(50% - 5px);
+  }
+  .worker-hours form button {
+    width: 100%;
+  }
+  .worker-hours-exports > div button {
+    flex: 1 1 42%;
+  }
+}
+@media (max-width: 360px) {
+  .worker-hours form label {
+    flex-basis: 100%;
+  }
+}

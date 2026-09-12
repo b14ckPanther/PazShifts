@@ -10,6 +10,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  if (['/fonts/Heebo-Regular.ttf', '/fonts/Heebo-OFL.txt'].includes(request.nextUrl.pathname))
+    return response;
+
   // The physical tag keeps its bare URL. Each fresh navigation gets a stable receipt URL.
   // Refresh/back/retries keep that ID, so they cannot toggle attendance again.
   const isNfc = /^\/nfc\/[^/]+$/.test(request.nextUrl.pathname);

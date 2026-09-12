@@ -227,3 +227,8 @@
     font-size: 14px;
   }
 }
+@media (max-width: 360px) {
+  .report-filters label {
+    flex-basis: 100%;
+  }
+}

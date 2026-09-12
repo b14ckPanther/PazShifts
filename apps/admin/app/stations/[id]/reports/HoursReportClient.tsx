@@ -1,10 +1,10 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { HoursTable, RateBreakdown } from '@yellowshifts/ui';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   addDays,
-  clock,
   duration,
   reportCsv,
   summaryCsv,
@@ -71,6 +71,7 @@ export function HoursReportClient({
         <h1>דוח שעות עבודה</h1>
         <p>סיכום הצוות, פירוט יומי וייצוא להנהלת חשבונות</p>
       </header>
+      <Link href={`/stations/${stationId}/reports/settings`}>הגדרת כללי שעות ותוספות →</Link>
       <section className="report-panel" aria-label="בחירת תקופה ועובד">
         <form
           key={`${report.from}-${report.to}`}
@@ -102,7 +103,12 @@ export function HoursReportClient({
           </button>
           <button
             disabled={pending}
-            onClick={() => navigate(weekStart(today), addDays(weekStart(today), 6))}
+            onClick={() =>
+              navigate(
+                weekStart(today, report.rateWeekStartsOn),
+                addDays(weekStart(today, report.rateWeekStartsOn), 6)
+              )
+            }
           >
             השבוע הנוכחי
           </button>
@@ -143,6 +149,7 @@ export function HoursReportClient({
           <small>פתוחות / מסומנות / חופפות</small>
         </section>
       </div>
+      <RateBreakdown entries={filtered.entries} />
       <section className="report-panel">
         <h2>ייצוא {personId ? 'העובד שנבחר' : 'כל הצוות'}</h2>
         <p>
@@ -176,8 +183,9 @@ export function HoursReportClient({
         </div>
         {error && <p role="alert">{error}</p>}
         <p className="report-note">
-          שעות נוכחות בלבד, ללא חישוב שכר או הפסקות. רשומות פתוחות, מסומנות וחופפות אינן נספרות.
-          משמרות לילה מחולקות לפי יום ואזור הזמן של התחנה. תיקונים ידניים כלולים ומסומנים.
+          שעות נוכחות וסיווג לפי כללי התחנה, ללא חישוב שכר כספי. ניכוי הפסקות מוצג בנפרד. רשומות
+          פתוחות, מסומנות וחופפות אינן נספרות. משמרות לילה מחולקות לפי יום ואזור הזמן של התחנה.
+          תיקונים ידניים כלולים ומסומנים.
         </p>
         <small>
           הדוח נכון ל־
@@ -198,7 +206,6 @@ export function HoursReportClient({
         {!filtered.people.length && <p>אין עובדים להצגה בתקופה זו.</p>}
         {filtered.people.map((person) => {
           const entries = filtered.entries.filter((e) => e.personId === person.id);
-          const weeks = [...new Set(entries.map((e) => weekStart(e.date)))].sort();
           return (
             <details className="report-panel" key={person.id} open={!!personId}>
               <summary>
@@ -209,52 +216,8 @@ export function HoursReportClient({
                 <span dir="ltr">{duration(entries.reduce((sum, e) => sum + e.seconds, 0))}</span>
               </summary>
               {!entries.length && <p>לא נרשמו שעות בתקופה שנבחרה.</p>}
-              {weeks.map((week) => (
-                <section key={week} className="report-week">
-                  <h3>
-                    שבוע <bdi>{week}</bdi>
-                    <span dir="ltr">
-                      {duration(
-                        entries
-                          .filter((e) => weekStart(e.date) === week)
-                          .reduce((sum, e) => sum + e.seconds, 0)
-                      )}
-                    </span>
-                  </h3>
-                  {[
-                    ...new Set(
-                      entries.filter((e) => weekStart(e.date) === week).map((e) => e.date)
-                    ),
-                  ].map((date) => (
-                    <div className="report-day" key={date}>
-                      <h4>
-                        <bdi>{date}</bdi>
-                        <span dir="ltr">
-                          {duration(
-                            entries
-                              .filter((e) => e.date === date)
-                              .reduce((sum, e) => sum + e.seconds, 0)
-                          )}
-                        </span>
-                      </h4>
-                      {entries
-                        .filter((e) => e.date === date)
-                        .map((e) => (
-                          <div className="report-entry" key={`${e.id}-${date}`}>
-                            <span dir="ltr">
-                              {clock(e.start, report.timezone)} → {clock(e.end, report.timezone)}
-                            </span>
-                            <strong dir="ltr">{duration(e.seconds)}</strong>
-                            <span className={e.status === 'הושלמה' ? '' : 'report-warning'}>
-                              {e.status} · {e.source}
-                            </span>
-                            {e.reason && <small>סיבת תיקון: {e.reason}</small>}
-                          </div>
-                        ))}
-                    </div>
-                  ))}
-                </section>
-              ))}
+              <RateBreakdown entries={entries} />
+              <HoursTable report={{ ...filtered, people: [person], entries }} />
             </details>
           );
         })}

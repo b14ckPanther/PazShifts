@@ -236,7 +236,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
             </div>
 
             {/* Navigation Tabs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <Link
                 href={`/?stationId=${activeContext.station.id}`}
                 style={{
@@ -274,6 +274,12 @@ export default async function WebHomePage({ searchParams }: PageProps) {
               >
                 <CalendarIcon size={16} />
                 <span>זמינות</span>
+              </Link>
+              <Link
+                href={`/hours?stationId=${activeContext.station.id}`}
+                style={{ color: '#111827', padding: '10px 14px', fontWeight: 600 }}
+              >
+                השעות שלי
               </Link>
             </div>
 
