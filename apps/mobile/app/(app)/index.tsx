@@ -1,45 +1,101 @@
-import { Redirect } from 'expo-router';
-import { View } from 'react-native';
-import { useSession } from '../../src/auth/SessionProvider';
-import { Button, Label, Message, Screen, Skeleton, Surface } from '../../src/ui';
-export default function Foundation() {
-  const { state, retry, logout } = useSession();
-  if (state.phase === 'signedOut') return <Redirect href="/login" />;
+import { View, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { duration, addDays } from '@yellowshifts/reports';
+import { Screen, Label, Surface } from '../../src/ui';
+import { colors } from '../../src/ui/theme';
+import { AppHeader, DataState, RefreshStamp, WebAction } from '../../src/home/Patterns';
+import { Hero } from '../../src/home/Hero';
+import { useWorker } from '../../src/home/WorkerProvider';
+export default function Home() {
+  const { context, data } = useWorker();
+  const router = useRouter();
+  const weekly =
+    data?.shifts.filter((s) => s.shift_date >= data.week && s.shift_date < addDays(data.week, 7)) ??
+    [];
   return (
-    <Screen>
-      <Label english bold style={{ fontSize: 24 }}>
-        YellowShifts
-      </Label>
-      <Surface>
-        {state.phase === 'loading' ? (
-          <Skeleton />
-        ) : state.phase === 'error' ? (
-          <>
-            <Message>{state.error}</Message>
-            <Button title="ניסיון נוסף" onPress={retry} />
-            <Button secondary title="התנתקות" onPress={() => void logout()} />
-          </>
-        ) : (
-          <>
-            <Label bold style={{ fontSize: 30 }}>
-              שלום, {state.context?.fullName}
+    <Screen tabbed>
+      <AppHeader />
+      <View style={{ gap: 4 }}>
+        <Label style={{ color: colors.secondary }}>טוב לראות אותך</Label>
+        <Label bold accessibilityRole="header" style={{ fontSize: 30 }}>
+          {context.fullName.split(' ')[0]}
+        </Label>
+      </View>
+      {!data ? (
+        <DataState />
+      ) : (
+        <>
+          <Hero />
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="משמרות השבוע"
+              onPress={() => router.navigate('/schedule')}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.65 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                flex: 1,
+                padding: 18,
+                borderRadius: 20,
+                backgroundColor: colors.surface,
+                gap: 8,
+              })}
+            >
+              <Label style={{ fontSize: 13 }}>השבוע בסידור</Label>
+              <Label english bold style={{ fontSize: 30 }}>
+                {weekly.length}
+              </Label>
+              <Label style={{ fontSize: 12, color: colors.secondary }}>משמרות שפורסמו</Label>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="שעות נוכחות השבוע"
+              onPress={() => router.navigate('/hours')}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.65 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                flex: 1,
+                padding: 18,
+                borderRadius: 20,
+                backgroundColor: colors.surface,
+                gap: 8,
+              })}
+            >
+              <Label style={{ fontSize: 13 }}>שעות השבוע</Label>
+              <Label
+                english
+                bold
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                style={{ fontSize: 28, fontVariant: ['tabular-nums'] }}
+              >
+                {duration(data.confirmedSeconds).slice(0, -3)}
+              </Label>
+              <Label style={{ fontSize: 12, color: colors.secondary }}>נוכחות סגורה</Label>
+            </Pressable>
+          </View>
+          <Surface>
+            <Label bold>
+              {data.availabilitySubmitted ? 'זמינות לשבוע הבא נשלחה' : 'עוד דבר קטן לשבוע הבא'}
             </Label>
-            <Label>החשבון שלך מחובר</Label>
-            <View style={{ gap: 12 }}>
-              {state.context?.stations.map((station) => (
-                <View key={station.id}>
-                  <Label bold>{station.name}</Label>
-                  <Label english>{station.code}</Label>
-                </View>
-              ))}
-            </View>
-            {!state.context?.stations.length && (
-              <Label>אין כרגע שיוך לתחנה פעילה. פנו למנהל התחנה.</Label>
+            <Label>
+              {data.availabilitySubmitted
+                ? 'אפשר לנשום. הזמינות שלך אצל מנהל התחנה.'
+                : 'עדיין לא שלחת זמינות. אפשר להשלים אותה באתר.'}
+            </Label>
+            {!data.availabilitySubmitted && (
+              <WebAction title="שליחת זמינות באתר" path="availability" />
             )}
-            <Button secondary title="התנתקות" onPress={() => void logout()} />
-          </>
-        )}
-      </Surface>
+          </Surface>
+          {data.reviewCount > 0 && (
+            <Label style={{ color: colors.deep }}>
+              יש {data.reviewCount} רשומות פתוחות או לבדיקה. הן אינן נכללות בסיכום השעות.
+            </Label>
+          )}
+          <RefreshStamp />
+        </>
+      )}
     </Screen>
   );
 }

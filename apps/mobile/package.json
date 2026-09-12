@@ -17,6 +17,7 @@
     "@expo-google-fonts/ubuntu": "^0.4.1",
     "@supabase/supabase-js": "^2.49.1",
     "@yellowshifts/database": "workspace:*",
+    "@yellowshifts/reports": "workspace:*",
     "@yellowshifts/types": "workspace:*",
     "expo": "~57.0.22",
     "expo-constants": "~57.0.18",

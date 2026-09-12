@@ -96,6 +96,9 @@ importers:
       '@yellowshifts/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@yellowshifts/reports':
+        specifier: workspace:*
+        version: link:../../packages/reports
       '@yellowshifts/types':
         specifier: workspace:*
         version: link:../../packages/types
