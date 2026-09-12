@@ -137,7 +137,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
             {/* Navigation Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Link
-                href={`/?stationId=${activeContext.station.id}`}
+                href={`/stations/${encodeURIComponent(activeContext.station.code)}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -157,7 +157,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
               </Link>
 
               <Link
-                href={`/availability?stationId=${activeContext.station.id}`}
+                href={`/stations/${encodeURIComponent(activeContext.station.code)}/availability`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

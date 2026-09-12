@@ -241,7 +241,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
             {/* Navigation Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <Link
-                href={`/?stationId=${activeContext.station.id}`}
+                href={`/stations/${encodeURIComponent(activeContext.station.code)}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -260,7 +260,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
               </Link>
 
               <Link
-                href={`/availability?stationId=${activeContext.station.id}`}
+                href={`/stations/${encodeURIComponent(activeContext.station.code)}/availability`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -279,7 +279,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
                 <span>זמינות</span>
               </Link>
               <Link
-                href={`/hours?stationId=${activeContext.station.id}`}
+                href={`/stations/${encodeURIComponent(activeContext.station.code)}/hours`}
                 style={{ color: '#111827', padding: '10px 14px', fontWeight: 600 }}
               >
                 השעות שלי

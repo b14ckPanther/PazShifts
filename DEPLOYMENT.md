@@ -268,3 +268,21 @@ contract tests cover resolution, missing/denied stations, cookies and POST handl
 hosted authenticated browser behavior remains owner verification. Changing a
 station code changes its readable URL; old UUID links remain valid. Revert this
 change and redeploy to restore UUID-only routing.
+
+### Readable worker station URLs
+
+Worker station links use `/stations/KURDANI`, `/stations/KURDANI/availability`, and
+`/stations/KURDANI/hours`. Existing `stationId` query links redirect to the code
+path on GET/HEAD, keeping week/date filters. The root `/` still selects the user's
+usual station. Code routes rewrite internally to the existing worker pages with
+the resolved UUID; server-side membership checks and mutations remain unchanged.
+The resolver uses the signed-in RLS client and does not cache station mappings.
+It adds one `id, code` lookup to station-specific requests.
+
+NFC `/nfc/<token>` routes and their scan receipts are unchanged: do not rewrite the
+physical tag. Legacy POST targets are retained, while code-path POSTs rewrite
+without a redirect. Deploy the worker app; no SQL or environment changes are
+required. Local contract tests cover all three routes, filters, login return,
+missing stations, cookie refresh, and POST handling. Verify signed-in navigation,
+station switching, and an availability save after deployment. Revert the worker
+routing change and redeploy to restore query-only URLs.
