@@ -105,10 +105,10 @@
     transform: translateX(120%);
   }
 }
-@media (max-width: 767px) {
-  .app-shell:has(.mobile-dock-space) .darb-footer {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  }
+/* Match streamed route readiness without a client effect or artificial timer. */
+.app-shell:has(.route-loading) .darb-footer,
+.app-shell:has(.brand-loading) .darb-footer {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .darb-credit,

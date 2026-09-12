@@ -482,7 +482,7 @@ html {
   }
   .mobile-dock-space {
     display: block;
-    height: calc(72px + var(--app-safe-bottom));
+    height: 0;
   }
   .mobile-dock {
     box-sizing: border-box;
@@ -665,4 +665,27 @@ body:has(.navigation-pending[data-pending='true'])::before {
   body:has(.navigation-pending[data-pending='true'])::before {
     animation: none;
   }
+}
+
+/* The shell alone reserves dock clearance, after the footer, in both apps. */
+@media (max-width: 767px) {
+  .app-shell:has(.mobile-dock-space) {
+    padding-bottom: calc(76px + var(--app-safe-bottom));
+  }
+  .app-shell:has(.mobile-dock-space) main:not(.route-loading):not(.mobile-flow) {
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .darb-footer {
+    padding-block: 16px 20px;
+  }
+}
+.route-loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.route-loading-brand p {
+  font-size: 13px;
 }
