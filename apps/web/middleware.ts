@@ -89,6 +89,56 @@ export async function middleware(request: NextRequest) {
     return redirected;
   }
 
+  // Public station-code paths; internal pages/actions still receive UUIDs.
+  const friendly = request.nextUrl.pathname.match(
+    /^\/stations\/([^/]+)(?:\/(hours|availability))?\/?$/
+  );
+  const legacy = ['/', '/hours', '/availability'].includes(request.nextUrl.pathname);
+  const reference =
+    friendly?.[1] || (legacy ? request.nextUrl.searchParams.get('stationId') : null);
+  if (user && reference) {
+    let value: string;
+    try {
+      value = friendly ? decodeURIComponent(reference) : reference;
+    } catch {
+      return new NextResponse('Invalid station URL', { status: 400 });
+    }
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    // Legacy POSTs keep their action target. Friendly POSTs rewrite, never redirect.
+    if (friendly || request.method === 'GET' || request.method === 'HEAD') {
+      const { data: station, error } = await supabase
+        .from('stations')
+        .select('id, code')
+        .eq(uuid ? 'id' : 'code', value)
+        .returns<{ id: string; code: string }[]>()
+        .maybeSingle();
+      if (error || !station) {
+        const failed = new NextResponse(error ? 'Unable to load station' : 'Station not found', {
+          status: error ? 503 : 404,
+        });
+        response.cookies.getAll().forEach((cookie) => failed.cookies.set(cookie));
+        return failed;
+      }
+      const destination = request.nextUrl.clone();
+      let routed: NextResponse;
+      if (friendly) {
+        destination.pathname = friendly[2] ? '/' + friendly[2] : '/';
+        destination.searchParams.set('stationId', station.id);
+        routed = NextResponse.rewrite(destination, { request: { headers: request.headers } });
+      } else {
+        destination.pathname =
+          '/stations/' +
+          encodeURIComponent(station.code) +
+          (request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname);
+        destination.searchParams.delete('stationId');
+        routed = NextResponse.redirect(destination, 307);
+      }
+      response.cookies.getAll().forEach((cookie) => routed.cookies.set(cookie));
+      routed.headers.set('Cache-Control', 'no-store');
+      return routed;
+    }
+  }
+
   return response;
 }
 
