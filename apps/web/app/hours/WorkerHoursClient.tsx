@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
+  hoursExportName,
   addDays,
   duration,
   reportCsv,
@@ -40,7 +41,8 @@ export function WorkerHoursClient({
   const total = report.entries.reduce((s, e) => s + e.seconds, 0);
   const flagged = new Set(report.entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id))
     .size;
-  const file = `my-hours-${stationId}-${report.from}-${report.to}`;
+  const exportName = (kind: 'pdf' | 'daily' | 'weekly' | 'detail') =>
+    hoursExportName(report, kind, report.people[0]?.name || 'עובד');
   function navigate(from: string, to: string, id = stationId) {
     startTransition(() =>
       router.push(`/hours?stationId=${encodeURIComponent(id)}&from=${from}&to=${to}`)
@@ -51,7 +53,7 @@ export function WorkerHoursClient({
     setError('');
     try {
       const { exportHoursPdf } = await import('@yellowshifts/reports/pdf');
-      await exportHoursPdf(report, file);
+      await exportHoursPdf(report, exportName('pdf'));
     } catch {
       setError('לא ניתן ליצור PDF כרגע. נסו שוב או הורידו CSV.');
     } finally {
@@ -149,19 +151,19 @@ export function WorkerHoursClient({
           </button>
           <button
             disabled={pending}
-            onClick={() => saveCsv(summaryCsv(report), `${file}-daily.csv`)}
+            onClick={() => saveCsv(summaryCsv(report), `${exportName('daily')}.csv`)}
           >
             CSV יומי
           </button>
           <button
             disabled={pending}
-            onClick={() => saveCsv(weeklyCsv(report), `${file}-weekly.csv`)}
+            onClick={() => saveCsv(weeklyCsv(report), `${exportName('weekly')}.csv`)}
           >
             CSV שבועי
           </button>
           <button
             disabled={pending}
-            onClick={() => saveCsv(reportCsv(report), `${file}-detail.csv`)}
+            onClick={() => saveCsv(reportCsv(report), `${exportName('detail')}.csv`)}
           >
             CSV מפורט
           </button>

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { RateBreakdown } from '@yellowshifts/ui';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
+  hoursExportName,
   addDays,
   duration,
   reportCsv,
@@ -48,7 +49,8 @@ export function HoursReportClient({
   const total = filtered.entries.reduce((sum, e) => sum + e.seconds, 0);
   const flagged = new Set(filtered.entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id))
     .size;
-  const file = `hours-${stationId}-${report.from}-${report.to}-${personId || 'team'}`;
+  const exportName = (kind: 'pdf' | 'daily' | 'weekly' | 'detail') =>
+    hoursExportName(filtered, kind, personId ? filtered.people[0]?.name || 'עובד' : undefined);
   function navigate(from: string, to: string) {
     startTransition(() => router.push(`?from=${from}&to=${to}`));
   }
@@ -57,7 +59,7 @@ export function HoursReportClient({
     setError('');
     try {
       const { exportHoursPdf } = await import('@/app/lib/hours-pdf');
-      await exportHoursPdf(filtered, file);
+      await exportHoursPdf(filtered, exportName('pdf'));
     } catch {
       setError('יצירת ה־PDF נכשלה. נסו שוב או הורידו CSV.');
     } finally {
@@ -165,19 +167,19 @@ export function HoursReportClient({
           </button>
           <button
             disabled={pending}
-            onClick={() => download(summaryCsv(filtered), `${file}-daily.csv`)}
+            onClick={() => download(summaryCsv(filtered), `${exportName('daily')}.csv`)}
           >
             CSV סיכום יומי
           </button>
           <button
             disabled={pending}
-            onClick={() => download(weeklyCsv(filtered), `${file}-weekly.csv`)}
+            onClick={() => download(weeklyCsv(filtered), `${exportName('weekly')}.csv`)}
           >
             CSV סיכום שבועי
           </button>
           <button
             disabled={pending}
-            onClick={() => download(reportCsv(filtered), `${file}-detail.csv`)}
+            onClick={() => download(reportCsv(filtered), `${exportName('detail')}.csv`)}
           >
             CSV פירוט נוכחות
           </button>
