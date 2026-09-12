@@ -2,7 +2,7 @@ import { PwaRegistration } from './components/PwaRegistration';
 import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
-import { BrandSplash } from '@yellowshifts/ui';
+import { BrandSplash, DarbFooter } from '@yellowshifts/ui';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegistration />
         <BrandSplash />
         {children}
+        <DarbFooter />
       </body>
     </html>
   );
