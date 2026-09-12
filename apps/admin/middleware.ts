@@ -76,6 +76,53 @@ export async function middleware(request: NextRequest) {
     return redirected;
   }
 
+  // Resolve readable station URLs with the signed-in user's RLS-scoped client.
+  // Internal pages/actions continue receiving UUIDs; no permission logic changes.
+  const stationPath = request.nextUrl.pathname.match(/^\/stations\/([^/]+)(.*)$/);
+  if (user && stationPath?.[1] && stationPath[1] !== 'new') {
+    let reference: string;
+    try {
+      reference = decodeURIComponent(stationPath[1]);
+    } catch {
+      return new NextResponse('Invalid station URL', { status: 400 });
+    }
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reference);
+    // Leave legacy mutation URLs intact. Never redirect/replay a POST.
+    if (!uuid || request.method === 'GET' || request.method === 'HEAD') {
+      const { data: station, error } = await supabase
+        .from('stations')
+        .select('id, code')
+        .eq(uuid ? 'id' : 'code', reference)
+        .returns<{ id: string; code: string }[]>()
+        .maybeSingle();
+      if (error || !station) {
+        const failed = new NextResponse(error ? 'Unable to load station' : 'Station not found', {
+          status: error ? 503 : 404,
+        });
+        response.cookies.getAll().forEach((cookie) => failed.cookies.set(cookie));
+        return failed;
+      }
+      // Reserved/UUID-shaped codes retain the legacy URL to avoid ambiguous routes.
+      const safeCode =
+        station.code !== 'new' &&
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(station.code);
+      if (uuid && safeCode) {
+        const canonical = request.nextUrl.clone();
+        canonical.pathname = '/stations/' + encodeURIComponent(station.code) + stationPath[2];
+        const redirected = NextResponse.redirect(canonical, 307);
+        response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+        return redirected;
+      }
+      if (!uuid) {
+        const internal = request.nextUrl.clone();
+        internal.pathname = '/stations/' + station.id + stationPath[2];
+        const rewritten = NextResponse.rewrite(internal, { request: { headers: request.headers } });
+        response.cookies.getAll().forEach((cookie) => rewritten.cookies.set(cookie));
+        return rewritten;
+      }
+    }
+  }
+
   return response;
 }
 

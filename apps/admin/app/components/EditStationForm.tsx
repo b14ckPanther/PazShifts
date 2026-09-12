@@ -65,7 +65,7 @@ export const EditStationForm: React.FC<EditStationFormProps> = ({ station }) => 
         isActive: resolvedIsActive,
       });
       if (result.success) {
-        router.push(`/stations/${station.id}`);
+        router.push(`/stations/${encodeURIComponent(station.code)}`);
       } else if (result.error) {
         setError(result.error);
       }
@@ -289,7 +289,10 @@ export const EditStationForm: React.FC<EditStationFormProps> = ({ station }) => 
               gap: '12px',
             }}
           >
-            <Link href={`/stations/${station.id}`} style={{ textDecoration: 'none' }}>
+            <Link
+              href={`/stations/${encodeURIComponent(station.code)}`}
+              style={{ textDecoration: 'none' }}
+            >
               <Button variant="ghost" size="md" type="button">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <ArrowRightIcon size={16} />

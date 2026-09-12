@@ -302,14 +302,17 @@ export const StationFilterableList: React.FC<StationFilterableListProps> = ({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Link href={`/stations/${station.id}`} style={{ textDecoration: 'none' }}>
+                      <Link
+                        href={`/stations/${encodeURIComponent(station.code)}`}
+                        style={{ textDecoration: 'none' }}
+                      >
                         <Button variant="secondary" size="sm">
                           ניהול וצוות
                         </Button>
                       </Link>
 
                       <Link
-                        href={`/stations/${station.id}/edit`}
+                        href={`/stations/${encodeURIComponent(station.code)}/edit`}
                         style={{ textDecoration: 'none' }}
                       >
                         <Button variant="ghost" size="sm" title="עריכת תחנה">

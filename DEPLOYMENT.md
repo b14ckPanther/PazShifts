@@ -246,3 +246,25 @@ The admin error page's retry button now reloads the current document once on use
 The shared server Supabase client retries a same-origin PostgREST table/view GET once after 150 ms for transport TypeError or HTTP 502/503/504. Auth endpoints, RPC endpoints (including GET RPC), mutations, permission errors, and other errors are not retried. Persistent failures still surface. No cached private data or authorization bypass is introduced. Both apps should be rebuilt/deployed; no migration or environment changes are required.
 
 Local regression checks cover refreshed redirect cookies, transient/persistent read failures, cancelled requests and mutation/RPC exclusions. The original hosted exception corresponding to support digest `1393664799` has not been identified from server logs; the digest alone is insufficient to establish its cause. If it recurs after deployment, correlate the digest and request time with Vercel function logs. Do not log sessions, employee records or credentials when investigating.
+
+### Readable admin station URLs
+
+Admin station pages now use the station's existing unique code, for example
+`/stations/KURDANI` and `/stations/KIRYAT-ATA/reports`. Codes are case-sensitive.
+The signed-in Supabase client resolves the code under RLS, then Next.js rewrites
+it internally to the existing UUID route. Page and mutation authorization remain
+unchanged. No schema migration or environment variable is required.
+
+Existing UUID GET links temporarily redirect (307) to the current code, retaining
+subroutes and query parameters. UUID POST requests are not redirected; code POST
+requests rewrite to the same internal action route. Refreshed session cookies
+are copied to redirects and rewrites. No station mapping is cached across users.
+The resolver adds one small authorized `id, code` read per station request;
+legacy links also incur a redirect. Station-list links use codes directly.
+
+Deploy the admin app. Verify station switching, nested reports/schedules, login
+return URLs, and a normal save with an authorized test account. Local middleware
+contract tests cover resolution, missing/denied stations, cookies and POST handling;
+hosted authenticated browser behavior remains owner verification. Changing a
+station code changes its readable URL; old UUID links remain valid. Revert this
+change and redeploy to restore UUID-only routing.

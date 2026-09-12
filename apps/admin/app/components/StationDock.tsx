@@ -1,11 +1,18 @@
 'use client';
 import { NavigationLink as Link } from './NavigationLink';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
 import { StationIcon, CalendarIcon, NfcIcon, UsersIcon, ClockIcon } from '@yellowshifts/icons';
 export function StationDock({ stationId, admin }: { stationId: string; admin: boolean }) {
   const path = usePathname();
-  const base = `/stations/${stationId}`;
+  // Rewrites can render a UUID internally; use the browser path after hydration.
+  const [visibleBase, setVisibleBase] = useState<string>();
+  useEffect(() => {
+    setVisibleBase(path.match(/^\/stations\/[^/]+/)?.[0]);
+  }, [path]);
+  const base = visibleBase || `/stations/${stationId}`;
+  const activePath = path.replace(/^\/stations\/[^/]+/, base);
   const items = admin
     ? [
         { href: base, label: 'התחנה', Icon: StationIcon },
@@ -25,7 +32,11 @@ export function StationDock({ stationId, admin }: { stationId: string; admin: bo
           key={href}
           href={href}
           aria-current={
-            (href === base ? path === href : path === href || path.startsWith(href + '/'))
+            (
+              href === base
+                ? activePath === href
+                : activePath === href || activePath.startsWith(href + '/')
+            )
               ? 'page'
               : undefined
           }
