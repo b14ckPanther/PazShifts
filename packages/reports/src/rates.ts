@@ -87,11 +87,14 @@ export function classifiedEntries(
       rules.restDays.includes(weekday) ? rules.restRate : 100,
       rules.holidays.includes(entry.date) ? rules.holidayRate : 100
     );
+    // Minute boundaries matter only when a night premium can change the rate.
+    // Otherwise jump directly to the next daily/weekly/tier boundary.
+    const checkNight = rules.nightRate > specialRate && rules.nightStart !== rules.nightEnd;
     let cursor = start;
     while (cursor < paidEnd) {
       const minute = Math.floor(cursor / 60000);
       let localMinute = minuteCache.get(minute);
-      if (localMinute === undefined) {
+      if (checkNight && localMinute === undefined) {
         const parts = formatter.formatToParts(new Date(cursor));
         localMinute =
           Number(parts.find((p) => p.type === 'hour')!.value) * 60 +
@@ -99,7 +102,7 @@ export function classifiedEntries(
         minuteCache.set(minute, localMinute);
       }
       const isNight =
-        rules.nightStart === rules.nightEnd
+        !checkNight || localMinute === undefined
           ? false
           : rules.nightStart < rules.nightEnd
             ? localMinute >= rules.nightStart && localMinute < rules.nightEnd
@@ -111,7 +114,7 @@ export function classifiedEntries(
           : rules.secondRate
         : 100;
       const rate = Math.max(baseRate, specialRate, isNight ? rules.nightRate : 100);
-      let elapsed = Math.min(paidEnd, (minute + 1) * 60000) - cursor;
+      let elapsed = (checkNight ? Math.min(paidEnd, (minute + 1) * 60000) : paidEnd) - cursor;
       if (!overtime)
         elapsed = Math.min(elapsed, regularLimit - day.paid, weeklyLimit - regularWeek);
       else if (day.overtime < rules.firstOvertimeMinutes * 60000)

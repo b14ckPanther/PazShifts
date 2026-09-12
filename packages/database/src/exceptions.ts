@@ -201,13 +201,11 @@ export async function getStationExceptionsForDate(
   stationId: string,
   date: string // YYYY-MM-DD
 ): Promise<StationExceptionsResult> {
-  const tolerances = await getStationTolerances(supabase, stationId);
-
   const dateStart = `${date}T00:00:00Z`;
   const dateEnd = `${date}T23:59:59Z`;
 
   // 1. Fetch all attendance records for the date (including ACTIVE left-open from earlier)
-  const { data: attendanceData } = await supabase
+  const attendanceQuery = supabase
     .from('attendance_records')
     .select(
       `
@@ -245,17 +243,15 @@ export async function getStationExceptionsForDate(
     .lte('clock_in_at', dateEnd)
     .order('clock_in_at', { ascending: true });
 
-  const records = attendanceData || [];
-
   // 2. Fetch published shift assignments for the date (for no-show detection)
-  const { data: assignmentData } = await supabase
+  const assignmentQuery = supabase
     .from('shift_assignments')
     .select(
       `
       id,
       station_membership_id,
       scheduled_shift_id,
-      station_memberships (
+      station_memberships!inner (
         id,
         role,
         status,
@@ -283,7 +279,20 @@ export async function getStationExceptionsForDate(
       )
     `
     )
-    .eq('station_id', stationId);
+    .eq('station_id', stationId)
+    .eq('scheduled_shifts.shift_date', date)
+    .eq('scheduled_shifts.schedules.status', 'PUBLISHED')
+    .eq('station_memberships.status', 'ACTIVE');
+
+  const [tolerances, attendanceResult, assignmentResult] = await Promise.all([
+    getStationTolerances(supabase, stationId),
+    attendanceQuery,
+    assignmentQuery,
+  ]);
+  if (attendanceResult.error || assignmentResult.error)
+    throw new Error('לא ניתן לטעון את חריגות הנוכחות. נסו שוב.');
+  const records = attendanceResult.data || [];
+  const assignmentData = assignmentResult.data;
 
   // Filter to published, active-membership, today's assignments
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

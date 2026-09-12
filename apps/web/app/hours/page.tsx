@@ -72,7 +72,7 @@ export default async function WorkerHoursPage({
             },
           ],
           entries: classifiedEntries(records, from, to, station.timezone, policies),
-          policies,
+          policies: policies.map(({ id, effectiveFrom }) => ({ id, effectiveFrom })),
           rateWeekStartsOn: policies[0]?.rules.weekStartsOn,
         }}
       />

@@ -77,7 +77,7 @@ export async function getWorkerWeeklyAvailability(
 
   const { data: week, error: weekErr } = await supabase
     .from('availability_weeks')
-    .select('*')
+    .select('*, availability_entries(*)')
     .eq('station_membership_id', stationMembershipId)
     .eq('week_start_date', normWeekStart)
     .maybeSingle();
@@ -88,15 +88,9 @@ export async function getWorkerWeeklyAvailability(
 
   if (!week) return null;
 
-  const { data: entries, error: entriesErr } = await supabase
-    .from('availability_entries')
-    .select('*')
-    .eq('availability_week_id', week.id)
-    .order('date', { ascending: true });
-
-  if (entriesErr) {
-    throw new Error(`שגיאה בטעינת רשומות זמינות: ${entriesErr.message}`);
-  }
+  const entries = [...(week.availability_entries ?? [])].sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
 
   return {
     week: mapAvailabilityWeekRow(week),
