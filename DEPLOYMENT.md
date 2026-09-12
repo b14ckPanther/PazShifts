@@ -238,3 +238,11 @@ Deletion preserves the original snapshot/actor/reason in the RLS-protected `atte
 This transactional migration briefly locks the audit and receipt tables when replacing their foreign-key enforcement with retained historical identifiers. Apply during a quiet period. Deployment rollback can revert the UI while leaving migration 16 in place. Do not blindly re-add the old foreign keys after removals: archived identifiers intentionally no longer exist in attendance. Restoring those constraints requires a reviewed data restoration/archival plan. Never delete receipt tombstones to resolve a constraint error.
 
 Local verification includes authorization, stale edits, audit retention, same-range replacement after deletion, old-scan replay denial, and existing NFC concurrency tests. Hosted migration/application and physical phone verification remain owner actions. Shared loading buttons now retain their geometry and the staff dialog uses a dim backdrop without blur; deploy both apps for shared-button updates.
+
+## Admin reload recovery
+
+The admin error page's retry button now reloads the current document once on user request, creating a fresh server render instead of resetting the same failed React boundary. It shows a pending state; there is no automatic reload loop. Admin authentication redirects also copy refreshed/cleared session cookies onto the redirect response.
+
+The shared server Supabase client retries a same-origin PostgREST table/view GET once after 150 ms for transport TypeError or HTTP 502/503/504. Auth endpoints, RPC endpoints (including GET RPC), mutations, permission errors, and other errors are not retried. Persistent failures still surface. No cached private data or authorization bypass is introduced. Both apps should be rebuilt/deployed; no migration or environment changes are required.
+
+Local regression checks cover refreshed redirect cookies, transient/persistent read failures, cancelled requests and mutation/RPC exclusions. The original hosted exception corresponding to support digest `1393664799` has not been identified from server logs; the digest alone is insufficient to establish its cause. If it recurs after deployment, correlate the digest and request time with Vercel function logs. Do not log sessions, employee records or credentials when investigating.

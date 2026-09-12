@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { Database } from '@yellowshifts/types';
+import { createReadFetch } from './read-fetch';
 import { getSupabaseEnv } from './env';
 
 export interface CookieStoreAdapter {
@@ -25,6 +26,9 @@ export function createServerSupabaseClient(cookieStore: CookieStoreAdapter) {
     env.url || 'https://placeholder.supabase.co',
     env.anonKey || 'placeholder',
     {
+      global: {
+        fetch: createReadFetch(new URL(env.url || 'https://placeholder.supabase.co').origin),
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

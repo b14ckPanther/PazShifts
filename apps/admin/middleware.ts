@@ -62,14 +62,18 @@ export async function middleware(request: NextRequest) {
     if (nextPath && nextPath !== '/') {
       redirectUrl.searchParams.set('next', nextPath);
     }
-    return NextResponse.redirect(redirectUrl);
+    const redirected = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+    return redirected;
   }
 
   // Authenticated users attempting to access login page
   if (user && isLoginPage) {
     const nextPath = safeNextPath(request.nextUrl.searchParams.get('next'));
     const redirectUrl = new URL(nextPath, request.nextUrl.origin);
-    return NextResponse.redirect(redirectUrl);
+    const redirected = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => redirected.cookies.set(cookie));
+    return redirected;
   }
 
   return response;
