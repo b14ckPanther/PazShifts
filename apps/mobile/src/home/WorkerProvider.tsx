@@ -7,6 +7,7 @@ type Value = {
   context: WorkerContext;
   station: WorkerContext['stations'][number] | undefined;
   select: (id: string) => void;
+  openStation: (id: string, action: () => void) => void;
   data: MobileHome | null;
   error: boolean;
   refresh: () => void;
@@ -73,6 +74,16 @@ export function WorkerProvider({
           guard.current = next;
         },
         station: context.stations.find((s) => s.id === id),
+        openStation: (next, action) => {
+          if (context.stations.some((s) => s.id === next))
+            proceed(() => {
+              if (next !== id) {
+                setData(null);
+                setSelected(next);
+              }
+              action();
+            });
+        },
         select: (next) => {
           if (next !== id && context.stations.some((s) => s.id === next)) {
             proceed(() => {

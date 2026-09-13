@@ -140,6 +140,7 @@ export default function HoursPreview() {
               phone: null,
               stations: [station],
             },
+            openStation: (_id, action) => action(),
             select: () => {},
             data: null,
             error: false,

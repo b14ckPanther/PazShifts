@@ -23,6 +23,7 @@ const config: ExpoConfig = {
   },
   android: { package: process.env.MOBILE_ANDROID_PACKAGE || 'il.co.darb.yellowshifts.dev' },
   plugins: [
+    ['expo-notifications', { color: '#FCBC00' }],
     '@react-native-community/datetimepicker',
     'expo-router',
     'expo-font',

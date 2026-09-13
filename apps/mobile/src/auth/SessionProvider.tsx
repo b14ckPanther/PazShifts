@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { detachNotificationsBeforeLogout } from '../notifications/logout';
 import { AppState } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -110,8 +111,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [resolve, retry]);
   const logout = async () => {
     const run = ++generation.current;
-    setState({ phase: 'loading', context: null, error: null });
     try {
+      // Server session revocation also cascades device registration if cleanup is unavailable.
+      await detachNotificationsBeforeLogout().catch(() => {});
+      setState({ phase: 'loading', context: null, error: null });
       const result = await supabase?.auth.signOut({ scope: 'local' });
       if (result?.error) throw result.error;
       if (run === generation.current) setState({ phase: 'signedOut', context: null, error: null });
