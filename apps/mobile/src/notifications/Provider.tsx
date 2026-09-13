@@ -156,7 +156,8 @@ function NotificationSession({ children }: { children: ReactNode }) {
           })
           .catch(() => {});
       }
-      if (data?.kind !== 'location-reminder') void Notifications.clearLastNotificationResponseAsync();
+      if (data?.kind !== 'location-reminder')
+        void Notifications.clearLastNotificationResponseAsync();
     };
     void SecureStore.getItemAsync(pendingKey).then((value) => {
       if (value && alive) {
@@ -174,7 +175,10 @@ function NotificationSession({ children }: { children: ReactNode }) {
     });
     const response = Notifications.addNotificationResponseReceivedListener(receive);
     const incoming = Notifications.addNotificationReceivedListener((n) => {
-      if (n.request.content.data?.kind !== 'location-reminder' && n.request.content.data?.userId === identity.current) {
+      if (
+        n.request.content.data?.kind !== 'location-reminder' &&
+        n.request.content.data?.userId === identity.current
+      ) {
         setBanner(true);
         void refresh();
       }

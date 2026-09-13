@@ -98,6 +98,7 @@ function mount({
             },
           };
         if (name === '../lib/supabase') return { supabase: { auth } };
+        if (name === '../location/runtime') return { clearLocationReminders: async () => {} };
         if (name === '../notifications/logout') return { detachNotificationsBeforeLogout: detach };
         if (name === '@yellowshifts/database/public') return { getNativeWorkerContext: context };
         throw Error(name);

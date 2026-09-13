@@ -32,7 +32,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         ? previous
         : { phase: session ? 'loading' : 'signedOut', context: null, error: null }
     );
-    if (!session || !supabase) { await clearLocationReminders().catch(() => {}); return; }
+    if (!session || !supabase) {
+      await clearLocationReminders().catch(() => {});
+      return;
+    }
     try {
       const context = await getNativeWorkerContext(supabase, session.user.id);
       if (run === generation.current)

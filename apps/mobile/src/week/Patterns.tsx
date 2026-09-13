@@ -73,7 +73,9 @@ export function Sheet({
   close,
   title,
   children,
+  closeLabel = 'סגירה',
 }: {
+  closeLabel?: string;
   visible: boolean;
   close: () => void;
   title: string;
@@ -126,7 +128,7 @@ export function Sheet({
             {title}
           </Label>
           <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 12 }}>{children}</ScrollView>
-          <Button secondary title="סגירה" onPress={close} />
+          <Button secondary title={closeLabel} onPress={close} />
         </View>
       </View>
     </Modal>
