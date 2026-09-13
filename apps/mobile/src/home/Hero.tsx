@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { duration, addDays } from '@yellowshifts/reports';
 import { Label } from '../ui';
 import { colors } from '../ui/theme';
 import { useWorker } from './WorkerProvider';
 import { heroState } from './model';
+import { Elapsed } from './ShiftClock';
+export { Elapsed } from './ShiftClock';
 export const nativeTime = (value: string, timezone: string) =>
   new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
@@ -13,28 +14,6 @@ export const nativeTime = (value: string, timezone: string) =>
     hourCycle: 'h23',
     timeZone: timezone,
   }).format(new Date(value));
-export function Elapsed({ start }: { start: string }) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (AppState.currentState === 'active') setNow(Date.now());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-  return (
-    <Label
-      english
-      numberOfLines={1}
-      adjustsFontSizeToFit
-      minimumFontScale={0.6}
-      bold
-      accessibilityLabel={`משך המשמרת ${duration(Math.max(0, (now - Date.parse(start)) / 1000))}`}
-      style={{ fontSize: 44, fontVariant: ['tabular-nums'] }}
-    >
-      {duration(Math.max(0, (now - Date.parse(start)) / 1000))}
-    </Label>
-  );
-}
 export function ShiftTime({
   start,
   end,
@@ -101,8 +80,8 @@ export function Hero() {
       </View>
       {hero.kind === 'active' && data.active ? (
         <>
-          <Elapsed start={data.active.clock_in_at} />
-          <Label>
+          <Elapsed start={data.active.clock_in_at} featured />
+          <Label bold style={{ fontSize: 14 }}>
             כניסה ב־{nativeTime(data.active.clock_in_at, data.activeTimezone)} ·{' '}
             {data.activeStation ?? 'תחנה אחרת'}
           </Label>
