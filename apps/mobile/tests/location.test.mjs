@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 const ts = createRequire(import.meta.url)('typescript');
 function load(file, imports = {}) {
+  imports = { '../lib/features': { backgroundLocationEnabled: true }, ...imports };
   const exports = {};
   runInNewContext(
     ts.transpileModule(readFileSync(new URL(file, import.meta.url), 'utf8'), {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
-import Attendance, { NfcApi } from '../../app/attendance';
+import { AttendanceContent as Attendance, NfcApi } from '../../app/attendance';
 import { AuthContext } from '../../src/auth/SessionProvider';
 import { Label } from '../../src/ui';
 import type { NfcScanResult } from '@yellowshifts/types';

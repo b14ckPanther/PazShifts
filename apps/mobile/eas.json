@@ -1,13 +1,41 @@
 {
-  "cli": { "appVersionSource": "local" },
+  "cli": {
+    "appVersionSource": "remote"
+  },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "simulator": true }
+      "ios": {
+        "simulator": true
+      },
+      "environment": "development"
     },
-    "development-device": { "extends": "development", "ios": { "simulator": false } },
-    "preview": { "distribution": "internal" },
-    "production": { "autoIncrement": true }
+    "development-device": {
+      "extends": "development",
+      "ios": {
+        "simulator": false
+      },
+      "environment": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_NATIVE_NFC_ENABLED": "false",
+        "EXPO_PUBLIC_BACKGROUND_LOCATION_ENABLED": "false",
+        "EXPO_PUBLIC_NOTIFICATIONS_ENABLED": "false"
+      },
+      "autoIncrement": true
+    },
+    "production": {
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_NATIVE_NFC_ENABLED": "false",
+        "EXPO_PUBLIC_BACKGROUND_LOCATION_ENABLED": "false",
+        "EXPO_PUBLIC_NOTIFICATIONS_ENABLED": "false"
+      }
+    }
   }
 }

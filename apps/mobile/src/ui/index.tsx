@@ -133,7 +133,11 @@ export function Button({
         {busy && <ActivityIndicator color={secondary ? colors.text : colors.surface} />}
         <Label
           bold
-          style={{ color: secondary ? colors.text : colors.surface, textAlign: 'center' }}
+          style={{
+            color: secondary ? colors.text : colors.surface,
+            textAlign: 'center',
+            flexShrink: 1,
+          }}
         >
           {title}
         </Label>

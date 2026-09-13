@@ -1,3 +1,4 @@
+import { nativeNfcEnabled } from '../src/lib/features';
 import { attendanceChanged } from '../src/nfc/events';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { View, Linking } from 'react-native';
@@ -28,6 +29,17 @@ export const NfcApi = createContext({
   location: scanLocation,
 });
 export default function Attendance() {
+  if (!nativeNfcEnabled)
+    return (
+      <Screen>
+        <Label bold>דיווח נוכחות באתר</Label>
+        <Label>בגרסה זו יש לפתוח את קישור תג התחנה בדפדפן כדי לדווח נוכחות.</Label>
+        <Button title="למסך שלי" onPress={() => router.replace('/')} />
+      </Screen>
+    );
+  return <AttendanceContent />;
+}
+export function AttendanceContent() {
   const { state, logout } = useSession();
   const userId = state.context?.userId;
   const identity = useRef(userId);

@@ -27,7 +27,7 @@ export function Onboarding({ done }: { done: () => void }) {
       <View style={{ flex: 1, justifyContent: 'space-between', gap: 32, paddingVertical: 20 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Image source={mark} style={{ width: 44, height: 44 }} />
-          <Label english bold>
+          <Label english bold numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
             YellowShifts
           </Label>
         </View>

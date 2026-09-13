@@ -1,3 +1,4 @@
+import { backgroundLocationEnabled } from '../lib/features';
 import { createSecureStorage } from '../auth/secure-storage';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
@@ -65,6 +66,7 @@ async function registry(): Promise<Registry | null> {
 export const getPreferences = async (user: string) =>
   preferences(await read(`location.prefs.${user}`));
 export async function permissionState(): Promise<string> {
+  if (!backgroundLocationEnabled) return 'unavailable';
   const [fg, bg, n, services, available] = await Promise.all([
     Location.getForegroundPermissionsAsync(),
     Location.getBackgroundPermissionsAsync(),
@@ -86,6 +88,7 @@ export async function permissionState(): Promise<string> {
 }
 /** Called only after the explanatory sheet's explicit enable action. */
 export async function requestReminderPermissions(confirmBackground: () => Promise<boolean>) {
+  if (!backgroundLocationEnabled) return 'unavailable';
   await prepareNotificationChannel();
   if (!(await Notifications.getPermissionsAsync()).granted)
     await Notifications.requestPermissionsAsync();

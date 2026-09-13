@@ -10,7 +10,8 @@
     "bundle": "expo export --platform ios --platform android",
     "typecheck": "tsc --noEmit",
     "lint": "eslint app src app.config.ts",
-    "test": "node --experimental-strip-types --test tests/*.test.*"
+    "test": "node --experimental-strip-types --test tests/*.test.*",
+    "check:bundle": "node scripts/check-bundle.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/heebo": "^0.4.2",

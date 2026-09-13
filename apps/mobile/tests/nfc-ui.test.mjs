@@ -122,7 +122,7 @@ function mount({
       assert.ok(runs++ < 30);
       dirty = false;
       i = 0;
-      tree = exports.default();
+      tree = exports.AttendanceContent();
       while (effects.length) effects.shift()();
     }
     return tree;

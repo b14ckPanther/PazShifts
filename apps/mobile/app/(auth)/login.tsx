@@ -67,7 +67,13 @@ export default function Login() {
       <View style={{ gap: 12, paddingTop: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Image source={logomark} style={{ width: 48, height: 48 }} resizeMode="contain" />
-          <Label english bold style={{ fontSize: 24 }}>
+          <Label
+            english
+            bold
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={{ fontSize: 24, flexShrink: 1 }}
+          >
             YellowShifts
           </Label>
         </View>

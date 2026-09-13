@@ -41,12 +41,13 @@ export async function readPending(): Promise<PendingScan | null> {
     return null;
   }
 }
+function writePending(value: PendingScan) {
+  return SecureStore.setItemAsync(key, JSON.stringify(value), {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
+}
 export function savePending(value: PendingScan) {
-  return serial(() =>
-    SecureStore.setItemAsync(key, JSON.stringify(value), {
-      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-    })
-  );
+  return serial(() => writePending(value));
 }
 export function clearNfcIntent() {
   return serial(() => SecureStore.deleteItemAsync(key));
@@ -54,14 +55,16 @@ export function clearNfcIntent() {
 export async function receiveNfcLink(url: string) {
   const parsed = parseNfcLink(url);
   if (!parsed) return false;
-  const existing = await readPending();
-  // An unresolved submission is recovered, never replaced by a new operation on another tap.
-  if (existing?.sent && !existing.completed) return true;
-  await savePending({
-    token: parsed.token,
-    scanId: parsed.scan ?? Crypto.randomUUID(),
-    at: parsed.at ?? Date.now(),
-    userId: null,
+  return serial(async () => {
+    const existing = await readPending();
+    // An unresolved submission is recovered, never replaced by a new operation on another tap.
+    if (existing?.sent && !existing.completed) return true;
+    await writePending({
+      token: parsed.token,
+      scanId: parsed.scan ?? Crypto.randomUUID(),
+      at: parsed.at ?? Date.now(),
+      userId: null,
+    });
+    return true;
   });
-  return true;
 }

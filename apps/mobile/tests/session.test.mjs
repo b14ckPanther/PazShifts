@@ -217,3 +217,27 @@ test('notification cleanup outage does not prevent authoritative logout', async 
   assert.equal(signedOut, true);
   assert.equal(app.state.phase, 'signedOut');
 });
+test('startup events share only in-flight validation and foreground still revalidates', async () => {
+  let count = 0,
+    finish;
+  const app = mount({
+    context: async () => {
+      count++;
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    },
+  });
+  await app.flush();
+  app.emit('INITIAL_SESSION', { user: { id: 'a' } });
+  await app.flush();
+  assert.equal(count, 1);
+  finish({ fullName: 'a', stations: [] });
+  await app.flush();
+  app.app('active');
+  await app.flush();
+  assert.equal(count, 2);
+  finish({ fullName: 'a', stations: [] });
+  await app.flush();
+  app.close();
+});

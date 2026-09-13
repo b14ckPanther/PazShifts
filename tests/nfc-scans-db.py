@@ -33,6 +33,9 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
             sql(migration.read_text())
         sql("ALTER TABLE public.stations ALTER COLUMN latitude SET DEFAULT 32.858784, ALTER COLUMN longitude SET DEFAULT 35.090755;")
+        sql('GRANT SELECT,INSERT,UPDATE,DELETE ON public.availability_weeks,public.availability_entries TO authenticated;')
+        sql((ROOT / 'tests/sql/atomic-availability.sql').read_text())
+        print('PASS: existing atomic availability rollback/authorization SQL regressions')
         sql((ROOT / 'tests/sql/worker-notifications.sql').read_text())
         print('PASS: existing notification SQL/RLS/device/queue regressions')
         uid = lambda n: f'00000000-0000-0000-0000-{n:012d}'

@@ -35,6 +35,8 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         CREATE TABLE auth.users (id uuid PRIMARY KEY, email text, phone text, raw_user_meta_data jsonb DEFAULT '{}');
         CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
           $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+        CREATE TABLE auth.sessions(id uuid PRIMARY KEY,user_id uuid,not_after timestamptz);
+        CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT jsonb_build_object('session_id',auth.uid()) $$;
         GRANT USAGE ON SCHEMA auth TO authenticated, anon;
         """)
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
