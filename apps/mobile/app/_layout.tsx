@@ -3,7 +3,7 @@ import { NotificationProvider } from '../src/notifications/Provider';
 import 'react-native-gesture-handler';
 import { useCallback, useEffect, useState } from 'react';
 import { Text, Pressable, ScrollView, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { LocaleProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { Heebo_400Regular } from '@expo-google-fonts/heebo/400Regular';
@@ -33,24 +33,29 @@ export default function Root() {
   if (error) throw error;
   if (!loaded) return null;
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <SessionProvider>
-          <NotificationProvider>
-            <StatusBar style="dark" />
-            <View
-              style={{ flex: 1 }}
-              accessibilityElementsHidden={launching}
-              importantForAccessibility={launching ? 'no-hide-descendants' : 'auto'}
-            >
-              <Stack
-                screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F6F6F6' } }}
-              />
-            </View>
-          </NotificationProvider>
-        </SessionProvider>
-        {launching && <LaunchSplash onDone={finishLaunch} />}
-      </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1, direction: 'rtl' }}>
+      <LocaleProvider direction="rtl">
+        <SafeAreaProvider>
+          <SessionProvider>
+            <NotificationProvider>
+              <StatusBar style="dark" />
+              <View
+                style={{ flex: 1 }}
+                accessibilityElementsHidden={launching}
+                importantForAccessibility={launching ? 'no-hide-descendants' : 'auto'}
+              >
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: '#F6F6F6' },
+                  }}
+                />
+              </View>
+            </NotificationProvider>
+          </SessionProvider>
+          {launching && <LaunchSplash onDone={finishLaunch} />}
+        </SafeAreaProvider>
+      </LocaleProvider>
     </GestureHandlerRootView>
   );
 }
