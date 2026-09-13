@@ -94,7 +94,8 @@ export function Inbox() {
         <RefreshControl
           refreshing={busy && rows.length > 0}
           onRefresh={refresh}
-          tintColor={colors.crimson}
+          tintColor={colors.yellow}
+          colors={[colors.yellow]}
         />
       }
     >

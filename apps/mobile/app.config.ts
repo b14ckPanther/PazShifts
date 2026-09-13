@@ -78,7 +78,7 @@ const config: ExpoConfig = {
     ['expo-localization', { supportsRTL: true, forcesRTL: true }],
     [
       'expo-splash-screen',
-      { backgroundColor: '#FFF7CC', image: './assets/logomark.png', imageWidth: 96 },
+      { backgroundColor: '#FCBC00', image: './assets/logomark.png', imageWidth: 96 },
     ],
     ['./plugins/withReleaseGuardrails.cjs', { release, backgroundLocation }],
   ],

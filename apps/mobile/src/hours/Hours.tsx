@@ -168,7 +168,8 @@ export function HoursContent({
         <RefreshControl
           refreshing={loading && !!report}
           onRefresh={() => setRevision((v) => v + 1)}
-          tintColor={colors.crimson}
+          tintColor={colors.yellow}
+          colors={[colors.yellow]}
         />
       }
     >
