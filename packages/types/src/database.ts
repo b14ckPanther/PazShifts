@@ -599,6 +599,21 @@ export interface Database {
         Args: { p_station_id: string; p_latitude: number; p_longitude: number; p_radius: number };
         Returns: undefined;
       };
+      read_native_nfc_receipt: { Args: { p_token: string; p_scan_id: string }; Returns: Json };
+      process_native_nfc_scan: {
+        Args: {
+          p_token: string;
+          p_scan_id: string;
+          p_scanned_at: string;
+          p_expected_action: string;
+          p_expected_record: string | null;
+          p_latitude: number | null;
+          p_longitude: number | null;
+          p_accuracy: number | null;
+          p_location_at: string | null;
+        };
+        Returns: Json;
+      };
       process_nfc_scan: {
         Args: {
           p_token: string;

@@ -27,10 +27,14 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         sql("""CREATE ROLE authenticated; CREATE ROLE anon; CREATE ROLE service_role BYPASSRLS;
         CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, phone text, raw_user_meta_data jsonb DEFAULT '{}');
         CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+        CREATE TABLE auth.sessions(id uuid PRIMARY KEY,user_id uuid,not_after timestamptz);
+        CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT jsonb_build_object('session_id',coalesce(nullif(current_setting('request.jwt.claim.session_id',true),''),auth.uid()::text)) $$;
         GRANT USAGE ON SCHEMA auth TO authenticated, anon;""")
         for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
             sql(migration.read_text())
         sql("ALTER TABLE public.stations ALTER COLUMN latitude SET DEFAULT 32.858784, ALTER COLUMN longitude SET DEFAULT 35.090755;")
+        sql((ROOT / 'tests/sql/worker-notifications.sql').read_text())
+        print('PASS: existing notification SQL/RLS/device/queue regressions')
         uid = lambda n: f'00000000-0000-0000-0000-{n:012d}'
         sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(1)}','worker@example.com'),('{uid(2)}','other@example.com');
         INSERT INTO public.stations(id,code,name,nfc_public_token) VALUES ('{uid(101)}','NFC-A','Test A','token-a'),('{uid(102)}','NFC-B','Test B','token-b');
@@ -120,6 +124,50 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         assert sql(f"SELECT full_name || '|' || phone || '|' || email FROM public.profiles WHERE id='{uid(1)}';").strip() == 'Updated Worker|+972501234567|updated@example.com'
         sql(f"UPDATE public.station_memberships SET status='INACTIVE' WHERE id='{uid(201)}';")
         assert scan(first_id)['code'] == 'NO_MEMBERSHIP'
+        sql(f"UPDATE public.station_memberships SET status='ACTIVE' WHERE id='{uid(201)}'; INSERT INTO auth.sessions(id,user_id) VALUES ('{uid(1)}','{uid(1)}'),('{uid(2)}','{uid(2)}');")
+        def native(action='CLOCK_IN', record=None, identity=None, actor=1, geo='32.858784,35.090755,5,clock_timestamp()'):
+            identity = identity or uuid.uuid4()
+            record_sql = f"'{record}'" if record else 'NULL'
+            output = sql(f"BEGIN; SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(actor)}',true); SELECT public.process_native_nfc_scan('token-a','{identity}',clock_timestamp(),'{action}',{record_sql},{geo}); COMMIT;")
+            return json.loads(next(line for line in output.splitlines() if line.startswith('{')))
+        active = sql("SELECT id FROM public.attendance_records WHERE status='ACTIVE';").strip()
+        assert native()['code'] == 'STATE_CHANGED'
+        assert native('CLOCK_OUT', uid(999))['code'] == 'STATE_CHANGED'
+        assert native('CLOCK_OUT', active, geo='32.86,35.09,5,clock_timestamp()')['code'] == 'OUTSIDE_STATION'
+        cool_down()
+        native_id = uuid.uuid4()
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            results = list(pool.map(lambda _: native('CLOCK_OUT', active, native_id), range(6)))
+        assert all(r['success'] and r['record']['status']=='COMPLETED' for r in results), results
+        assert sum(not r['replayed'] for r in results)==1
+        assert native('CLOCK_OUT', active, native_id)['replayed']
+        recovery = sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',false); SELECT public.read_native_nfc_receipt('token-a','{native_id}');")
+        assert 'COMPLETED' in recovery
+        assert native(actor=2)['code']=='NO_MEMBERSHIP'
+        sql(f"DELETE FROM auth.sessions WHERE user_id='{uid(1)}';")
+        assert native('CLOCK_OUT', active, native_id)['code']=='SESSION_EXPIRED'
+        sql(f"INSERT INTO auth.sessions(id,user_id) VALUES ('{uid(1)}','{uid(1)}');")
+        cool_down()
+        assert native()['action']=='CLOCK_IN'
+        assert native()['code']=='STATE_CHANGED'
+        sql(f"UPDATE public.station_memberships SET status='INACTIVE' WHERE id='{uid(201)}';")
+        assert native('CLOCK_OUT', active, native_id)['code']=='NO_MEMBERSHIP'
+        sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',false); SELECT public.read_native_nfc_receipt('token-a','{native_id}');", fails=True)
+        sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(3)}','left-open@example.test');
+        INSERT INTO public.station_memberships(id,station_id,user_id) VALUES ('{uid(203)}','{uid(101)}','{uid(3)}');
+        INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status) VALUES ('{uid(403)}','{uid(101)}','{uid(203)}','{uid(3)}',now()-interval '13 hours','ACTIVE');
+        SET ROLE service_role; SELECT public.claim_worker_notifications(); RESET ROLE;""")
+        assert sql("SELECT count(*) FROM public.worker_notifications WHERE type='LEFT_OPEN';").strip()=='1'
+        sql('SET ROLE service_role; SELECT public.claim_worker_notifications(); RESET ROLE;')
+        assert sql("SELECT count(*) FROM public.worker_notifications WHERE type='LEFT_OPEN';").strip()=='1'
+        assert sql("SELECT public.worker_notification_current(n) FROM public.worker_notifications n WHERE type='LEFT_OPEN';").strip()=='t'
+        sql(f"INSERT INTO public.worker_notification_preferences(user_id,reminder_minutes) VALUES ('{uid(3)}',0);")
+        assert sql("SELECT public.worker_notification_current(n) FROM public.worker_notifications n WHERE type='LEFT_OPEN';").strip()=='f'
+        sql(f"UPDATE public.worker_notification_preferences SET reminder_minutes=60 WHERE user_id='{uid(3)}'; UPDATE public.attendance_records SET status='COMPLETED',clock_out_at=now() WHERE id='{uid(403)}';")
+        assert sql("SELECT public.worker_notification_current(n) FROM public.worker_notifications n WHERE type='LEFT_OPEN';").strip()=='f'
+        sql('SET ROLE authenticated; SELECT public.claim_worker_notifications();',fails=True)
+        print('PASS: LEFT_OPEN server queue, deduplication, disabled preference, completed-record cancellation and privileged dispatch')
+        print('PASS: native expected action, location denial, six concurrent confirmations, receipt recovery, revoked session, membership isolation')
         print('PASS: automatic clock-in; confirmed checkout; cancel/replay; concurrent confirmations; stale/expired denial; legacy calls cannot auto-checkout; auth-profile sync; station/membership isolation; direct-write denial')
     finally:
         command('pg_ctl', '-D', str(base / 'data'), '-m', 'immediate', '-w', 'stop')

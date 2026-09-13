@@ -1,6 +1,4 @@
-/** Only Phase 1 implemented routes are allowed; never accept an arbitrary URL. */
-export function safeReturnPath(value: unknown): '/' {
-  // Expand this explicit allowlist when schedule/NFC routes are implemented.
-  void value;
-  return '/';
+/** Explicit internal destination only; never redirect to caller-supplied URLs. */
+export function safeReturnPath(value: unknown): '/' | '/attendance' {
+  return value === 'attendance' ? '/attendance' : '/';
 }

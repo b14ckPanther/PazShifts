@@ -33,7 +33,7 @@ Notifications.setNotificationHandler({
 });
 const pendingKey = 'ys.notification.destination.v1',
   askedKey = 'ys.notification.asked.v1';
-type Target = { stationId: string; day: string };
+type Target = { stationId: string; day: string; screen?: 'home' };
 type Value = {
   enabled: boolean;
   unread: number;

@@ -63,6 +63,7 @@ function mount() {
         if (name === 'react/jsx-runtime') return { jsx: (_type, props) => props };
         if (name === 'react-native') return { AppState: { currentState: 'active' } };
         if (name === '../lib/supabase') return { supabase: {} };
+        if (name === '../nfc/events') return { onAttendanceChanged: () => () => {} };
         if (name === './model')
           return {
             selectStation: (allowed, selected) =>

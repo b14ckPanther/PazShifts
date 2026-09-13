@@ -5,12 +5,18 @@ export type WorkerNotification = {
   id: string;
   user_id: string;
   station_id: string;
-  type: 'SCHEDULE_PUBLISHED' | 'SHIFT_REMINDER';
+  type: 'SCHEDULE_PUBLISHED' | 'SHIFT_REMINDER' | 'LEFT_OPEN';
   title: string;
   body: string;
   created_at: string;
   read_at: string | null;
-  data: { stationName?: string; day?: string; shiftId?: string; scheduleId?: string };
+  data: {
+    stationName?: string;
+    day?: string;
+    shiftId?: string;
+    scheduleId?: string;
+    attendanceId?: string;
+  };
 };
 export type NotificationPreferences = {
   schedule_published: boolean;
@@ -63,6 +69,23 @@ export async function workerNotificationTarget(
     !validDate(data.data?.day)
   )
     throw Error('Destination unavailable');
+  if (data.type === 'LEFT_OPEN') {
+    if (!notificationId(data.data.attendanceId)) throw Error('Destination unavailable');
+    const active = await client
+      .from('attendance_records')
+      .select('id')
+      .eq('id', data.data.attendanceId)
+      .eq('user_id', context.userId)
+      .eq('station_id', data.station_id)
+      .eq('status', 'ACTIVE')
+      .maybeSingle();
+    if (active.error || !active.data) throw Error('Destination unavailable');
+    return {
+      stationId: data.station_id as string,
+      day: data.data.day as string,
+      screen: 'home' as const,
+    };
+  }
   if (!['SCHEDULE_PUBLISHED', 'SHIFT_REMINDER'].includes(data.type))
     throw Error('Destination unavailable');
   if (!notificationId(data.data.scheduleId)) throw Error('Destination unavailable');

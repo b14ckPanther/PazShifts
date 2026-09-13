@@ -34,3 +34,10 @@ export {
   type ReminderStation,
   type ReminderContext,
 } from './src/mobile-location';
+
+export {
+  getNativeNfcContext,
+  submitNativeNfc,
+  type NativeNfcContext,
+  type NativeNfcRequest,
+} from './src/mobile-nfc';

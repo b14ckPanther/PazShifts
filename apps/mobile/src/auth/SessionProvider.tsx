@@ -1,3 +1,4 @@
+import { clearNfcIntent } from '../nfc/pending';
 import { clearLocationReminders } from '../location/runtime';
 import {
   createContext,
@@ -19,9 +20,11 @@ type State = {
   error: string | null;
 };
 const initial: State = { phase: 'loading', context: null, error: null };
-const AuthContext = createContext<{ state: State; retry: () => void; logout: () => Promise<void> }>(
-  { state: initial, retry: () => {}, logout: async () => {} }
-);
+export const AuthContext = createContext<{
+  state: State;
+  retry: () => void;
+  logout: () => Promise<void>;
+}>({ state: initial, retry: () => {}, logout: async () => {} });
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(initial);
   const generation = useRef(0);
@@ -117,6 +120,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const run = ++generation.current;
     try {
       // Server session revocation also cascades device registration if cleanup is unavailable.
+      await clearNfcIntent().catch(() => {});
       await clearLocationReminders().catch(() => {});
       await detachNotificationsBeforeLogout().catch(() => {});
       setState({ phase: 'loading', context: null, error: null });

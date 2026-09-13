@@ -393,3 +393,18 @@ RPC from migration 16 and the three-argument wrapper from migration 11, remove t
 new eight-argument RPC and location-required trigger, then redeploy the prior app.
 This removes geofence protection; do not do it as a silent workaround. Location
 columns may remain for recovery. No new environment variables or paid service.
+
+### Native NFC links (Mobile Phase 7)
+
+The worker project now serves `/.well-known/apple-app-site-association` and
+`/.well-known/assetlinks.json` without authentication. Configure `APPLE_APP_IDS`,
+`ANDROID_APP_LINKS_PACKAGE`, and `ANDROID_APP_LINKS_SHA256` from the actual signed
+app identities; missing values intentionally return 503. Both `paz.darb.co.il` and
+`paz-shifts.vercel.app` must serve the documents directly. Do not redirect the
+legacy NFC hostname or rewrite physical tags during this rollout.
+
+Apply the reviewed native NFC and left-open notification migrations (20 and 21)
+before releasing the new native attendance build. No production migration or
+association deployment was performed during implementation. Signing, environment
+values, inspection/apply commands, rollback and physical-device checks are in
+[`apps/mobile/PHASE7.md`](apps/mobile/PHASE7.md).

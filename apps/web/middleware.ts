@@ -10,7 +10,14 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  if (['/fonts/Heebo-Regular.ttf', '/fonts/Heebo-OFL.txt'].includes(request.nextUrl.pathname))
+  if (
+    [
+      '/.well-known/apple-app-site-association',
+      '/.well-known/assetlinks.json',
+      '/fonts/Heebo-Regular.ttf',
+      '/fonts/Heebo-OFL.txt',
+    ].includes(request.nextUrl.pathname)
+  )
     return response;
 
   // The physical tag keeps its bare URL. Each fresh navigation gets a stable receipt URL.

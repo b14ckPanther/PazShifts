@@ -1,3 +1,4 @@
+import { onAttendanceChanged } from '../nfc/events';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { getMobileHome, type MobileHome, type WorkerContext } from '@yellowshifts/database/public';
@@ -29,6 +30,13 @@ export function WorkerProvider({
     [loading, setLoading] = useState(true),
     [revision, setRevision] = useState(0);
   const id = selectStation(context.stations, selected);
+  useEffect(
+    () =>
+      onAttendanceChanged((user) => {
+        if (user === context.userId) setRevision((v) => v + 1);
+      }),
+    [context.userId]
+  );
   const generation = useRef(0);
   const guard = useRef<((action: () => void) => void) | null>(null);
   const proceed = (action: () => void) => (guard.current ? guard.current(action) : action());
