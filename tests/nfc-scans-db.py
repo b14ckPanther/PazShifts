@@ -65,7 +65,7 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         def cool_down():
             sql("UPDATE public.nfc_scan_receipts SET applied_at=clock_timestamp()-interval '11 seconds';")
 
-        sql(f"""INSERT INTO public.schedules(id,station_id,week_start_date,status) VALUES ('{uid(301)}','{uid(101)}',date_trunc('week',now())::date,'DRAFT');
+        sql(f"""INSERT INTO public.schedules(id,station_id,week_start_date,status) VALUES ('{uid(301)}','{uid(101)}',(current_date-extract(dow FROM current_date)::int),'DRAFT');
         INSERT INTO public.scheduled_shifts(id,schedule_id,station_id,shift_date,start_at,end_at) VALUES ('{uid(302)}','{uid(301)}','{uid(101)}',current_date,now()-interval '5 minutes',now()+interval '8 hours');
         INSERT INTO public.shift_assignments(scheduled_shift_id,station_id,station_membership_id) VALUES ('{uid(302)}','{uid(101)}','{uid(201)}');""")
         first_id = uuid.uuid4()

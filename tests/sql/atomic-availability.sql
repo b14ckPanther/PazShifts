@@ -8,7 +8,7 @@ CREATE TRIGGER test_insert_failure BEFORE INSERT ON public.availability_entries 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 DO $$
-DECLARE w date:=date_trunc('week',timezone('Asia/Jerusalem',now()))::date; payload jsonb; result jsonb; baseline jsonb; bad jsonb; i integer;
+DECLARE w date:=(timezone('Asia/Jerusalem',now())::date-extract(dow FROM timezone('Asia/Jerusalem',now()))::int); payload jsonb; result jsonb; baseline jsonb; bad jsonb; i integer;
 BEGIN
  SELECT jsonb_agg(jsonb_build_object('date',w+d,'availabilityType','ALL_DAY_AVAILABLE')) INTO payload FROM generate_series(0,6) d;
  result:=public.submit_worker_availability('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100',w,payload);
@@ -16,6 +16,7 @@ BEGIN
  result:=public.submit_worker_availability('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100',w,jsonb_set(payload,'{0,availabilityType}','"ALL_DAY_UNAVAILABLE"'));
  IF result#>>'{entries,0,availability_type}'<>'ALL_DAY_UNAVAILABLE' THEN RAISE EXCEPTION 'replacement'; END IF;
  baseline:=result;
+ BEGIN PERFORM public.submit_worker_availability('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100',w+1,payload); RAISE EXCEPTION 'Monday allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.submit_worker_availability('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100',w-7,payload); RAISE EXCEPTION 'historical allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.submit_worker_availability('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100',w+21,payload); RAISE EXCEPTION 'future allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  FOR i IN 1..7 LOOP

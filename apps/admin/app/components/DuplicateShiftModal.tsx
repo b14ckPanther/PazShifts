@@ -16,13 +16,13 @@ interface DuplicateShiftModalProps {
 }
 
 const HEBREW_DAYS = [
-  { index: 0, name: 'יום שני' },
-  { index: 1, name: 'יום שלישי' },
-  { index: 2, name: 'יום רביעי' },
-  { index: 3, name: 'יום חמישי' },
-  { index: 4, name: 'יום שישי' },
-  { index: 5, name: 'יום שבת' },
-  { index: 6, name: 'יום ראשון' },
+  { index: 0, name: 'יום ראשון' },
+  { index: 1, name: 'יום שני' },
+  { index: 2, name: 'יום שלישי' },
+  { index: 3, name: 'יום רביעי' },
+  { index: 4, name: 'יום חמישי' },
+  { index: 5, name: 'יום שישי' },
+  { index: 6, name: 'יום שבת' },
 ];
 
 function addDays(dateStr: string, days: number): string {

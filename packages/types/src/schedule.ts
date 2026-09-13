@@ -18,7 +18,7 @@ export interface ShiftTemplate {
 export interface Schedule {
   id: string;
   stationId: string;
-  weekStartDate: string; // "YYYY-MM-DD", Monday
+  weekStartDate: string; // "YYYY-MM-DD", Sunday
   status: ScheduleStatus;
   createdBy: string | null;
   createdAt: string;
@@ -92,7 +92,7 @@ export interface UpdateShiftTemplateInput {
 
 export interface CreateScheduleInput {
   stationId: string;
-  weekStartDate: string; // Must be Monday "YYYY-MM-DD"
+  weekStartDate: string; // Must be Sunday "YYYY-MM-DD"
   createdBy?: string | null;
 }
 
@@ -129,8 +129,8 @@ export interface DuplicateShiftInput {
 
 export interface CopyWeekOptions {
   stationId: string;
-  sourceWeekStartDate: string; // "YYYY-MM-DD", Monday
-  targetWeekStartDate: string; // "YYYY-MM-DD", Monday
+  sourceWeekStartDate: string; // "YYYY-MM-DD", Sunday
+  targetWeekStartDate: string; // "YYYY-MM-DD", Sunday
   copyAssignments: boolean;
   createdBy?: string | null;
 }

@@ -13,7 +13,7 @@ export interface AvailabilityWeek {
   id: string;
   stationId: string;
   stationMembershipId: string;
-  weekStartDate: string; // YYYY-MM-DD (Monday)
+  weekStartDate: string; // YYYY-MM-DD (Sunday)
   notes: string | null;
   submittedAt: string;
   updatedAt: string;
@@ -47,7 +47,7 @@ export interface SaveAvailabilityEntryInput {
 export interface SaveWeeklyAvailabilityInput {
   stationId: string;
   stationMembershipId: string;
-  weekStartDate: string; // YYYY-MM-DD (Monday)
+  weekStartDate: string; // YYYY-MM-DD (Sunday)
   notes?: string | null;
   entries: SaveAvailabilityEntryInput[];
 }

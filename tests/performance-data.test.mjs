@@ -92,7 +92,7 @@ test('worker availability embeds entries in one membership/week-scoped read and 
   assert.equal(reads, 1);
   assert(calls.some((c) => c[0] === 'select' && c[1].includes('availability_entries')));
   assert(calls.some((c) => c[1] === 'station_membership_id' && c[2] === 'own-member'));
-  assert(calls.some((c) => c[1] === 'week_start_date' && c[2] === '2026-09-07'));
+  assert(calls.some((c) => c[1] === 'week_start_date' && c[2] === '2026-09-06'));
   assert.equal(result.entries[0].date, '2026-09-07');
 });
 test('elapsed labels share one timer and release listeners when unmounted; hidden tabs do not tick', () => {

@@ -88,9 +88,9 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         sql(f"""INSERT INTO public.attendance_records(station_id,user_id,station_membership_id,clock_in_at,clock_out_at,status)
             VALUES ('{station}','{user(5)}','{user(204)}',now()-interval '1 hour',now(),'COMPLETED');
             INSERT INTO public.schedules(id,station_id,week_start_date,status) VALUES
-            ('{user(301)}','{station}','2026-09-07','DRAFT'),
-            ('{user(302)}','{other}','2026-09-07','DRAFT'),
-            ('{user(303)}','{station}','2026-09-14','PUBLISHED');""")
+            ('{user(301)}','{station}','2026-09-06','DRAFT'),
+            ('{user(302)}','{other}','2026-09-06','DRAFT'),
+            ('{user(303)}','{station}','2026-09-13','PUBLISHED');""")
         for actor, count in [(1,2),(2,2),(5,1),(6,0)]:
             output = attempt(actor,'SELECT count(*) AS visible FROM public.attendance_records')
             assert f'\n{count}\n' in output, output

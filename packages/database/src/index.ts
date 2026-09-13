@@ -17,3 +17,5 @@ export * from './member-permissions';
 export * from './login-identifier';
 
 export * from './hours-query';
+
+export { isAvailabilitySubmitted } from './availability-status';

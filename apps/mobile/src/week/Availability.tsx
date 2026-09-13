@@ -1,3 +1,4 @@
+import { isAvailabilitySubmitted } from '@yellowshifts/database/public';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, AccessibilityInfo } from 'react-native';
 import { useLocalSearchParams, useNavigation, useFocusEffect } from 'expo-router';
@@ -31,7 +32,7 @@ export default function Availability() {
     navigation = useNavigation();
   const current = stationWeek(station?.timezone ?? 'Asia/Jerusalem');
   const [week, setWeek] = useState(() =>
-    validDay(params.week) ? weekStart(params.week) : addDays(current, 7)
+    validDay(params.week) ? weekStart(params.week, 0) : addDays(current, 7)
   );
   const [draft, setDraft] = useState<SaveAvailabilityEntryInput[]>([]),
     [saved, setSaved] = useState<WeeklyAvailabilityWithEntries | null>(null),
@@ -179,7 +180,7 @@ export default function Availability() {
     if (params.week !== requested.current) {
       requested.current = params.week;
       if (validDay(params.week)) {
-        const next = weekStart(params.week);
+        const next = weekStart(params.week, 0);
         guard(() => setWeek(next));
       }
     }
@@ -195,7 +196,7 @@ export default function Availability() {
       setWeek(addDays(week, delta * 7));
       selection();
     });
-  const submitNeeded = !saved && draft.length === 7;
+  const submitNeeded = !isAvailabilitySubmitted(saved) && draft.length === 7;
   const canSave = !busy && editable && validDraft(draft) && (dirty || submitNeeded);
   const selected = picker ? (draft[picker.index]?.[picker.field] ?? '08:00') : '08:00';
   return (
@@ -219,9 +220,11 @@ export default function Availability() {
                   ? 'יש שינויים שלא נשמרו'
                   : success
                     ? 'נשמר'
-                    : saved
+                    : isAvailabilitySubmitted(saved)
                       ? 'הזמינות נשלחה'
-                      : 'עדיין לא נשלחה זמינות'}
+                      : saved
+                        ? 'נשמרה זמינות חלקית · יש להשלים ולשלוח'
+                        : 'עדיין לא נשלחה זמינות'}
             </Label>
             <Button
               title={busy ? 'שומרים…' : submitNeeded ? 'שליחת הזמינות' : 'שמירת השינויים'}

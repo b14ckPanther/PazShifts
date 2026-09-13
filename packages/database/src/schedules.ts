@@ -110,13 +110,13 @@ export function normalizeTimeString(time: string): string {
 }
 
 /**
- * Deterministically calculates the Monday date of the week for a given date.
+ * Deterministically calculates the Sunday date of the week for a given date.
  * Output format: "YYYY-MM-DD".
  */
 export function getWeekStartDate(date: Date | string = new Date()): string {
   const d = typeof date === 'string' ? new Date(`${date.slice(0, 10)}T00:00:00Z`) : new Date(date);
   const day = d.getUTCDay(); // 0 is Sunday, 1 is Monday ... 6 is Saturday
-  const diff = day === 0 ? -6 : 1 - day; // If Sunday, go back 6 days to Monday; else 1 - day
+  const diff = -day; // Days back to Sunday
   d.setUTCDate(d.getUTCDate() + diff);
   return d.toISOString().slice(0, 10);
 }

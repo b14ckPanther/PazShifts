@@ -1,4 +1,5 @@
 'use client';
+import { isAvailabilitySubmitted } from '@yellowshifts/database/public';
 
 import { WeekNavigator } from './WeekNavigator';
 import React, { useState, useTransition } from 'react';
@@ -22,7 +23,7 @@ import {
 interface WeeklyAvailabilityFormProps {
   stationId: string;
   stationMembershipId: string;
-  weekStartDate: string; // YYYY-MM-DD (Monday)
+  weekStartDate: string; // YYYY-MM-DD (Sunday)
   initialData: WeeklyAvailabilityWithEntries | null;
   isHistoricalWeek: boolean;
   todayStr?: string;
@@ -30,13 +31,13 @@ interface WeeklyAvailabilityFormProps {
 }
 
 const HEBREW_DAYS = [
-  { index: 0, name: 'יום שני', short: 'שני' },
-  { index: 1, name: 'יום שלישי', short: 'שלישי' },
-  { index: 2, name: 'יום רביעי', short: 'רביעי' },
-  { index: 3, name: 'יום חמישי', short: 'חמישי' },
-  { index: 4, name: 'יום שישי', short: 'שישי' },
-  { index: 5, name: 'יום שבת', short: 'שבת' },
-  { index: 6, name: 'יום ראשון', short: 'ראשון' },
+  { index: 0, name: 'יום ראשון', short: 'ראשון' },
+  { index: 1, name: 'יום שני', short: 'שני' },
+  { index: 2, name: 'יום שלישי', short: 'שלישי' },
+  { index: 3, name: 'יום רביעי', short: 'רביעי' },
+  { index: 4, name: 'יום חמישי', short: 'חמישי' },
+  { index: 5, name: 'יום שישי', short: 'שישי' },
+  { index: 6, name: 'יום שבת', short: 'שבת' },
 ];
 
 function addDays(dateStr: string, days: number): string {
@@ -245,10 +246,12 @@ export function WeeklyAvailabilityForm({
                 : 'השבוע הנבחר'
         }
       >
-        {initialData ? (
+        {isAvailabilitySubmitted(initialData) ? (
           <Badge variant="success">הוגשה זמינות לשבוע זה</Badge>
         ) : (
-          <Badge variant="warning">טרם הוגשה זמינות</Badge>
+          <Badge variant="warning">
+            {initialData ? 'נשמרה זמינות חלקית · יש להשלים ולשלוח' : 'טרם הוגשה זמינות'}
+          </Badge>
         )}
       </WeekNavigator>
 
@@ -695,10 +698,10 @@ export function WeeklyAvailabilityForm({
           }}
         >
           <div style={{ fontSize: '0.8125rem', color: '#6B7280' }}>
-            {initialData ? (
+            {isAvailabilitySubmitted(initialData) ? (
               <span>
                 עודכן לאחרונה:{' '}
-                {new Date(initialData.week.updatedAt).toLocaleTimeString('he-IL', {
+                {new Date(initialData!.week.updatedAt).toLocaleTimeString('he-IL', {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}

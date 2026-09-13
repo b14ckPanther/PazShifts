@@ -20,7 +20,7 @@ export default function Schedule() {
   const timezone = station?.timezone ?? 'Asia/Jerusalem',
     today = localDate(new Date(), timezone);
   const [week, setWeek] = useState(() =>
-    validDay(params.day) ? weekStart(params.day) : stationWeek(timezone)
+    validDay(params.day) ? weekStart(params.day, 0) : stationWeek(timezone)
   );
   const [day, setDay] = useState(() => (validDay(params.day) ? params.day : today));
   const [data, setData] = useState<NativeSchedule | null>(null),
@@ -29,7 +29,7 @@ export default function Schedule() {
     [detail, setDetail] = useState<NativeShift | null>(null);
   useEffect(() => {
     if (validDay(params.day)) {
-      setWeek(weekStart(params.day));
+      setWeek(weekStart(params.day, 0));
       setDay(params.day);
     }
   }, [params.day]);

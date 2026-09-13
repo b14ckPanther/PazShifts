@@ -111,12 +111,7 @@ export function WorkerHoursClient({
           </button>
           <button
             disabled={pending}
-            onClick={() =>
-              navigate(
-                weekStart(today, report.rateWeekStartsOn),
-                addDays(weekStart(today, report.rateWeekStartsOn), 6)
-              )
-            }
+            onClick={() => navigate(weekStart(today, 0), addDays(weekStart(today, 0), 6))}
           >
             השבוע
           </button>

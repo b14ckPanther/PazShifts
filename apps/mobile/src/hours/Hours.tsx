@@ -145,7 +145,7 @@ export function HoursContent({
       };
     }, [api, station.id, key, revision])
   ); // period is represented by its stable serialized key
-  const days = useMemo(() => groupDays(report?.entries || [], report?.weekStartsOn ?? 1), [report]);
+  const days = useMemo(() => groupDays(report?.entries || [], 0), [report]);
   const summary = useMemo(() => summarize(report?.entries || []), [report]);
   const change = (value: HoursPeriod) => {
     selection();

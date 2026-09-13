@@ -1,3 +1,4 @@
+import { localDate } from '@yellowshifts/reports';
 import { getServerContext } from '@/app/lib/server-context';
 import { BrandMark } from '@yellowshifts/ui';
 import { redirect } from 'next/navigation';
@@ -181,7 +182,9 @@ export default async function WebHomePage({ searchParams }: PageProps) {
     }
   }
 
-  const selectedWeekStart = getWeekStartDate(resolvedSearchParams.week || new Date());
+  const selectedWeekStart = getWeekStartDate(
+    resolvedSearchParams.week || localDate(new Date(), activeContext.station.timezone)
+  );
 
   // Fetch published schedule for worker
   const schedule = await getWeeklySchedule(supabase, activeContext.station.id, selectedWeekStart);

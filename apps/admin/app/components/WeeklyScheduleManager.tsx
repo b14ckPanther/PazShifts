@@ -40,7 +40,8 @@ import { AddShiftModal } from './AddShiftModal';
 interface WeeklyScheduleManagerProps {
   stationId: string;
   stationName: string;
-  selectedWeekStart: string; // YYYY-MM-DD (Monday)
+  currentWeekStart: string;
+  selectedWeekStart: string; // YYYY-MM-DD (Sunday)
   schedule: WeeklyScheduleDetails | null;
   templates: ShiftTemplate[];
   activeMembers: StationMemberWithProfile[];
@@ -62,18 +63,11 @@ function formatDateDisplay(dateStr: string): string {
   return `${d}/${m}/${y}`;
 }
 
-function getMondayOfCurrentWeek(): string {
-  const now = new Date();
-  const day = now.getUTCDay(); // 0 is Sunday, 1 is Monday, ...
-  const diff = (day + 6) % 7; // Days since Monday
-  now.setUTCDate(now.getUTCDate() - diff);
-  return now.toISOString().slice(0, 10);
-}
-
 export function WeeklyScheduleManager({
   stationId,
   stationName: _stationName,
   selectedWeekStart,
+  currentWeekStart,
   schedule,
   templates,
   activeMembers,
@@ -101,8 +95,8 @@ export function WeeklyScheduleManager({
     ? (schedule?.shifts.find((s) => s.id === activeShiftIdForDrawer) ?? null)
     : null;
 
-  const currentMonday = getMondayOfCurrentWeek();
-  const isViewingCurrentWeek = selectedWeekStart === currentMonday;
+  const currentSunday = currentWeekStart;
+  const isViewingCurrentWeek = selectedWeekStart === currentSunday;
   const weekEnd = addDays(selectedWeekStart, 6);
 
   const navigateWeek = (offsetDays: number) => {
@@ -111,7 +105,7 @@ export function WeeklyScheduleManager({
   };
 
   const jumpToCurrentWeek = () => {
-    router.push(`?week=${currentMonday}`);
+    router.push(`?week=${currentSunday}`);
   };
 
   const handleCreateSchedule = () => {

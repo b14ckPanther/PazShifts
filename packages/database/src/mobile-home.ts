@@ -32,7 +32,7 @@ export async function getMobileHome(
   if (!station) throw new Error('Station access unavailable');
   const timezone = station.timezone,
     today = localDate(new Date(now), timezone),
-    week = weekStart(today),
+    week = weekStart(today, 0),
     nextWeek = addDays(week, 7);
   const start = new Date(dayBoundary(week, timezone)).toISOString(),
     end = new Date(dayBoundary(nextWeek, timezone)).toISOString();
@@ -58,7 +58,7 @@ export async function getMobileHome(
       .maybeSingle(),
     client
       .from('availability_weeks')
-      .select('submitted_at')
+      .select('submitted_at,availability_entries(date)')
       .eq('station_id', stationId)
       .eq('station_membership_id', station.membershipId)
       .eq('week_start_date', nextWeek)
@@ -106,7 +106,12 @@ export async function getMobileHome(
     activeStation: context.stations.find((s) => s.id === active.data?.station_id)?.name ?? null,
     activeTimezone:
       context.stations.find((s) => s.id === active.data?.station_id)?.timezone ?? timezone,
-    availabilitySubmitted: Boolean(availability.data?.submitted_at),
+    availabilitySubmitted: Boolean(
+      availability.data?.submitted_at &&
+      Array.from({ length: 7 }, (_, i) => addDays(nextWeek, i)).every((date) =>
+        availability.data?.availability_entries.some((entry) => entry.date === date)
+      )
+    ),
     confirmedSeconds: complete.reduce((sum, e) => sum + e.seconds, 0),
     reviewCount: new Set(entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id)).size,
     completedToday: complete.some((e) => e.date === today),
