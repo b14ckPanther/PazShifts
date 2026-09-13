@@ -14,3 +14,7 @@ google-services.json
 *.p8
 *.p12
 *.mobileprovision
+
+*.jks
+*.keystore
+*.pfx

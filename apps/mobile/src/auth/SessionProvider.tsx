@@ -28,6 +28,7 @@ export const AuthContext = createContext<{
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>(initial);
   const generation = useRef(0);
+  const inFlight = useRef<{ key: string; value: Promise<WorkerContext> } | null>(null);
   const resolve = useCallback(async (session: Session | null, run: number) => {
     if (run !== generation.current) return;
     setState((previous) =>
@@ -40,7 +41,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const context = await getNativeWorkerContext(supabase, session.user.id);
+      // INITIAL_SESSION and getSession may race during startup. Share only an in-flight
+      // validation for this exact session; never cache authorization after completion.
+      const key = `${session.user.id}:${session.access_token}`;
+      const value =
+        inFlight.current?.key === key
+          ? inFlight.current.value
+          : getNativeWorkerContext(supabase, session.user.id);
+      inFlight.current = { key, value };
+      let context: WorkerContext;
+      try {
+        context = await value;
+      } finally {
+        if (inFlight.current?.value === value) inFlight.current = null;
+      }
       if (run === generation.current)
         setState({
           phase: 'ready',
@@ -118,6 +132,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [resolve, retry]);
   const logout = async () => {
     const run = ++generation.current;
+    setState({ phase: 'loading', context: null, error: null });
     try {
       // Server session revocation also cascades device registration if cleanup is unavailable.
       await clearNfcIntent().catch(() => {});

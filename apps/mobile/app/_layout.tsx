@@ -1,8 +1,8 @@
 import '../src/location/backgroundTasks';
 import { NotificationProvider } from '../src/notifications/Provider';
 import 'react-native-gesture-handler';
-import { useEffect } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Text, Pressable, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -47,26 +47,59 @@ export default function Root() {
 
 /** A quiet recovery screen; never show raw server errors or identifiers. */
 export function ErrorBoundary({ retry }: { retry: () => Promise<void> }) {
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // The font-loading render can fail before Root's effects commit.
+  useEffect(() => {
+    void SplashScreen.hideAsync().catch(() => {});
+  }, []);
   return (
-    <View
-      style={{
-        flex: 1,
+    <ScrollView
+      contentContainerStyle={{
+        flexGrow: 1,
         justifyContent: 'center',
         padding: 32,
-        backgroundColor: '#FFF7CC',
+        paddingTop: 64,
         gap: 24,
+        backgroundColor: '#FFF7CC',
       }}
     >
-      <Text style={{ fontSize: 24, textAlign: 'right', color: '#000000' }}>
+      <Text
+        accessibilityRole="header"
+        style={{ fontSize: 24, textAlign: 'right', color: '#000000' }}
+      >
         לא הצלחנו לפתוח את האפליקציה
       </Text>
+      <Text style={{ fontSize: 16, textAlign: 'right' }}>
+        הדיווחים שכבר אושרו נשמרו. ניתן לנסות לפתוח שוב את המסך.
+      </Text>
+      {failed && (
+        <Text accessibilityRole="alert" style={{ textAlign: 'right' }}>
+          הפתיחה לא הושלמה. סגרו ופתחו שוב את האפליקציה.
+        </Text>
+      )}
       <Pressable
         accessibilityRole="button"
-        onPress={() => void retry()}
-        style={{ padding: 18, borderRadius: 18, backgroundColor: '#D10040' }}
+        accessibilityState={{ disabled: pending, busy: pending }}
+        disabled={pending}
+        onPress={() => {
+          setPending(true);
+          setFailed(false);
+          void retry()
+            .catch(() => setFailed(true))
+            .finally(() => setPending(false));
+        }}
+        style={{
+          padding: 18,
+          borderRadius: 18,
+          backgroundColor: '#D10040',
+          opacity: pending ? 0.6 : 1,
+        }}
       >
-        <Text style={{ textAlign: 'center', color: '#FFFFFF', fontSize: 18 }}>ניסיון נוסף</Text>
+        <Text style={{ textAlign: 'center', color: '#FFFFFF', fontSize: 18 }}>
+          {pending ? 'פותחים…' : 'ניסיון נוסף'}
+        </Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }

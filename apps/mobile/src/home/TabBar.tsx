@@ -73,7 +73,10 @@ export function TabBar({ state, navigation }: Props) {
               color={active ? colors.text : colors.secondary}
               strokeWidth={active ? 2.2 : 1.7}
             />
-            <Label bold={active} style={{ fontSize: 11, textAlign: 'center' }}>
+            <Label
+              bold={active}
+              style={{ fontSize: 11, textAlign: 'center', width: '100%', paddingHorizontal: 2 }}
+            >
               {tab.label}
             </Label>
           </Pressable>

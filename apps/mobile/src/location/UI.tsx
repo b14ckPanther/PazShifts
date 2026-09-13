@@ -1,3 +1,4 @@
+import { backgroundLocationEnabled } from '../lib/features';
 import { prepareBackgroundSession } from '../lib/supabase';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { AppState, Linking, Switch, View, Alert } from 'react-native';
@@ -29,6 +30,9 @@ export const LocationApi = createContext({
   reconcileWorkerGeofences,
 });
 export function LocationPreferences() {
+  return backgroundLocationEnabled ? <LocationPreferencesContent /> : null;
+}
+function LocationPreferencesContent() {
   const api = useContext(LocationApi);
   const { context, station } = useWorker();
   const [prefs, setPrefs] = useState<Preferences>(disabled),
