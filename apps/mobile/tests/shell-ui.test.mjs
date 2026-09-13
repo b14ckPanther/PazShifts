@@ -170,6 +170,7 @@ test('authenticated shell guards signed-out, pending and failed sessions before 
           }),
         },
         '../../src/home/WorkerProvider': { WorkerProvider: 'WorkerProvider' },
+        '../../src/location/Bridge': { LocationBridge: 'LocationBridge' },
         '../../src/home/Onboarding': { Onboarding: 'Onboarding' },
         '../../src/home/TabBar': { TabBar: 'TabBar' },
       },

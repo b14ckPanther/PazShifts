@@ -11,7 +11,9 @@ const storage = createSecureStorage({
   getItemAsync: SecureStore.getItemAsync,
   setItemAsync: (key, value) =>
     SecureStore.setItemAsync(key, value, {
-      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      // Background reminders need authenticated RLS reads while the screen is locked.
+      // Device-only keychain; unavailable before the first unlock after a reboot.
+      keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
     }),
   deleteItemAsync: SecureStore.deleteItemAsync,
 });
@@ -28,3 +30,12 @@ export const supabase = configured
       },
     })
   : null;
+
+/** Rewrite an existing session under the background-capable device-only keychain policy. */
+export async function prepareBackgroundSession() {
+  if (!url || !supabase) throw Error('Session unavailable');
+  const key = `sb-${new URL(url).hostname.split('.')[0]}-auth-token`;
+  const value = await storage.getItem(key);
+  if (!value) throw Error('Session unavailable');
+  await storage.setItem(key, value);
+}

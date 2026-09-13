@@ -29,4 +29,8 @@ export {
 } from './src/mobile-notifications';
 export { registerWorkerDevice } from './src/mobile-notifications';
 
-export { getWorkerReminderContext, type ReminderStation, type ReminderContext } from './src/mobile-location';
+export {
+  getWorkerReminderContext,
+  type ReminderStation,
+  type ReminderContext,
+} from './src/mobile-location';

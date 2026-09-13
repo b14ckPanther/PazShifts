@@ -26,13 +26,21 @@ const config: ExpoConfig = {
       : {}),
   },
   plugins: [
-    ['expo-location', {
-      locationWhenInUsePermission: 'המיקום משמש לתזכורות לסריקת NFC בהגעה לתחנה וביציאה בלבד. לא נשמרת היסטוריית מיקום.',
-      locationAlwaysAndWhenInUsePermission: 'אפשר מיקום תמיד כדי לקבל תזכורות לסריקת NFC גם כשהאפליקציה סגורה. אין מעקב מסלול או דיווח נוכחות אוטומטי.',
-      isIosBackgroundLocationEnabled: true,
-      isAndroidBackgroundLocationEnabled: true,
-      isAndroidForegroundServiceEnabled: false,
-    }],
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'המיקום משמש לתזכורות לסריקת NFC בהגעה לתחנה וביציאה בלבד. לא נשמרת היסטוריית מיקום.',
+        locationAlwaysAndWhenInUsePermission:
+          'אפשר מיקום תמיד כדי לקבל תזכורות לסריקת NFC גם כשהאפליקציה סגורה. אין מעקב מסלול או דיווח נוכחות אוטומטי.',
+        locationAlwaysPermission: false,
+        motionUsagePermission: false,
+        isAndroidMotionActivityEnabled: false,
+        isIosBackgroundLocationEnabled: true,
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: false,
+      },
+    ],
     ['expo-notifications', { color: '#FCBC00', defaultChannel: 'work' }],
     '@react-native-community/datetimepicker',
     'expo-router',
