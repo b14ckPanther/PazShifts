@@ -173,7 +173,7 @@ export function AttendanceContent() {
   return (
     <Screen>
       <View style={{ alignItems: 'center', gap: 12, paddingVertical: 20 }}>
-        <View style={{ backgroundColor: colors.cream, padding: 20, borderRadius: 28 }}>
+        <View style={{ backgroundColor: colors.yellow, padding: 20, borderRadius: 28 }}>
           {complete ? <Check size={36} /> : <Nfc size={36} />}
         </View>
         <Label bold accessibilityRole="header" style={{ fontSize: 28 }}>

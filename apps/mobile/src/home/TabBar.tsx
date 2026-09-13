@@ -64,7 +64,7 @@ export function TabBar({ state, navigation }: Props) {
               justifyContent: 'center',
               gap: 4,
               borderRadius: 16,
-              backgroundColor: active ? colors.cream : 'transparent',
+              backgroundColor: active ? colors.yellow : 'transparent',
               opacity: pressed ? 0.6 : 1,
             })}
           >

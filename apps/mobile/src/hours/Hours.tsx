@@ -60,7 +60,7 @@ function Rates({ entries }: { entries: ReportEntry[] }) {
               flexBasis: 120,
               padding: 12,
               borderRadius: 16,
-              backgroundColor: rate === '100' ? colors.cream : colors.base,
+              backgroundColor: rate === '100' ? colors.yellow : colors.base,
               gap: 5,
             }}
           >
@@ -299,7 +299,7 @@ export function HoursContent({
           <Animated.View
             key={key}
             entering={FadeIn.duration(160).reduceMotion(ReduceMotion.System)}
-            style={{ backgroundColor: colors.cream, borderRadius: 28, padding: 24, gap: 10 }}
+            style={{ backgroundColor: colors.yellow, borderRadius: 28, padding: 24, gap: 10 }}
           >
             <Label bold>שעות נוכחות שהושלמו</Label>
             <Time seconds={summary.seconds} large />

@@ -135,7 +135,7 @@ export default function Login() {
                   alignItems: 'center',
                   gap: 8,
                   borderRadius: 14,
-                  backgroundColor: mode === item ? colors.cream : 'transparent',
+                  backgroundColor: mode === item ? colors.yellow : 'transparent',
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
@@ -209,7 +209,7 @@ export default function Login() {
           </>
         )}
         <LinearGradient
-          colors={[colors.surface, colors.cream]}
+          colors={[colors.surface, colors.yellow]}
           style={{ borderRadius: 16, padding: 16 }}
         >
           <Pressable

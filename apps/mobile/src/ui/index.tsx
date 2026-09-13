@@ -125,7 +125,7 @@ export function Button({
         style={[
           styles.button,
           {
-            backgroundColor: secondary ? colors.cream : colors.crimson,
+            backgroundColor: secondary ? colors.yellow : colors.crimson,
             opacity: disabled || busy ? 0.65 : 1,
           },
         ]}
@@ -171,7 +171,7 @@ export function Field({
           styles.input,
           {
             borderColor: focused ? colors.yellow : colors.border,
-            backgroundColor: focused ? colors.cream : colors.base,
+            backgroundColor: focused ? colors.surface : colors.base,
           },
           props.style,
         ]}
