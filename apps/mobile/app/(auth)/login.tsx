@@ -4,14 +4,11 @@ import {
   InputAccessoryView,
   Platform,
   Keyboard,
-  Linking,
   Pressable,
   type TextInput,
   View,
 } from 'react-native';
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import ArrowUpLeft from 'lucide-react-native/icons/arrow-up-left';
 import Eye from 'lucide-react-native/icons/eye';
 import EyeOff from 'lucide-react-native/icons/eye-off';
 import Mail from 'lucide-react-native/icons/mail';
@@ -208,34 +205,6 @@ export default function Login() {
             />
           </>
         )}
-        <LinearGradient
-          colors={[colors.surface, colors.yellow]}
-          style={{ borderRadius: 16, padding: 16 }}
-        >
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel="Nour — Darb, פתיחת אתר"
-            onPress={() => {
-              void Linking.openURL('https://darb.co.il/he').catch(() =>
-                setError('לא ניתן לפתוח את הקישור כעת.')
-              );
-            }}
-            style={{
-              minHeight: 44,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <View style={{ gap: 4 }}>
-              <Label english bold>
-                Nour — Darb
-              </Label>
-              <Label style={{ fontSize: 11, color: colors.secondary }}>כל הזכויות שמורות</Label>
-            </View>
-            <ArrowUpLeft size={22} color={colors.deep} />
-          </Pressable>
-        </LinearGradient>
       </Surface>
     </Screen>
   );
