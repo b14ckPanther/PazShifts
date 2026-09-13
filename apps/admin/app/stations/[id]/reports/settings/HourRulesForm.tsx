@@ -223,6 +223,7 @@ export function HourRulesForm({
                 {key === 'nightStart' ? 'תחילת חלון לילה' : 'סיום חלון לילה'}
                 <input
                   type="time"
+                  dir="ltr"
                   required
                   value={time(rules[key])}
                   onChange={(e) => {

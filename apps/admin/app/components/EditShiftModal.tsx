@@ -154,6 +154,7 @@ export function EditShiftModal({ stationId, shift, onClose, onSuccess }: EditShi
               </label>
               <input
                 type="time"
+                dir="ltr"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
@@ -184,6 +185,7 @@ export function EditShiftModal({ stationId, shift, onClose, onSuccess }: EditShi
               </label>
               <input
                 type="time"
+                dir="ltr"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required

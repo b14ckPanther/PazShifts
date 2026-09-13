@@ -228,7 +228,7 @@ export function AddShiftModal({
               <option value="">משמרת מותאמת אישית (ללא תבנית)</option>
               {templates.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} ({t.startTime} — {t.endTime})
+                  {t.name} ({`\u2066${t.startTime} — ${t.endTime}\u2069`})
                 </option>
               ))}
             </select>
@@ -250,6 +250,7 @@ export function AddShiftModal({
               </label>
               <input
                 type="time"
+                dir="ltr"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
@@ -279,6 +280,7 @@ export function AddShiftModal({
               </label>
               <input
                 type="time"
+                dir="ltr"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
