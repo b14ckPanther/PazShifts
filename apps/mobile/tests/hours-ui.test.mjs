@@ -20,7 +20,7 @@ function load(p, mocks = {}) {
 }
 const reports = load('../../../packages/reports/src/hours-report.ts');
 const model = load('../src/hours/model.ts', { '@yellowshifts/reports': reports });
-function mount() {
+function mount(params = {}) {
   let i = 0,
     dirty = true,
     tree,
@@ -99,7 +99,10 @@ function mount() {
       Platform: { OS: 'ios' },
       I18nManager: { isRTL: true },
     },
-    'expo-router': { useFocusEffect: (fn) => react.useEffect(fn, [fn]) },
+    'expo-router': {
+      useLocalSearchParams: () => params,
+      useFocusEffect: (fn) => react.useEffect(fn, [fn]),
+    },
     'react-native-reanimated': {
       default: { View: 'Animated' },
       FadeIn: anim,
@@ -115,7 +118,7 @@ function mount() {
     ),
     '../ui/theme': { colors: {} },
     '../week/Patterns': { Sheet: 'Sheet', selection: () => {} },
-    '../week/model': { dateLabel: (d) => d },
+    '../week/model': { dateLabel: (d) => d, validDay: reports.validDate },
     './model': model,
   });
   const render = () => {
@@ -206,4 +209,14 @@ test('period change hides previous period immediately and station/account change
   assert.equal(h.root().key, 'u:b');
   h.worker.context.userId = 'other';
   assert.equal(h.root().key, 'other:b');
+});
+
+test('completed-shift Home destination opens the exact check-in date', async () => {
+  const h = mount({ day: '2026-09-12' });
+  await h.flush();
+  assert.equal(
+    JSON.stringify(h.root().props.initialPeriod),
+    JSON.stringify({ mode: 'custom', from: '2026-09-12', to: '2026-09-12' })
+  );
+  assert.ok(h.root().key.endsWith(':2026-09-12'));
 });

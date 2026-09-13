@@ -1,6 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, AttendanceRecord } from '@yellowshifts/types';
-import { addDays, localDate, weekStart, dayBoundary, buildEntries } from '@yellowshifts/reports';
+import {
+  addDays,
+  localDate,
+  weekStart,
+  dayBoundary,
+  shiftReportEntries,
+} from '@yellowshifts/reports';
+import { readOwnReportAttendance } from './hours-query';
 import { getNativeWorkerContext } from './worker-context';
 export type MobileShift = { id: string; start_at: string; end_at: string; shift_date: string };
 export type MobileHome = {
@@ -15,6 +22,16 @@ export type MobileHome = {
   activeStation: string | null;
   activeTimezone: string;
   availabilitySubmitted: boolean;
+  latestClosed?: {
+    stationId: string;
+    stationName: string;
+    timezone: string;
+    date: string;
+    start: string;
+    end: string;
+    seconds: number;
+    corrected: boolean;
+  } | null;
   confirmedSeconds: number;
   reviewCount: number;
   completedToday: boolean;
@@ -36,7 +53,7 @@ export async function getMobileHome(
     nextWeek = addDays(week, 7);
   const start = new Date(dayBoundary(week, timezone)).toISOString(),
     end = new Date(dayBoundary(nextWeek, timezone)).toISOString();
-  const [assigned, active, availability, attendance] = await Promise.all([
+  const [assigned, active, availability, attendance, recent] = await Promise.all([
     client
       .from('shift_assignments')
       .select('scheduled_shifts!inner(id,start_at,end_at,shift_date,schedules!inner(status))')
@@ -63,22 +80,32 @@ export async function getMobileHome(
       .eq('station_membership_id', station.membershipId)
       .eq('week_start_date', nextWeek)
       .maybeSingle(),
+    readOwnReportAttendance(client, userId, stationId, start, end).then((data) => ({
+      data,
+      error: null,
+    })),
     client
       .from('attendance_records')
       .select('*')
       .eq('user_id', userId)
-      .eq('station_id', stationId)
-      .lt('clock_in_at', end)
-      .or(`clock_out_at.gt.${start},clock_out_at.is.null`)
-      .order('clock_in_at')
+      .in(
+        'station_id',
+        context.stations.map((s) => s.id)
+      )
+      .eq('status', 'COMPLETED')
+      .gte('clock_out_at', new Date(now - 14 * 86400000).toISOString())
+      .lte('clock_out_at', new Date(now).toISOString())
+      .order('clock_out_at', { ascending: false })
       .order('id')
-      .limit(301),
+      .limit(1)
+      .maybeSingle(),
   ]);
   if (
     assigned.error ||
     active.error ||
     availability.error ||
     attendance.error ||
+    recent.error ||
     assigned.data.length > 300 ||
     attendance.data.length > 300
   )
@@ -86,14 +113,23 @@ export async function getMobileHome(
   const shifts = assigned.data
     .map((row) => row.scheduled_shifts as unknown as MobileShift)
     .sort((a, b) => a.start_at.localeCompare(b.start_at));
-  const entries = buildEntries(
+  const entries = shiftReportEntries(
     attendance.data as AttendanceRecord[],
     week,
     addDays(nextWeek, -1),
     timezone,
+    undefined,
     now
   );
   const complete = entries.filter((e) => e.status === 'הושלמה');
+  const last = recent.data as AttendanceRecord | null;
+  const lastStation = context.stations.find((s) => s.id === last?.station_id);
+  const lastDate =
+    last && lastStation ? localDate(new Date(last.clock_in_at), lastStation.timezone) : null;
+  const lastEntry =
+    last && lastStation && lastDate
+      ? shiftReportEntries([last], lastDate, lastDate, lastStation.timezone, undefined, now)[0]
+      : null;
   return {
     stationId,
     timezone,
@@ -112,6 +148,19 @@ export async function getMobileHome(
         availability.data?.availability_entries.some((entry) => entry.date === date)
       )
     ),
+    latestClosed:
+      last && lastStation && lastEntry && lastEntry.status === 'הושלמה' && last.clock_out_at
+        ? {
+            stationId: lastStation.id,
+            stationName: lastStation.name,
+            timezone: lastStation.timezone,
+            date: lastEntry.date,
+            start: last.clock_in_at,
+            end: last.clock_out_at,
+            seconds: lastEntry.seconds,
+            corrected: Boolean(last.corrected_at),
+          }
+        : null,
     confirmedSeconds: complete.reduce((sum, e) => sum + e.seconds, 0),
     reviewCount: new Set(entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id)).size,
     completedToday: complete.some((e) => e.date === today),

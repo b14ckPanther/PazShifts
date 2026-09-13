@@ -21,6 +21,10 @@ function load(path, mocks = {}) {
 }
 const helpers = load('../packages/reports/src/hours-report.ts');
 Object.assign(helpers, load('../packages/reports/src/rates.ts', { './hours-report': helpers }));
+Object.assign(
+  helpers,
+  load('../packages/reports/src/shift-report.ts', { './hours-report': helpers, './rates': helpers })
+);
 test('worker attendance applies the authenticated user and station filter to every page', async () => {
   const { readOwnReportAttendance } = load('../packages/database/src/hours-query.ts');
   let calls = 0;

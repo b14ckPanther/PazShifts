@@ -1,14 +1,15 @@
 import { NotificationBell } from '../../src/notifications/UI';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { duration, addDays } from '@yellowshifts/reports';
+import { duration, addDays, localDate } from '@yellowshifts/reports';
 import { Screen, Label, Surface, Button } from '../../src/ui';
 import { colors } from '../../src/ui/theme';
 import { AppHeader, DataState, RefreshStamp } from '../../src/home/Patterns';
+import { RecentShift } from '../../src/home/RecentShift';
 import { Hero } from '../../src/home/Hero';
 import { useWorker } from '../../src/home/WorkerProvider';
 export default function Home() {
-  const { context, data } = useWorker();
+  const { context, data, station, openStation } = useWorker();
   const router = useRouter();
   const weekly =
     data?.shifts.filter((s) => s.shift_date >= data.week && s.shift_date < addDays(data.week, 7)) ??
@@ -29,8 +30,20 @@ export default function Home() {
         <>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="פתיחת המשמרת בסידור"
+            accessibilityLabel={data.active ? 'פתיחת המשמרת הפעילה בשעות' : 'פתיחת המשמרת בסידור'}
             onPress={() => {
+              if (data.active) {
+                const active = data.active;
+                openStation(active.station_id, () =>
+                  router.navigate({
+                    pathname: '/hours',
+                    params: {
+                      day: localDate(new Date(active.clock_in_at), data.activeTimezone),
+                    },
+                  })
+                );
+                return;
+              }
               const next = data.shifts.find((s) => Date.parse(s.end_at) > Date.now());
               router.navigate({
                 pathname: '/schedule',
@@ -86,9 +99,22 @@ export default function Home() {
               >
                 {duration(data.confirmedSeconds).slice(0, -3)}
               </Label>
-              <Label style={{ fontSize: 12, color: colors.secondary }}>נוכחות סגורה</Label>
+              <Label style={{ fontSize: 12, color: colors.secondary }}>
+                נוכחות סגורה · {station?.name}
+              </Label>
             </Pressable>
           </View>
+          {data.latestClosed && (
+            <RecentShift
+              shift={data.latestClosed}
+              onOpen={() => {
+                const last = data.latestClosed!;
+                openStation(last.stationId, () =>
+                  router.navigate({ pathname: '/hours', params: { day: last.date } })
+                );
+              }}
+            />
+          )}
           <Surface>
             <Label bold>
               {data.availabilitySubmitted ? 'זמינות לשבוע הבא נשלחה' : 'עוד דבר קטן לשבוע הבא'}

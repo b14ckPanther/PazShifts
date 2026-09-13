@@ -1,5 +1,13 @@
 import { jsPDF } from 'jspdf';
-import { addDays, clock, duration, weekStart, rateText, type HoursReport } from './hours-report';
+import {
+  addDays,
+  clock,
+  duration,
+  localDate,
+  weekStart,
+  rateText,
+  type HoursReport,
+} from './hours-report';
 
 /** Loaded only on export; the Hebrew font is served locally and embedded in the file. */
 export function createHoursPdf(report: HoursReport, font: string) {
@@ -76,7 +84,11 @@ export function createHoursPdf(report: HoursReport, font: string) {
     extraHeight = 0
   ) {
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(status, 60) as string[];
+    const overnight =
+      end && localDate(new Date(end), report.timezone) !== date
+        ? ` · יציאה ב־${localDate(new Date(end), report.timezone)}`
+        : '';
+    const lines = doc.splitTextToSize(status + overnight, 60) as string[];
     const height = Math.max(10, lines.length * 5 + 4);
     if (y + height + extraHeight > 277) {
       doc.addPage();
@@ -97,7 +109,7 @@ export function createHoursPdf(report: HoursReport, font: string) {
   line('התוספות אינן מצטברות; שעות ללא כללים מסומנות בנפרד.');
   line(rateText(report.entries), 9);
   line('רשומות פתוחות, מסומנות וחופפות אינן נכללות בסיכום.');
-  line('משמרות לילה מחולקות לפי יום; שעות מחוץ לתקופה אינן נספרות.');
+  line('כל משמרת נספרת בשלמותה לפי תאריך הכניסה, גם אם היציאה למחרת.');
   line('משך מוצג בשעות:דקות:שניות. התיקונים הידניים כלולים ומסומנים.');
   line(`סה״כ שעות סגורות: ${duration(report.entries.reduce((s, e) => s + e.seconds, 0))}`);
   divider();
