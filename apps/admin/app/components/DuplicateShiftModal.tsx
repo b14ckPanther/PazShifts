@@ -159,9 +159,7 @@ export function DuplicateShiftModal({
             }}
           >
             <ClockIcon size={14} />
-            <span>
-              {sTime} — {eTime}
-            </span>
+            <bdi dir="ltr">{`${sTime} — ${eTime}`}</bdi>
           </div>
         </div>
 

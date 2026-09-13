@@ -400,7 +400,7 @@ export function ShiftTemplatesManager({
                           color: 'var(--ys-color-brand-yellow)',
                         }}
                       >
-                        {tpl.startTime} — {tpl.endTime}
+                        <bdi dir="ltr">{`${tpl.startTime} — ${tpl.endTime}`}</bdi>
                         {overnight && (
                           <span
                             style={{ fontSize: '0.75rem', color: '#9CA3AF', marginRight: '6px' }}
