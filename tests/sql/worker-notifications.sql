@@ -21,7 +21,7 @@ DO $$ BEGIN
  BEGIN PERFORM public.claim_worker_notifications(); RAISE EXCEPTION 'worker dispatch'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $$;
 RESET ROLE;
-INSERT INTO public.schedules(id,station_id,week_start_date) VALUES('00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',date_trunc('week',now())::date);
+INSERT INTO public.schedules(id,station_id,week_start_date) VALUES('00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',(current_date-extract(dow FROM current_date)::int));
 INSERT INTO public.scheduled_shifts(id,schedule_id,station_id,shift_date,start_at,end_at) VALUES('00000000-0000-4000-8000-000000020000','00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',current_date,now()+interval '20 minutes',now()+interval '8 hours');
 INSERT INTO public.shift_assignments(scheduled_shift_id,station_id,station_membership_id) VALUES('00000000-0000-4000-8000-000000020000','00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100');
 UPDATE public.schedules SET status='PUBLISHED';

@@ -35,9 +35,7 @@ export default async function WorkerHoursPage({
   try {
     const policies = await getHourPolicies(supabase, station.id);
     const from =
-      typeof query.from === 'string' && validDate(query.from)
-        ? query.from
-        : weekStart(today, policies[0]?.rules.weekStartsOn);
+      typeof query.from === 'string' && validDate(query.from) ? query.from : weekStart(today, 0);
     const to = typeof query.to === 'string' && validDate(query.to) ? query.to : addDays(from, 6);
     if (to < from || Date.parse(to) - Date.parse(from) > 92 * 86400000)
       return (

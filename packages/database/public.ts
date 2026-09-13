@@ -41,3 +41,5 @@ export {
   type NativeNfcContext,
   type NativeNfcRequest,
 } from './src/mobile-nfc';
+
+export { isAvailabilitySubmitted } from './src/availability-status';

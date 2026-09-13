@@ -35,13 +35,13 @@ interface WeeklyScheduleGridProps {
 }
 
 const HEBREW_DAYS = [
-  { index: 0, name: 'יום שני', short: 'שני' },
-  { index: 1, name: 'יום שלישי', short: 'שלישי' },
-  { index: 2, name: 'יום רביעי', short: 'רביעי' },
-  { index: 3, name: 'יום חמישי', short: 'חמישי' },
-  { index: 4, name: 'יום שישי', short: 'שישי' },
-  { index: 5, name: 'יום שבת', short: 'שבת' },
-  { index: 6, name: 'יום ראשון', short: 'ראשון' },
+  { index: 0, name: 'יום ראשון', short: 'ראשון' },
+  { index: 1, name: 'יום שני', short: 'שני' },
+  { index: 2, name: 'יום שלישי', short: 'שלישי' },
+  { index: 3, name: 'יום רביעי', short: 'רביעי' },
+  { index: 4, name: 'יום חמישי', short: 'חמישי' },
+  { index: 5, name: 'יום שישי', short: 'שישי' },
+  { index: 6, name: 'יום שבת', short: 'שבת' },
 ];
 
 function addDays(dateStr: string, days: number): string {
@@ -75,7 +75,7 @@ export function WeeklyScheduleGrid({
   onOpenEditShift,
   onDeleteShift,
 }: WeeklyScheduleGridProps) {
-  // Mobile active day index (0 = Monday)
+  // Mobile active day index (0 = Sunday)
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [preferredMode, setMobileMode] = useState<'grid' | 'singleDay'>('grid');
   const compact = useSyncExternalStore(subscribeCompact, getCompact, () => true);

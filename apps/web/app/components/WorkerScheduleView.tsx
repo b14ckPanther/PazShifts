@@ -19,7 +19,7 @@ interface WorkerScheduleViewProps {
   stationId: string;
   stationName: string;
   workerUserId: string;
-  selectedWeekStart: string; // YYYY-MM-DD (Monday)
+  selectedWeekStart: string; // YYYY-MM-DD (Sunday)
   schedule: WeeklyScheduleDetails | null;
 }
 

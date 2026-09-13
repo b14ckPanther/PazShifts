@@ -21,9 +21,11 @@ function load(path, mocks = {}) {
 const reports = load('../../../packages/reports/src/hours-report.ts');
 const model = load('../src/week/model.ts', { '@yellowshifts/reports': reports });
 test('station-local Sunday and Monday, DST boundaries and week shifts', () => {
-  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-13T20:59Z')), '2026-09-07');
-  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-13T21:01Z')), '2026-09-14');
-  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-03-27T02:00Z')), '2026-03-23');
+  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-12T20:59Z')), '2026-09-06');
+  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-12T21:01Z')), '2026-09-13');
+  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-13T20:59Z')), '2026-09-13');
+  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-09-13T21:01Z')), '2026-09-13');
+  assert.equal(model.stationWeek('Asia/Jerusalem', new Date('2026-03-27T02:00Z')), '2026-03-22');
   assert.equal(model.shiftDay('2026-09-07', '2026-09-13', 1).day, '2026-09-20');
   assert.equal(model.shiftDay('2026-09-07', '2026-09-13', -1).week, '2026-08-31');
   assert.equal(model.validDay('2026-02-30'), false);
@@ -50,7 +52,7 @@ test('shared availability saving uses exactly one RPC and no destructive REST wr
       rpc: async (name, args) => {
         calls++;
         assert.equal(name, 'submit_worker_availability');
-        assert.equal(args.p_week, '2026-09-07');
+        assert.equal(args.p_week, '2026-09-13');
         return {
           data: { week: { id: 'w', week_start_date: args.p_week }, entries: [] },
           error: null,

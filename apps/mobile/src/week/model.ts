@@ -5,7 +5,7 @@ import type {
 } from '@yellowshifts/types';
 export const days = (week: string) => Array.from({ length: 7 }, (_, i) => addDays(week, i));
 export const stationWeek = (timezone: string, now = new Date()) =>
-  weekStart(localDate(now, timezone));
+  weekStart(localDate(now, timezone), 0);
 export function validDay(value: unknown): value is string {
   return (
     typeof value === 'string' &&

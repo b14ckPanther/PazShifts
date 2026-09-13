@@ -47,12 +47,12 @@ function mapAvailabilityEntryRow(
 }
 
 /**
- * Ensures a date is normalized to Monday (ISO week start).
+ * Ensures a date is normalized to Sunday (Sunday week start).
  */
 export function getAvailabilityWeekStart(dateStr: string): string {
   const d = new Date(`${dateStr.slice(0, 10)}T00:00:00Z`);
   const day = d.getUTCDay(); // 0: Sun, 1: Mon, ...
-  const diff = (day + 6) % 7; // days since Monday
+  const diff = day; // days since Sunday
   d.setUTCDate(d.getUTCDate() - diff);
   return d.toISOString().slice(0, 10);
 }

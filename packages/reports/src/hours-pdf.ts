@@ -122,20 +122,17 @@ export function createHoursPdf(report: HoursReport, font: string) {
     line(rateText(entries), 9);
     let week = '';
     for (let date = report.from; date <= report.to; date = addDays(date, 1)) {
-      const currentWeek = weekStart(date, report.rateWeekStartsOn);
+      const currentWeek = weekStart(date, 0);
       if (week !== currentWeek) {
         week = currentWeek;
         room(21);
         line(
-          `שבוע ${week} — סה״כ ${duration(entries.filter((e) => weekStart(e.date, report.rateWeekStartsOn) === week).reduce((s, e) => s + e.seconds, 0))}`,
+          `שבוע ${week} — סה״כ ${duration(entries.filter((e) => weekStart(e.date, 0) === week).reduce((s, e) => s + e.seconds, 0))}`,
           11
         );
       }
       if (date === report.from || date === currentWeek)
-        line(
-          rateText(entries.filter((e) => weekStart(e.date, report.rateWeekStartsOn) === week)),
-          9
-        );
+        line(rateText(entries.filter((e) => weekStart(e.date, 0) === week)), 9);
       const daily = entries.filter((e) => e.date === date);
       if (date === report.from || date === currentWeek) {
         room(20);

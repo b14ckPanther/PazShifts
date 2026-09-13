@@ -240,7 +240,7 @@ export function reportCsv(report: HoursReport): string {
         person.code,
         person.id,
         e.date,
-        weekStart(e.date, report.rateWeekStartsOn),
+        weekStart(e.date, 0),
         e.start,
         e.end || '',
         duration(e.seconds),
@@ -282,7 +282,7 @@ export function summaryCsv(report: HoursReport): string {
         person.name,
         person.code,
         person.id,
-        weekStart(date, report.rateWeekStartsOn),
+        weekStart(date, 0),
         date,
         duration(seconds),
         (seconds / 3600).toFixed(4),
@@ -312,13 +312,9 @@ export function weeklyCsv(report: HoursReport): string {
     ],
   ];
   for (const person of report.people)
-    for (
-      let week = weekStart(report.from, report.rateWeekStartsOn);
-      week <= report.to;
-      week = addDays(week, 7)
-    ) {
+    for (let week = weekStart(report.from, 0); week <= report.to; week = addDays(week, 7)) {
       const entries = report.entries.filter(
-        (e) => e.personId === person.id && weekStart(e.date, report.rateWeekStartsOn) === week
+        (e) => e.personId === person.id && weekStart(e.date, 0) === week
       );
       const seconds = entries.reduce((sum, e) => sum + e.seconds, 0);
       rows.push([

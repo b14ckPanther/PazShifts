@@ -26,10 +26,8 @@ export function HoursTable({ report }: { report: HoursReport }) {
         <tbody>
           {days.map((date, index) => {
             const entries = report.entries.filter((e) => e.date === date);
-            const week = weekStart(date, report.rateWeekStartsOn);
-            const last =
-              index === days.length - 1 ||
-              weekStart(days[index + 1]!, report.rateWeekStartsOn) !== week;
+            const week = weekStart(date, 0);
+            const last = index === days.length - 1 || weekStart(days[index + 1]!, 0) !== week;
             return (
               <HoursDay
                 key={date}
@@ -39,7 +37,7 @@ export function HoursTable({ report }: { report: HoursReport }) {
                 weekTotal={
                   last
                     ? report.entries
-                        .filter((e) => weekStart(e.date, report.rateWeekStartsOn) === week)
+                        .filter((e) => weekStart(e.date, 0) === week)
                         .reduce((s, e) => s + e.seconds, 0)
                     : null
                 }
@@ -113,7 +111,7 @@ function HoursDay({
       {weekTotal !== null && (
         <tr className="hours-table-week">
           <th scope="row" colSpan={3}>
-            סיכום שבוע <bdi>{weekStart(date, report.rateWeekStartsOn)}</bdi>
+            סיכום שבוע <bdi>{weekStart(date, 0)}</bdi>
           </th>
           <td dir="ltr">{duration(weekTotal)}</td>
           <td />

@@ -232,7 +232,7 @@ export async function createWeeklyScheduleAction(
   const auth = await checkStationAccess(stationId, false);
   if (auth.error) return { success: false, error: auth.error };
 
-  const normMonday = getWeekStartDate(weekStartDate);
+  const normSunday = getWeekStartDate(weekStartDate);
 
   try {
     const cookieStore = await cookies();
@@ -240,7 +240,7 @@ export async function createWeeklyScheduleAction(
 
     const schedule = await createWeeklySchedule(supabase, {
       stationId,
-      weekStartDate: normMonday,
+      weekStartDate: normSunday,
       createdBy: auth.userId,
     });
 

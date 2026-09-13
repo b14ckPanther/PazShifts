@@ -14,7 +14,7 @@ import { getHourPolicies, readOwnReportAttendance } from './hours-query';
 export type HoursPeriod =
   { mode: 'week' | 'month'; anchor?: string } | { mode: 'custom'; from: string; to: string };
 export class HoursScopeError extends Error {}
-export function hoursRange(period: HoursPeriod, today: string, startsOn = 1) {
+export function hoursRange(period: HoursPeriod, today: string, startsOn = 0) {
   if (period.mode === 'custom') {
     if (
       !validDate(period.from) ||
@@ -67,7 +67,7 @@ export async function getMobileWorkerHours(
   const today = localDate(now, station.timezone);
   const policies = await getHourPolicies(client, stationId);
   const startsOn = policies[0]?.rules.weekStartsOn ?? 1;
-  const { from, to } = hoursRange(period, today, startsOn);
+  const { from, to } = hoursRange(period, today, 0);
   const [records, active] = await Promise.all([
     readOwnReportAttendance(
       client,

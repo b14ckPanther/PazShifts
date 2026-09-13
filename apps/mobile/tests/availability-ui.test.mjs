@@ -77,7 +77,7 @@ function mount() {
       saves++;
       if (fail) throw Error('offline');
       return {
-        week: { id: 'w', notes: null },
+        week: { id: 'w', notes: null, weekStartDate: week, submittedAt: new Date().toISOString() },
         entries: entries.map((e) => ({ ...e, id: e.date })),
       };
     },
@@ -115,6 +115,10 @@ function mount() {
       NotificationFeedbackType: { Success: 'success' },
     },
     '@yellowshifts/reports': reports,
+    '@yellowshifts/database/public': load(
+      '../../../packages/database/src/availability-status.ts',
+      {}
+    ),
     './Api': { useWeekApi: () => api },
     '../ui': {
       Screen: 'Screen',
