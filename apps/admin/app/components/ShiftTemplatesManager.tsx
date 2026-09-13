@@ -595,6 +595,7 @@ export function ShiftTemplatesManager({
                   </label>
                   <input
                     type="time"
+                    dir="ltr"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -625,6 +626,7 @@ export function ShiftTemplatesManager({
                   </label>
                   <input
                     type="time"
+                    dir="ltr"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     required
@@ -842,6 +844,7 @@ export function ShiftTemplatesManager({
                   </label>
                   <input
                     type="time"
+                    dir="ltr"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -872,6 +875,7 @@ export function ShiftTemplatesManager({
                   </label>
                   <input
                     type="time"
+                    dir="ltr"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     required
