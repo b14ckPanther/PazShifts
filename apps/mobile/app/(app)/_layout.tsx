@@ -1,3 +1,4 @@
+import { NotificationBridge } from '../../src/notifications/UI';
 import { useEffect, useState } from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -45,6 +46,7 @@ export default function Shell() {
   if (!intro) return <Onboarding done={() => setIntro(true)} />;
   return (
     <WorkerProvider key={state.context.userId} context={state.context}>
+      <NotificationBridge />
       <Tabs
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{

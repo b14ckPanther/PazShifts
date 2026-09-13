@@ -22,6 +22,8 @@ function moduleAt(path, mocks = {}, initial = []) {
       exports,
       require(name) {
         if (name in mocks) return mocks[name];
+        if (name.endsWith('/notifications/UI'))
+          return { NotificationBridge: 'NotificationBridge', NotificationBell: 'NotificationBell' };
         if (name === 'react')
           return {
             useEffect: () => {},

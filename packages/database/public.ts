@@ -17,3 +17,14 @@ export {
   type MobileHours,
   type HoursPeriod,
 } from './src/mobile-hours';
+export {
+  readWorkerInbox,
+  unreadWorkerNotifications,
+  markWorkerNotificationsRead,
+  workerNotificationTarget,
+  workerNotificationPreferences,
+  notificationId,
+  type WorkerNotification,
+  type NotificationPreferences,
+} from './src/mobile-notifications';
+export { registerWorkerDevice } from './src/mobile-notifications';

@@ -11,15 +11,16 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.115.0",
     "@yellowshifts/database": "workspace:*",
     "@yellowshifts/i18n": "workspace:*",
     "@yellowshifts/icons": "workspace:*",
+    "@yellowshifts/reports": "workspace:*",
     "@yellowshifts/types": "workspace:*",
     "@yellowshifts/ui": "workspace:*",
     "next": "^16.3.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@yellowshifts/reports": "workspace:*"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.8",

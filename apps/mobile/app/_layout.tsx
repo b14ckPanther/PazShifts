@@ -1,3 +1,4 @@
+import { NotificationProvider } from '../src/notifications/Provider';
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
@@ -31,10 +32,12 @@ export default function Root() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F6F6F6' } }}
-          />
+          <NotificationProvider>
+            <StatusBar style="dark" />
+            <Stack
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F6F6F6' } }}
+            />
+          </NotificationProvider>
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

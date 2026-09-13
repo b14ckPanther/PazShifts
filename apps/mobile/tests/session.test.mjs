@@ -11,6 +11,7 @@ function mount({
   session = { user: { id: 'a' } },
   context = async (_c, id) => ({ fullName: id, stations: [] }),
   signOut = async () => ({ error: null }),
+  detach = async () => {},
 } = {}) {
   let state,
     authEvent,
@@ -97,6 +98,7 @@ function mount({
             },
           };
         if (name === '../lib/supabase') return { supabase: { auth } };
+        if (name === '../notifications/logout') return { detachNotificationsBeforeLogout: detach };
         if (name === '@yellowshifts/database/public') return { getNativeWorkerContext: context };
         throw Error(name);
       },
@@ -195,4 +197,21 @@ test('same-account foreground verification preserves the mounted app until check
   await tick();
   assert.equal(app.state.phase, 'error');
   assert.equal(app.state.context, null);
+});
+
+test('notification cleanup outage does not prevent authoritative logout', async () => {
+  let signedOut = false;
+  const app = mount({
+    detach: async () => {
+      throw Error('notifications offline');
+    },
+    signOut: async () => {
+      signedOut = true;
+      return { error: null };
+    },
+  });
+  await app.flush();
+  await app.actions.logout();
+  assert.equal(signedOut, true);
+  assert.equal(app.state.phase, 'signedOut');
 });

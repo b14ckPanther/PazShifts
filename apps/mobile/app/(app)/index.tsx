@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../src/notifications/UI';
 import { View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { duration, addDays } from '@yellowshifts/reports';
@@ -15,6 +16,7 @@ export default function Home() {
   return (
     <Screen tabbed>
       <AppHeader />
+      <NotificationBell />
       <View style={{ gap: 4 }}>
         <Label style={{ color: colors.secondary }}>טוב לראות אותך</Label>
         <Label bold accessibilityRole="header" style={{ fontSize: 30 }}>

@@ -160,6 +160,7 @@ export default function Preview() {
             data: null,
             error: false,
             loading: false,
+            openStation: (_id, action) => action(),
             select: (id) => proceed(() => setStation(id)),
             refresh: () => {},
             proceed,

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import Constants from 'expo-constants';
 import { Screen, Label, Surface, Button } from '../../src/ui';
@@ -38,7 +39,7 @@ export default function Profile() {
           </View>
         ))}
       </View>
-      <Label>לא ביקשנו הרשאות מיקום או התראות. תזכורות יהיו לבחירתך בהמשך.</Label>
+      <Button secondary title="העדכונים וההתראות שלך" onPress={() => router.push('/inbox')} />
       <Label english style={{ fontSize: 12 }}>
         YellowShifts · {Constants.expoConfig?.version ?? '1.0.0'}
       </Label>
