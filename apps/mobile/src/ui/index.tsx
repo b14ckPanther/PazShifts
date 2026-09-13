@@ -61,7 +61,7 @@ export function Screen({
   return (
     <SafeAreaView
       edges={tabbed ? ['top', 'left', 'right'] : ['top', 'bottom', 'left', 'right']}
-      style={{ flex: 1, backgroundColor: colors.base }}
+      style={{ flex: 1, backgroundColor: colors.base, direction: 'rtl' }}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}

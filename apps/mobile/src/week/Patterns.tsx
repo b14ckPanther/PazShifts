@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
-import { View, Pressable, Modal, ScrollView, PanResponder, I18nManager } from 'react-native';
+import { View, Pressable, Modal, ScrollView, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -27,13 +27,13 @@ export function WeekPicker({
         onMoveShouldSetPanResponder: (_, g) =>
           !disabled && Math.abs(g.dx) > 35 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
         onPanResponderRelease: (_, g) => {
-          if (Math.abs(g.dx) > 60) change((g.dx > 0 ? 1 : -1) * (I18nManager.isRTL ? 1 : -1));
+          if (Math.abs(g.dx) > 60) change(g.dx > 0 ? 1 : -1);
         },
       }),
     [disabled, change]
   );
   return (
-    <View {...pan.panHandlers} style={{ gap: 12 }}>
+    <View {...pan.panHandlers} style={{ gap: 12, direction: 'rtl' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Pressable
           disabled={disabled}
@@ -43,7 +43,7 @@ export function WeekPicker({
           style={{ minWidth: 44, minHeight: 48, justifyContent: 'center', alignItems: 'center' }}
         >
           <Label english bold style={{ fontSize: 28 }}>
-            {I18nManager.isRTL ? '›' : '‹'}
+            ›
           </Label>
         </Pressable>
         <View style={{ flex: 1 }}>
@@ -60,7 +60,7 @@ export function WeekPicker({
           style={{ minWidth: 44, minHeight: 48, justifyContent: 'center', alignItems: 'center' }}
         >
           <Label english bold style={{ fontSize: 28 }}>
-            {I18nManager.isRTL ? '‹' : '›'}
+            ‹
           </Label>
         </Pressable>
       </View>
@@ -100,7 +100,14 @@ export function Sheet({
       animationType={reduced ? 'none' : 'slide'}
       onRequestClose={close}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: '#00000066' }}>
+      <View
+        style={{
+          flex: 1,
+          direction: 'rtl',
+          justifyContent: 'flex-end',
+          backgroundColor: '#00000066',
+        }}
+      >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="סגירה"

@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useMemo, useState } from 'react';
-import { View, Pressable, RefreshControl, Platform, I18nManager } from 'react-native';
+import { View, Pressable, RefreshControl, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
@@ -260,7 +260,7 @@ export function HoursContent({
                 style={{ padding: 12, minWidth: 44 }}
               >
                 <Label english style={{ fontSize: 28 }}>
-                  {I18nManager.isRTL ? '›' : '‹'}
+                  ›
                 </Label>
               </Pressable>
             )}
@@ -292,7 +292,7 @@ export function HoursContent({
                 style={{ padding: 12, minWidth: 44, opacity: report.to >= today ? 0.3 : 1 }}
               >
                 <Label english style={{ fontSize: 28 }}>
-                  {I18nManager.isRTL ? '‹' : '›'}
+                  ‹
                 </Label>
               </Pressable>
             )}

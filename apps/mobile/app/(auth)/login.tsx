@@ -83,6 +83,7 @@ export default function Login() {
         <InputAccessoryView nativeID="login-next">
           <View
             style={{
+              direction: 'rtl',
               backgroundColor: colors.surface,
               paddingHorizontal: 24,
               alignItems: 'flex-end',

@@ -66,7 +66,14 @@ export function AppHeader() {
         animationType={reduced ? 'none' : 'slide'}
         onRequestClose={() => setOpen(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: '#00000066' }}>
+        <View
+          style={{
+            flex: 1,
+            direction: 'rtl',
+            justifyContent: 'flex-end',
+            backgroundColor: '#00000066',
+          }}
+        >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="סגירת בחירת תחנה"

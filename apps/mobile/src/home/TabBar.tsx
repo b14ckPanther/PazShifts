@@ -26,6 +26,7 @@ export function TabBar({ state, navigation }: Props) {
   return (
     <View
       style={{
+        direction: 'rtl',
         flexDirection: 'row',
         paddingTop: 8,
         paddingBottom: Math.max(insets.bottom, 8),
