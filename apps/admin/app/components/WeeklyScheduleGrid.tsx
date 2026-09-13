@@ -190,9 +190,7 @@ export function WeeklyScheduleGrid({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ClockIcon size={14} />
-            <span>
-              {sTime} — {eTime}
-            </span>
+            <bdi dir="ltr">{`${sTime} — ${eTime}`}</bdi>
           </div>
           {isOvernight && <span style={{ fontSize: '0.6875rem', color: '#6B7280' }}>+1</span>}
         </div>

@@ -277,7 +277,8 @@ export function PublishValidationModal({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ color: '#6B7280' }}>{w.shiftDate}</span>
                           <span style={{ fontWeight: 600, color: '#111827' }}>
-                            {w.templateName || 'משמרת מותאמת'} ({w.startTime}-{w.endTime})
+                            {w.templateName || 'משמרת מותאמת'} (
+                            <bdi dir="ltr">{`${w.startTime} — ${w.endTime}`}</bdi>)
                           </span>
                         </div>
                         <Badge variant="neutral" style={{ fontSize: '0.6875rem' }}>

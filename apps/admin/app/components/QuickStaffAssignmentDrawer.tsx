@@ -234,7 +234,8 @@ export function QuickStaffAssignmentDrawer({
             >
               <ClockIcon size={16} />
               <span>
-                {shift.shiftDate} • {sTime} — {eTime}
+                <bdi dir="ltr">{shift.shiftDate}</bdi> •{' '}
+                <bdi dir="ltr">{`${sTime} — ${eTime}`}</bdi>
               </span>
             </div>
           </div>
