@@ -55,7 +55,7 @@ export function NotificationBell() {
           alignItems: 'center',
           padding: 16,
           borderRadius: 22,
-          backgroundColor: pressed ? colors.cream : colors.surface,
+          backgroundColor: pressed ? colors.yellow : colors.surface,
         })}
       >
         <Bell size={22} color={colors.text} />

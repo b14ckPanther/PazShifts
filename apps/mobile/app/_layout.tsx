@@ -61,7 +61,7 @@ export function ErrorBoundary({ retry }: { retry: () => Promise<void> }) {
         padding: 32,
         paddingTop: 64,
         gap: 24,
-        backgroundColor: '#FFF7CC',
+        backgroundColor: '#F6F6F6',
       }}
     >
       <Text

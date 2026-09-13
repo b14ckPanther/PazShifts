@@ -183,7 +183,7 @@ export default function Schedule() {
                     padding: 22,
                     gap: 12,
                     borderRadius: 24,
-                    backgroundColor: s.id === next ? colors.cream : colors.surface,
+                    backgroundColor: s.id === next ? colors.yellow : colors.surface,
                     borderWidth: 1,
                     borderColor: s.id === next ? colors.yellow : colors.border,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -249,7 +249,7 @@ export default function Schedule() {
             {detail.coworkers.length ? (
               detail.coworkers.map((p) => (
                 <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ backgroundColor: colors.cream, borderRadius: 14, padding: 12 }}>
+                  <View style={{ backgroundColor: colors.yellow, borderRadius: 14, padding: 12 }}>
                     <Label bold>
                       {p.name
                         .split(' ')

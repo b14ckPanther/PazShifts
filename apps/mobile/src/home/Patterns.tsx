@@ -46,7 +46,7 @@ export function AppHeader() {
             width: 44,
             height: 44,
             borderRadius: 16,
-            backgroundColor: colors.cream,
+            backgroundColor: colors.yellow,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -128,7 +128,7 @@ export function AppHeader() {
                     gap: 16,
                     padding: 16,
                     borderRadius: 18,
-                    backgroundColor: s.id === station?.id ? colors.cream : colors.surface,
+                    backgroundColor: s.id === station?.id ? colors.yellow : colors.surface,
                     opacity: pressed ? 0.6 : 1,
                   })}
                 >

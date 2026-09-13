@@ -87,7 +87,7 @@ export function Hero() {
       style={{
         padding: 24,
         borderRadius: 24,
-        backgroundColor: hero.kind === 'soon' ? colors.yellow : colors.cream,
+        backgroundColor: colors.yellow,
         gap: 18,
         borderWidth: 1,
         borderColor: colors.yellow,

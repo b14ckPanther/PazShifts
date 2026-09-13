@@ -42,7 +42,7 @@ export function Onboarding({ done }: { done: () => void }) {
               height: 160,
               justifyContent: 'center',
               padding: 24,
-              backgroundColor: colors.cream,
+              backgroundColor: colors.yellow,
               borderRadius: 24,
             }}
           >

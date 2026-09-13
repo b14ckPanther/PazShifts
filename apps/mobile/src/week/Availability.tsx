@@ -339,7 +339,7 @@ export default function Availability() {
                           padding: 6,
                           borderRadius: 12,
                           backgroundColor:
-                            entry.availabilityType === mode.type ? colors.cream : colors.base,
+                            entry.availabilityType === mode.type ? colors.yellow : colors.base,
                           opacity: pressed ? 0.65 : 1,
                         })}
                       >

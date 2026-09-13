@@ -152,7 +152,7 @@ export function Inbox() {
                   padding: 20,
                   gap: 10,
                   borderRadius: 24,
-                  backgroundColor: row.read_at ? colors.surface : colors.cream,
+                  backgroundColor: row.read_at ? colors.surface : colors.yellow,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
