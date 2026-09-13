@@ -1,4 +1,11 @@
-import { addDays, clock, duration, weekStart, type HoursReport } from '@yellowshifts/reports';
+import {
+  addDays,
+  clock,
+  duration,
+  localDate,
+  weekStart,
+  type HoursReport,
+} from '@yellowshifts/reports';
 import '../styles/hours-table.css';
 import { RateBreakdown } from './RateBreakdown';
 
@@ -78,7 +85,14 @@ function HoursDay({
               <bdi>{date}</bdi>
             </th>
             <td dir="ltr">{clock(e.start, report.timezone)}</td>
-            <td dir="ltr">{clock(e.end, report.timezone)}</td>
+            <td dir="ltr">
+              {clock(e.end, report.timezone)}
+              {e.end && localDate(new Date(e.end), report.timezone) !== e.date && (
+                <small dir="rtl">
+                  יציאה ב־<bdi>{localDate(new Date(e.end), report.timezone)}</bdi>
+                </small>
+              )}
+            </td>
             <td dir="ltr">{duration(e.seconds)}</td>
             <td>
               <span className={e.status === 'הושלמה' ? '' : 'hours-table-warning'}>{e.status}</span>

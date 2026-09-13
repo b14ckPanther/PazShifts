@@ -1,6 +1,6 @@
 import { createContext, useContext, useCallback, useMemo, useState } from 'react';
 import { View, Pressable, RefreshControl, Platform } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { addDays, localDate, type ReportEntry } from '@yellowshifts/reports';
@@ -17,7 +17,7 @@ import { supabase } from '../lib/supabase';
 import { Screen, Label, Surface, Button, Skeleton, Message } from '../ui';
 import { colors } from '../ui/theme';
 import { Sheet, selection } from '../week/Patterns';
-import { dateLabel } from '../week/model';
+import { dateLabel, validDay } from '../week/model';
 import { dayTitle, groupDays, hoursText, movePeriod, summarize } from './model';
 export const HoursApi = createContext(getMobileWorkerHours);
 function Time({ seconds, large = false }: { seconds: number; large?: boolean }) {
@@ -83,6 +83,8 @@ function Rates({ entries }: { entries: ReportEntry[] }) {
 export default function Hours() {
   const { station, context } = useWorker();
   const api = useContext(HoursApi);
+  const params = useLocalSearchParams<{ day?: string }>();
+  const day = validDay(params.day) ? params.day : undefined;
   // A new station mounts a fresh state tree: no previous station can flash while loading.
   if (!station)
     return (
@@ -90,7 +92,14 @@ export default function Hours() {
         <Message>לא נמצאה תחנה זמינה</Message>
       </Screen>
     );
-  return <HoursContent key={`${context.userId}:${station.id}`} station={station} api={api} />;
+  return (
+    <HoursContent
+      key={`${context.userId}:${station.id}${day ? ':' + day : ''}`}
+      station={station}
+      api={api}
+      initialPeriod={day ? { mode: 'custom', from: day, to: day } : undefined}
+    />
+  );
 }
 export function HoursContent({
   station,
@@ -381,9 +390,7 @@ export function HoursContent({
                   >
                     <Time seconds={day.seconds} />
                     <Label style={{ color: colors.secondary }}>
-                      {day.entries.length > 1
-                        ? `${day.entries.length} מקטעי נוכחות`
-                        : 'פירוט נוכחות'}
+                      {day.entries.length > 1 ? `${day.entries.length} משמרות` : 'פירוט נוכחות'}
                     </Label>
                   </View>
                   {day.entries.some((e) => e.correctedAt) && (
@@ -413,11 +420,11 @@ export function HoursContent({
           }}
           title={excluded ? 'רשומות שלא נספרו' : dayTitle(selected!.date)}
         >
-          <Label>הזמנים לפי השעון המקומי של התחנה. משמרות לילה מחולקות לפי יום.</Label>
+          <Label>הזמנים לפי השעון המקומי של התחנה. משמרת לילה מוצגת בשלמותה ביום הכניסה.</Label>
           {(excluded ? summary.excluded : selected!.entries).slice(0, detailLimit).map((e, i) => (
             <Surface key={`${e.id}:${e.date}:${i}`}>
               <Label bold>{dayTitle(e.date)}</Label>
-              <Label style={{ color: colors.secondary }}>מקטע הנוכחות ביום זה</Label>
+              <Label style={{ color: colors.secondary }}>המשמרת המלאה</Label>
               <Label english bold numberOfLines={1} adjustsFontSizeToFit style={{ fontSize: 24 }}>
                 {nativeTime(e.start, report.timezone)} —{' '}
                 {e.end ? nativeTime(e.end, report.timezone) : '…'}
@@ -425,7 +432,7 @@ export function HoursContent({
               {e.status === 'הושלמה' &&
                 e.end &&
                 localDate(new Date(e.end), report.timezone) !== e.date && (
-                  <Label>המקטע מסתיים בחצות</Label>
+                  <Label>יציאה ב־{dayTitle(localDate(new Date(e.end), report.timezone))}</Label>
                 )}
               {report.sessions?.[e.id] &&
                 (report.sessions[e.id]!.start !== e.start ||

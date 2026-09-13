@@ -232,8 +232,53 @@ test('Home shows the availability action only when submission is missing', () =>
         WebAction: 'WebAction',
       },
       '../../src/home/Hero': { Hero: 'Hero' },
+      '../../src/home/RecentShift': { RecentShift: 'RecentShift' },
     });
     const tree = m.exports.default();
     assert.equal(find(tree, (n) => n.props?.title === 'שליחת זמינות').length, submitted ? 0 : 1);
   }
+});
+
+test('Home opens completed and active attendance in their own station/date', () => {
+  const routed = [],
+    opened = [];
+  const m = moduleAt('../app/(app)/index.tsx', {
+    'expo-router': { useRouter: () => ({ navigate: (target) => routed.push(target) }) },
+    '@yellowshifts/reports': {
+      duration: () => '00:00:00',
+      addDays: () => '2026-09-20',
+      localDate: () => '2026-09-13',
+    },
+    '../../src/home/WorkerProvider': {
+      useWorker: () => ({
+        context: { fullName: 'Test' },
+        station: { name: 'Ata' },
+        openStation: (id, callback) => {
+          opened.push(id);
+          callback();
+        },
+        data: {
+          shifts: [],
+          week: '2026-09-13',
+          confirmedSeconds: 0,
+          availabilitySubmitted: true,
+          reviewCount: 0,
+          active: { station_id: 'curdani', clock_in_at: '2026-09-13T11:00Z' },
+          activeTimezone: 'Asia/Jerusalem',
+          latestClosed: { stationId: 'curdani', date: '2026-09-12' },
+        },
+      }),
+    },
+    '../../src/home/Patterns': { AppHeader: 'Header', RefreshStamp: 'Stamp' },
+    '../../src/home/Hero': { Hero: 'Hero' },
+    '../../src/home/RecentShift': { RecentShift: 'Recent' },
+  });
+  const tree = m.exports.default();
+  find(tree, (n) => n.type === 'Recent')[0].props.onOpen();
+  assert.equal(opened[0], 'curdani');
+  assert.equal(routed[0].pathname, '/hours');
+  assert.equal(routed[0].params.day, '2026-09-12');
+  find(tree, (n) => n.props?.accessibilityLabel === 'פתיחת המשמרת הפעילה בשעות')[0].props.onPress();
+  assert.equal(opened[1], 'curdani');
+  assert.equal(routed[1].params.day, '2026-09-13');
 });

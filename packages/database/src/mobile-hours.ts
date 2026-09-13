@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@yellowshifts/types';
 import {
   addDays,
-  classifiedEntries,
+  shiftReportEntries,
   dayBoundary,
   localDate,
   validDate,
@@ -87,7 +87,7 @@ export async function getMobileWorkerHours(
   ]);
   if (active.error) throw Error('Active attendance unavailable');
   const generatedAt = new Date();
-  const entries = classifiedEntries(
+  const entries = shiftReportEntries(
     records,
     from,
     to,

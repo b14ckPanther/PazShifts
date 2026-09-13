@@ -8,7 +8,8 @@ async function readAttendance(
   stationId: string,
   start: string,
   end: string,
-  userId?: string
+  userId?: string,
+  includeShiftEnd = true
 ): Promise<AttendanceRecord[]> {
   const result: AttendanceRecord[] = [];
   for (let offset = 0; offset <= 50000; offset += 1000) {
@@ -26,7 +27,26 @@ async function readAttendance(
     if (error) throw new Error('לא ניתן לטעון את דוח השעות. נסו שוב.');
     result.push(...((data || []) as AttendanceRecord[]));
     if (result.length > 50000) throw new Error('הדוח גדול מדי. יש לבחור תקופה קצרה יותר.');
-    if (!data || data.length < 1000) return result;
+    if (!data || data.length < 1000) {
+      // Read overlap context through full completed shifts crossing the requested end.
+      // This preserves overlap exclusion even when a conflicting record starts next day.
+      const latestEnd = result.reduce((latest, record) => {
+        const finish = record.clock_out_at ? Date.parse(record.clock_out_at) : NaN;
+        return record.status === 'COMPLETED' && finish <= Date.now() && finish > latest
+          ? finish
+          : latest;
+      }, Date.parse(end));
+      if (includeShiftEnd && latestEnd > Date.parse(end))
+        return readAttendance(
+          supabase,
+          stationId,
+          start,
+          new Date(latestEnd).toISOString(),
+          userId,
+          false
+        );
+      return result;
+    }
   }
   throw new Error('יש לבחור תקופה קצרה יותר.');
 }

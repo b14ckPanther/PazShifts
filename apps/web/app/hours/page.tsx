@@ -3,7 +3,7 @@ import { getServerContext } from '@/app/lib/server-context';
 import { readOwnReportAttendance, getHourPolicies } from '@yellowshifts/database';
 import {
   addDays,
-  classifiedEntries,
+  shiftReportEntries,
   dayBoundary,
   localDate,
   validDate,
@@ -69,7 +69,7 @@ export default async function WorkerHoursPage({
               code: membership.membership.employeeCode || '',
             },
           ],
-          entries: classifiedEntries(records, from, to, station.timezone, policies),
+          entries: shiftReportEntries(records, from, to, station.timezone, policies),
           policies: policies.map(({ id, effectiveFrom }) => ({ id, effectiveFrom })),
           rateWeekStartsOn: policies[0]?.rules.weekStartsOn,
         }}

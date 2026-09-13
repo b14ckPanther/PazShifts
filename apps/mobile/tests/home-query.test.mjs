@@ -26,14 +26,29 @@ function setup({ allowed = true, failed = false, overflow = false } = {}) {
                 : [],
             }),
           };
+        if (name === './hours-query')
+          return {
+            readOwnReportAttendance: async (client, user, station, start, end) => {
+              const response = await client
+                .from('attendance_records')
+                .select('*')
+                .eq('user_id', user)
+                .eq('station_id', station)
+                .lt('clock_in_at', end)
+                .or(`clock_out_at.gt.${start},clock_out_at.is.null`)
+                .range(0, 999);
+              if (response.error) throw response.error;
+              return response.data;
+            },
+          };
         if (name === '@yellowshifts/reports')
           return {
             localDate: () => '2026-09-13',
-            weekStart: () => '2026-09-07',
+            weekStart: () => '2026-09-13',
             addDays: (d, days) =>
               new Date(Date.parse(d) + days * 86400000).toISOString().slice(0, 10),
             dayBoundary: (d) => Date.parse(d),
-            buildEntries: () => [
+            shiftReportEntries: () => [
               { id: '1', status: 'הושלמה', seconds: 3600, date: '2026-09-13' },
               { id: '2', status: 'פתוחה', seconds: 9999, date: '2026-09-13' },
             ],
@@ -47,7 +62,18 @@ function setup({ allowed = true, failed = false, overflow = false } = {}) {
       const filters = [];
       calls.push({ table, filters });
       const query = {};
-      for (const method of ['select', 'eq', 'gte', 'lt', 'or', 'order', 'limit'])
+      for (const method of [
+        'select',
+        'eq',
+        'gte',
+        'lt',
+        'or',
+        'order',
+        'limit',
+        'range',
+        'in',
+        'lte',
+      ])
         query[method] = (...args) => {
           filters.push([method, ...args]);
           return query;
@@ -88,7 +114,7 @@ test('published assignments and own attendance are bounded and scoped; open hour
   for (const call of s.calls.filter((c) => c.table === 'attendance_records'))
     assert.ok(call.filters.some((f) => f[1] === 'user_id' && f[2] === 'worker-a'));
   assert.ok(s.calls[3].filters.some((f) => f[1] === 'station_id' && f[2] === 'a'));
-  assert.ok(s.calls[3].filters.some((f) => f[0] === 'limit' && f[1] === 301));
+  assert.ok(s.calls[3].filters.some((f) => f[0] === 'range' && f[1] === 0 && f[2] === 999));
 });
 test('query failures and oversized results cannot become partial or misleading summaries', async () => {
   await assert.rejects(setup({ failed: true }).read());

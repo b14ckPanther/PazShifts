@@ -16,13 +16,17 @@ function load(path, mocks = {}) {
 }
 const reports = load('../../../packages/reports/src/hours-report.ts');
 const rates = load('../../../packages/reports/src/rates.ts', { './hours-report': reports });
+const shifts = load('../../../packages/reports/src/shift-report.ts', {
+  './hours-report': reports,
+  './rates': rates,
+});
 const model = load('../src/hours/model.ts', { '@yellowshifts/reports': reports });
 const helper = (
   context = { userId: 'own', stations: [{ id: 'station', timezone: 'Asia/Jerusalem' }] },
   query = {}
 ) =>
   load('../../../packages/database/src/mobile-hours.ts', {
-    '@yellowshifts/reports': { ...reports, ...rates },
+    '@yellowshifts/reports': { ...reports, ...rates, ...shifts },
     './worker-context': {
       getNativeWorkerContext: async (client) => {
         const {
@@ -217,7 +221,7 @@ test('classification/rule failures do not become a zero-hour report', async () =
   });
   await assert.rejects(h.getMobileWorkerHours(client, 'station', { mode: 'week' }), /offline/);
 });
-test('original checkout survives overnight day splitting without leaking lookback sessions', async () => {
+test('overnight shift remains one complete record without leaking lookback sessions', async () => {
   const rows = [
     record('visible', '2026-01-12T20:00Z', '2026-01-13T04:00Z'),
     record('lookback', '2026-01-06T08:00Z', '2026-01-06T09:00Z'),
@@ -231,8 +235,9 @@ test('original checkout survives overnight day splitting without leaking lookbac
     from: '2026-01-12',
     to: '2026-01-13',
   });
-  assert.equal(result.entries.length, 2);
-  assert.equal(result.entries[0].end, '2026-01-12T22:00:00.000Z');
+  assert.equal(result.entries.length, 1);
+  assert.equal(result.entries[0].end, '2026-01-13T04:00Z');
+  assert.equal(result.entries[0].seconds, 8 * 3600);
   assert.equal(result.sessions.visible.end, '2026-01-13T04:00Z');
   assert.equal(result.sessions.lookback, undefined);
 });
