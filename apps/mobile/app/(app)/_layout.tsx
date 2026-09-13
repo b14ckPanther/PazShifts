@@ -1,3 +1,4 @@
+import { LocationBridge } from '../../src/location/Bridge';
 import { NotificationBridge } from '../../src/notifications/UI';
 import { useEffect, useState } from 'react';
 import { Tabs, Redirect } from 'expo-router';
@@ -47,6 +48,7 @@ export default function Shell() {
   return (
     <WorkerProvider key={state.context.userId} context={state.context}>
       <NotificationBridge />
+      <LocationBridge />
       <Tabs
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{

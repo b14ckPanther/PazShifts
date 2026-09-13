@@ -24,9 +24,9 @@ import { synchronizeDevice, prepareNotificationChannel } from './device';
 import { setNotificationLogout } from './logout';
 const enabled = process.env.EXPO_PUBLIC_NOTIFICATIONS_ENABLED === 'true';
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: false,
-    shouldShowList: false,
+  handleNotification: async (notification) => ({
+    shouldShowBanner: notification.request.content.data?.kind === 'location-reminder',
+    shouldShowList: notification.request.content.data?.kind === 'location-reminder',
     shouldPlaySound: false,
     shouldSetBadge: false,
   }),
@@ -156,7 +156,7 @@ function NotificationSession({ children }: { children: ReactNode }) {
           })
           .catch(() => {});
       }
-      void Notifications.clearLastNotificationResponseAsync();
+      if (data?.kind !== 'location-reminder') void Notifications.clearLastNotificationResponseAsync();
     };
     void SecureStore.getItemAsync(pendingKey).then((value) => {
       if (value && alive) {
@@ -174,7 +174,7 @@ function NotificationSession({ children }: { children: ReactNode }) {
     });
     const response = Notifications.addNotificationResponseReceivedListener(receive);
     const incoming = Notifications.addNotificationReceivedListener((n) => {
-      if (n.request.content.data?.userId === identity.current) {
+      if (n.request.content.data?.kind !== 'location-reminder' && n.request.content.data?.userId === identity.current) {
         setBanner(true);
         void refresh();
       }

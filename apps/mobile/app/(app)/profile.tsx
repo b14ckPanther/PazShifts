@@ -1,3 +1,4 @@
+import { LocationPreferences } from '../../src/location/UI';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import Constants from 'expo-constants';
@@ -40,6 +41,7 @@ export default function Profile() {
         ))}
       </View>
       <Button secondary title="העדכונים וההתראות שלך" onPress={() => router.push('/inbox')} />
+      <LocationPreferences key={context.userId} />
       <Label english style={{ fontSize: 12 }}>
         YellowShifts · {Constants.expoConfig?.version ?? '1.0.0'}
       </Label>
