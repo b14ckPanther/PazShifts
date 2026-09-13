@@ -4,3 +4,13 @@ android/
 *.ipa
 *.apk
 *.aab
+
+# Local signing and push credentials (never commit private keys)
+credentials/
+credentials.json
+*service-account*.json
+*firebase-adminsdk*.json
+google-services.json
+*.p8
+*.p12
+*.mobileprovision

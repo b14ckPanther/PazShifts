@@ -1,3 +1,4 @@
+import { clearLocationReminders } from '../location/runtime';
 import {
   createContext,
   useCallback,
@@ -31,7 +32,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         ? previous
         : { phase: session ? 'loading' : 'signedOut', context: null, error: null }
     );
-    if (!session || !supabase) return;
+    if (!session || !supabase) { await clearLocationReminders().catch(() => {}); return; }
     try {
       const context = await getNativeWorkerContext(supabase, session.user.id);
       if (run === generation.current)
@@ -113,6 +114,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const run = ++generation.current;
     try {
       // Server session revocation also cascades device registration if cleanup is unavailable.
+      await clearLocationReminders().catch(() => {});
       await detachNotificationsBeforeLogout().catch(() => {});
       setState({ phase: 'loading', context: null, error: null });
       const result = await supabase?.auth.signOut({ scope: 'local' });

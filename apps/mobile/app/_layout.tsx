@@ -1,3 +1,4 @@
+import '../src/location/backgroundTasks';
 import { NotificationProvider } from '../src/notifications/Provider';
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
