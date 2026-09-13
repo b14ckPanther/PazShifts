@@ -47,7 +47,11 @@ function bounded<T>(operation: Promise<T>): Promise<T> {
   });
 }
 let work: Promise<unknown> = Promise.resolve();
-export function synchronizeDevice(userId: string, detach = false) {
+export function synchronizeDevice(
+  userId: string,
+  detach = false,
+  devicePushToken?: Notifications.DevicePushToken
+) {
   const run = async () => {
     if (!supabase) return;
     const {
@@ -58,15 +62,34 @@ export function synchronizeDevice(userId: string, detach = false) {
     const saved = await SecureStore.getItemAsync(installationKey);
     if (detach && !saved) return;
     const value = await installation();
+    if (typeof __DEV__ !== 'undefined' && __DEV__)
+      console.info('notification_setup', { stage: 'installation', detach });
     let token: string | null = null;
     if (!detach) {
       const permission = await Notifications.getPermissionsAsync();
+      if (typeof __DEV__ !== 'undefined' && __DEV__)
+        console.info('notification_setup', {
+          stage: 'permission',
+          status: permission.status,
+          physicalDevice: Device.isDevice,
+        });
       if (permission.granted && Device.isDevice) {
         const projectId =
           Constants.easConfig?.projectId || Constants.expoConfig?.extra?.eas?.projectId;
         if (!projectId) throw Error('Notifications unavailable');
         await prepareNotificationChannel();
-        token = (await bounded(Notifications.getExpoPushTokenAsync({ projectId }))).data;
+        if (typeof __DEV__ !== 'undefined' && __DEV__)
+          console.info('notification_setup', { stage: 'token_request', projectId });
+        token = (
+          await bounded(
+            Notifications.getExpoPushTokenAsync({
+              projectId,
+              ...(devicePushToken ? { devicePushToken } : {}),
+            })
+          )
+        ).data;
+        if (typeof __DEV__ !== 'undefined' && __DEV__)
+          console.info('notification_setup', { stage: 'token_ready' });
       }
     }
     // Serialize rotation/logout/account reassociation so an old request cannot run after detach.
@@ -77,6 +100,8 @@ export function synchronizeDevice(userId: string, detach = false) {
       p_platform: Platform.OS,
       p_version: Constants.expoConfig?.version || null,
     });
+    if (typeof __DEV__ !== 'undefined' && __DEV__)
+      console.info('notification_setup', { stage: 'registered', detach });
     if (detach) await Notifications.dismissAllNotificationsAsync();
   };
   const result = work.then(run, run);

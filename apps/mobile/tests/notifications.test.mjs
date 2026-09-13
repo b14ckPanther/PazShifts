@@ -9,6 +9,7 @@ function device({ granted = true, device = true, stored = null, platform = 'ios'
     token = 'ExpoPushToken[one]',
     storage = stored;
   const calls = [];
+  const tokenRequests = [];
   const exports = {};
   runInNewContext(
     ts.transpileModule(
@@ -39,7 +40,10 @@ function device({ granted = true, device = true, stored = null, platform = 'ios'
           case 'expo-notifications':
             return {
               getPermissionsAsync: async () => ({ granted }),
-              getExpoPushTokenAsync: async () => ({ data: token }),
+              getExpoPushTokenAsync: async (options) => {
+                tokenRequests.push(options);
+                return { data: token };
+              },
               dismissAllNotificationsAsync: async () => {},
               setNotificationChannelAsync: async () => {},
               AndroidImportance: { DEFAULT: 3 },
@@ -64,6 +68,7 @@ function device({ granted = true, device = true, stored = null, platform = 'ios'
   return {
     ...exports,
     calls,
+    tokenRequests,
     setUser(v) {
       current = v;
     },
@@ -196,4 +201,13 @@ for (const [name, options] of [
 test('notification channel preparation resolves before permission prompt', async () => {
   const d = device({ platform: 'android' });
   await d.prepareNotificationChannel();
+});
+
+test('rotation uses the supplied native token instead of requesting native registration again', async () => {
+  const d = device();
+  const native = { type: 'ios', data: 'native-fixture' };
+  await d.synchronizeDevice('a', false, native);
+  assert.equal(d.tokenRequests.length, 1);
+  assert.equal(d.tokenRequests[0].devicePushToken, native);
+  assert.equal(d.calls.length, 1);
 });

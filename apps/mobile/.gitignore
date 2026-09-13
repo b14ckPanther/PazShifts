@@ -18,3 +18,8 @@ google-services.json
 *.jks
 *.keystore
 *.pfx
+
+# CSR private keys and downloaded signing artifacts
+*.key
+*.cer
+*.certSigningRequest
