@@ -29,7 +29,9 @@ export function NotificationBridge() {
       }
       consume();
       worker.openStation(target.stationId, () =>
-        router.navigate({ pathname: '/schedule', params: { day: target.day } })
+        target.screen === 'home'
+          ? router.navigate('/')
+          : router.navigate({ pathname: '/schedule', params: { day: target.day } })
       );
     }
   }, [target, worker.context, retry]);
@@ -176,7 +178,9 @@ export function NotificationSettings() {
           </View>
           {busy && <Label accessibilityLiveRegion="polite">שומר את הבחירה שלך…</Label>}
           <Label bold>לפני המשמרת</Label>
-          <Label>בחר מתי לקבל תזכורת אחת, בלי להעמיס.</Label>
+          <Label>
+            בחר מתי לקבל תזכורת. בחירה ללא תזכורת מכבה גם את התזכורת למשמרת שנשארה פתוחה.
+          </Label>
           {([60, 30, 0] as const).map((minutes) => (
             <Button
               key={minutes}

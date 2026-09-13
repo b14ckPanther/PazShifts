@@ -18,8 +18,15 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: process.env.MOBILE_IOS_BUNDLE_ID || 'il.co.darb.yellowshifts.dev',
     supportsTablet: true,
+    associatedDomains: ['applinks:paz.darb.co.il', 'applinks:paz-shifts.vercel.app'],
   },
   android: {
+    intentFilters: ['paz.darb.co.il', 'paz-shifts.vercel.app'].map((host) => ({
+      action: 'VIEW',
+      autoVerify: true,
+      category: ['BROWSABLE', 'DEFAULT'],
+      data: [{ scheme: 'https', host, pathPrefix: '/nfc/' }],
+    })),
     package: process.env.MOBILE_ANDROID_PACKAGE || 'il.co.darb.yellowshifts.dev',
     ...(process.env.GOOGLE_SERVICES_JSON
       ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }
@@ -30,7 +37,7 @@ const config: ExpoConfig = {
       'expo-location',
       {
         locationWhenInUsePermission:
-          'המיקום משמש לתזכורות לסריקת NFC בהגעה לתחנה וביציאה בלבד. לא נשמרת היסטוריית מיקום.',
+          'המיקום משמש לאימות דיווח נוכחות בעת סריקת NFC, ולתזכורות לפי מיקום אם בחרת להפעיל אותן. לא נשמרת היסטוריית מיקום.',
         locationAlwaysAndWhenInUsePermission:
           'אפשר מיקום תמיד כדי לקבל תזכורות לסריקת NFC גם כשהאפליקציה סגורה. אין מעקב מסלול או דיווח נוכחות אוטומטי.',
         locationAlwaysPermission: false,
