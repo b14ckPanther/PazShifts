@@ -14,7 +14,8 @@
     "development-device": {
       "extends": "development",
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "credentialsSource": "local"
       },
       "environment": "development"
     },

@@ -111,9 +111,9 @@ function NotificationSession({ children }: { children: ReactNode }) {
     if (!enabled || !userId) return;
     let alive = true;
     void refresh();
-    const sync = () => {
+    const sync = (devicePushToken?: Notifications.DevicePushToken) => {
       if (!alive) return;
-      void synchronizeDevice(userId).catch(() => {
+      void synchronizeDevice(userId, false, devicePushToken).catch(() => {
         if (alive) setError(true);
       });
     };
