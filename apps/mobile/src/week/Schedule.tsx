@@ -12,7 +12,8 @@ import { ShiftTime } from '../home/Hero';
 import { useWorker } from '../home/WorkerProvider';
 import { supabase } from '../lib/supabase';
 import { WeekPicker, Sheet, selection } from './Patterns';
-import { days, stationWeek, validDay, dateLabel, shiftDay } from './model';
+import { stationWeek, validDay, dateLabel, shiftDay } from './model';
+import { DayStrip } from './DayStrip';
 export default function Schedule() {
   const api = useWeekApi();
   const { station, context } = useWorker();
@@ -91,61 +92,19 @@ export default function Schedule() {
           <Label style={{ color: colors.secondary, fontSize: 13 }}>
             {data.published ? 'הסידור פורסם' : 'ממתינים לפרסום הסידור'}
           </Label>
-          <View style={{ flexDirection: 'row', marginHorizontal: -20 }}>
-            {days(week).map((d) => (
-              <Pressable
-                key={d}
-                accessibilityRole="button"
-                accessibilityState={{ selected: d === day }}
-                accessibilityLabel={`${dateLabel(d, { weekday: 'long', day: 'numeric', month: 'long' })}, ${data.shifts.filter((s) => s.date === d).length} משמרות${d === today ? ', היום' : ''}`}
-                onPress={() => {
-                  setDay(d);
-                  selection();
-                }}
-                style={({ pressed }) => ({
-                  minWidth: 44,
-                  flex: 1,
-                  minHeight: 88,
-                  padding: 4,
-                  gap: 6,
-                  borderRadius: 16,
-                  alignItems: 'center',
-                  backgroundColor: d === day ? colors.yellow : colors.surface,
-                  borderWidth: 1,
-                  borderColor: d === today ? colors.yellow : colors.border,
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <Label style={{ fontSize: 12 }}>
-                  {
-                    ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'][
-                      new Date(d + 'T12:00:00Z').getUTCDay()
-                    ]
-                  }
-                </Label>
-                <Label
-                  english
-                  bold
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                  style={{ fontSize: 20, alignSelf: 'stretch', textAlign: 'center' }}
-                >
-                  {Number(d.slice(-2))}
-                </Label>
-                <View
-                  style={{
-                    width: 5,
-                    height: 5,
-                    borderRadius: 3,
-                    backgroundColor: data.shifts.some((s) => s.date === d)
-                      ? colors.crimson
-                      : 'transparent',
-                  }}
-                />
-              </Pressable>
-            ))}
-          </View>
+          <DayStrip
+            week={week}
+            day={day}
+            today={today}
+            counts={data.shifts.reduce<Record<string, number>>((counts, shift) => {
+              counts[shift.date] = (counts[shift.date] ?? 0) + 1;
+              return counts;
+            }, {})}
+            select={(date) => {
+              setDay(date);
+              selection();
+            }}
+          />
           <Animated.View
             key={week + day}
             entering={FadeIn.duration(140).reduceMotion(ReduceMotion.System)}
