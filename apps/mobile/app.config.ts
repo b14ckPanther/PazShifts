@@ -16,6 +16,10 @@ const nativeNfc =
 const backgroundLocation =
   process.env.EXPO_PUBLIC_BACKGROUND_LOCATION_ENABLED === 'true' ||
   (!release && process.env.EXPO_PUBLIC_BACKGROUND_LOCATION_ENABLED !== 'false');
+// expo-location bundles motion APIs even though the app never calls them.
+// Keep its plugin aligned with Info.plist: false would delete the purpose string.
+const motionUsageDescription =
+  'רכיב המיקום במכשיר כולל תמיכה בנתוני תנועה. YellowShifts אינה משתמשת בנתונים אלה בגרסה זו, ואינה מבצעת ספירת צעדים או מעקב כושר.';
 const config: ExpoConfig = {
   name: 'YellowShifts',
   owner: 'millionroses',
@@ -27,7 +31,10 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: identity,
     supportsTablet: true,
-    infoPlist: { ITSAppUsesNonExemptEncryption: false },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSMotionUsageDescription: motionUsageDescription,
+    },
     associatedDomains: nativeNfc
       ? ['applinks:paz.darb.co.il', 'applinks:paz-shifts.vercel.app']
       : [],
@@ -63,7 +70,7 @@ const config: ExpoConfig = {
           ? 'אפשר מיקום תמיד כדי לקבל תזכורת לסריקה בהגעה לתחנה, ולדיווח יציאה כשעזבת עם משמרת פעילה, גם כשהאפליקציה סגורה. אין מעקב מסלול או דיווח נוכחות אוטומטי.'
           : false,
         locationAlwaysPermission: false,
-        motionUsagePermission: false,
+        motionUsagePermission: motionUsageDescription,
         isAndroidMotionActivityEnabled: false,
         isIosBackgroundLocationEnabled: backgroundLocation,
         isAndroidBackgroundLocationEnabled: backgroundLocation,
