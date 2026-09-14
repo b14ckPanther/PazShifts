@@ -125,3 +125,21 @@ test('TestFlight enables only iOS push and declares exempt encryption', () => {
     assert.equal(c.extra.features.backgroundLocation, false);
   }
 });
+
+test('bundled motion APIs retain a purpose string through the Expo Location permission plugin', () => {
+  const c = config({ EAS_BUILD_PROFILE: 'production' });
+  const location = c.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-location')[1];
+  assert.match(c.ios.infoPlist.NSMotionUsageDescription, /YellowShifts/);
+  assert.equal(location.motionUsagePermission, c.ios.infoPlist.NSMotionUsageDescription);
+  const require = createRequire(import.meta.url);
+  const expoRequire = createRequire(require.resolve('expo/package.json'));
+  const { IOSConfig } = expoRequire('@expo/config-plugins');
+  const plist = IOSConfig.Permissions.applyPermissions(
+    { NSMotionUsageDescription: 'upstream default' },
+    { NSMotionUsageDescription: location.motionUsagePermission },
+    c.ios.infoPlist
+  );
+  assert.equal(plist.NSMotionUsageDescription, c.ios.infoPlist.NSMotionUsageDescription);
+  assert.equal(plist.ITSAppUsesNonExemptEncryption, false);
+  assert.equal(location.isAndroidMotionActivityEnabled, false);
+});
