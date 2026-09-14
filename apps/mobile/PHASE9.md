@@ -1,5 +1,8 @@
 # Phase 9 — release qualification
 
+**Current decision (Phase 9.5): READY AFTER MINOR MANUAL STEPS for internal TestFlight only.**
+See the Phase 9.5 update below; earlier findings are a historical QA ledger, not current blockers.
+
 Audit date: 2026-09-14. Decision: **C. NOT READY — NO-GO for release-candidate distribution.**
 The signed development app and APNs transport work. This is not a verdict that the product
 needs more features: remaining gates are release identity, policy/assets, associations and QA.
@@ -401,3 +404,184 @@ Sources checked during this audit:
 - https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy
 - https://developer.apple.com/go/?id=info-1
 - https://support.google.com/googleplay/android-developer/answer/9799150?hl=en
+
+## Phase 9.5 — pre-TestFlight cleanup (2026-09-14)
+
+### Evidence and scope
+
+Entry tree clean; HEAD `670638d`; fetched origin and main/origin/main have zero divergence.
+Migrations 1–23 match remote; no migration or DB push required. No tracked signing archives,
+credentials.json or service-account filenames; last 15 diffs have no private-key/service-account
+markers. This is a limited scan, not a guarantee about all Git history. No secrets printed.
+Owner reports production App Store profile, distribution certificate, APNs assignment, successful
+production IPA and App Store Connect record. These supersede the missing-production-identity findings
+above. Prior physical push evidence remains valid; a rebuilt production TestFlight binary still needs
+its own install/permission/foreground/background/closed-app tap smoke test.
+
+### AASA diagnosis and exact deployment change
+
+Both `paz.darb.co.il` and `paz-shifts.vercel.app` currently return HTTP 503, JSON
+`{"error":"Association configuration pending"}` for both association endpoints. The Apple route
+returns that exact response only when `appleAssociation(process.env.APPLE_APP_IDS)` is null:
+missing/empty IDs or invalid syntax. Middleware explicitly bypasses authentication. Correct env
+produces HTTP 200 locally, `application/json`, no redirect, no cookies/auth, no query dependency,
+cache max-age 300. No association code fix is needed. Hosted env is not readable here, so the
+missing-versus-malformed distinction cannot be established from HTTP alone.
+
+Vercel → select the WORKER project with Root Directory `apps/web`, whose Domains include
+`paz.darb.co.il` and legacy `paz-shifts.vercel.app` → Settings → Environment Variables:
+
+```dotenv
+APPLE_APP_IDS=KHQ29Z6A7S.il.co.darb.yellowshifts.dev,KHQ29Z6A7S.il.co.darb.yellowshifts
+```
+
+Set **Production**. Set **Preview** too only for intended preview deployments serving association
+QA; preview protection can prevent Apple's fetch, so use the public production hosts for qualification.
+Do not set this on the admin-only project. Repo deployment documentation intends both worker hosts
+on the SAME deployment. No local Vercel project link/project ID exists, so confirm their shared
+project in Domains before saving; if hosted mapping differs, each serving worker project needs it.
+No invented dashboard project name. Environment changes require a NEW deployment/redeploy; no DNS
+change. Redeploy only with owner authorization, after the desired commit reaches the deployment source.
+
+Expected response on EACH host:
+
+```json
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      { "appID": "KHQ29Z6A7S.il.co.darb.yellowshifts.dev", "paths": ["/nfc/*"] },
+      { "appID": "KHQ29Z6A7S.il.co.darb.yellowshifts", "paths": ["/nfc/*"] }
+    ]
+  }
+}
+```
+
+Apple TN3155 accepts this legacy appID/paths format. No whole-site wildcard needed. A successful
+server response does not enable the current binary's disabled association capability or prove a
+physical NFC scan. Android stays guarded: configure `ANDROID_APP_LINKS_PACKAGE` and
+`ANDROID_APP_LINKS_SHA256` only after obtaining actual release signing fingerprint(s). Its 503 is
+not an iOS TestFlight blocker. No Android credentials created.
+
+### Guards and binary decision
+
+- Production **iOS only**: `build.production.ios.env.EXPO_PUBLIC_NOTIFICATIONS_ENABLED=true`.
+  EAS platform-specific env overrides the common false. Actual EAS config resolution verified true
+  with production bundle `il.co.darb.yellowshifts`; Android and preview remain false.
+- Native NFC false; associatedDomains empty in this candidate. Physical tag/Universal Link QA pending.
+- Background location false; no Always/background reminder activation. Physical geofence QA pending.
+- Scheduler unchanged, server opt-in; mobile permission does not activate server traffic.
+  Server `NOTIFICATIONS_ENABLED`, cron authentication and any controlled delivery activation are
+  separate from the mobile flag. No scheduler activation performed.
+- `ios.infoPlist.ITSAppUsesNonExemptEncryption=false`, based on owner-confirmed standard/exempt
+  encryption and current standard TLS/platform secure storage; no duplicate key.
+- **Rebuild required for this candidate**: push JS flag and encryption plist are binary changes.
+  The older successful App Store IPA remains potentially uploadable with push disabled and manual
+  export-compliance answers, but is not the updated push-enabled candidate. Its upload acceptance
+  has not been verified here. AASA/env and web privacy/support changes alone require no native rebuild.
+
+### Privacy, support and review plan
+
+The Darb homepage redirects to `/ar`; its inspected navigation has no YellowShifts privacy/support
+link. No existing policy route was found in this repo. This repo owns the worker app, not the Darb
+marketing site. Prepared public routes, locally verified HTTP 200 without login:
+
+- Planned privacy: `https://paz.darb.co.il/privacy/yellowshifts`
+- Planned support: `https://paz.darb.co.il/support/yellowshifts`
+- Owner explicitly approved public mailbox: `founder@darb.co.il`.
+
+These URLs are NOT claimed live: deploy and check before entering them as published store URLs.
+Policy covers account/work records/corrections, device identifiers/push, scan-time location, optional
+geofencing, processors and requests. No invented retention interval. Owner review still needed for
+employer/controller responsibilities, record/backup/log retention, provider terms and international
+processing arrangements. Prepared wording is not a legal compliance certification. English scoped
+pages are usable for internal testing; Hebrew localization can be reviewed before public release.
+
+Review setup (not created): administrator creates an isolated review station, a dedicated worker
+with no real employee data, membership, safe published shifts/availability and clearly marked sample
+history using existing admin controls. Keep reviewer credentials in App Store Connect's private
+review fields, never Git. Verify login and five tabs. Never reuse a real worker password. Attendance
+QA only at that test station with authorized test tag/location; do not bypass geofence/security for
+review. First candidate disables native NFC/background location, so review notes must not advertise
+them as active. Internal testers can start with read-only checks while isolated data is prepared.
+
+Suggested beta description: “YellowShifts helps station workers view shifts, submit availability,
+review attendance and work hours, and receive work updates. Accounts are provisioned by station
+administrators.” Feedback email: founder@darb.co.il. What to Test: login, schedule times/overnights,
+availability save, hours, inbox and push taps in all app states; log out/account isolation next.
+No second device or physical station tag currently available; two-device/NFC/geofence QA remains
+pending. No pass is inferred from unit tests.
+
+### Internal TestFlight minimum versus public release
+
+Owner-confirmed app record: YellowShifts, Hebrew, `il.co.darb.yellowshifts`, SKU `yellowshifts-ios`.
+Manually check any outstanding developer agreements, correct app access/roles, processed build and
+export compliance. Upload a store-signed production build; preview Ad Hoc cannot be used. Create an
+internal group and add eligible App Store Connect users (up to 100), then add the processed build.
+Internal-only testing does not require additional beta review information per Apple's glossary.
+Final marketing screenshots, public product-page copy and external-review account are not prerequisites
+for first internal testing. Optional beta description/feedback above are prepared. Do not grant broad
+App Store Connect access to ordinary workers just to avoid external beta review.
+
+External TestFlight adds beta review/testing information and safe reviewer access. Public submission
+still needs finalized privacy/support URLs, App Privacy answers, review credentials/notes, age rating,
+category/product copy and screenshots for supported device families. `supportsTablet=true`: iPad QA
+and appropriate store screenshots remain pending. No artwork generated. Existing logomark/splash
+remain; source PNG has alpha, so verify the compiled app icon is opaque and accepted at upload.
+Missing final marketing assets do not block internal TestFlight; an invalid binary icon would.
+Native NFC/background-location claims must remain absent until qualified. Android FCM/signing,
+assetlinks and physical validation remain separate pending work, not an iOS blocker.
+
+### Validation and exact next steps
+
+Passed: 159 mobile tests (including iOS-only release guard coverage), 90 root regression tests,
+9/9 workspace typecheck tasks, 9/9 lint tasks, Expo Doctor 21/21, production-profile iOS Hermes export,
+Android export smoke check, two-source-map server/fixture boundary check, web production build.
+Android export is not a signed native Android build/FCM qualification. Local production server checks:
+AASA 200 with supplied IDs, privacy/support 200, correct content types, no authentication or redirects.
+No SQL suites needed because no DB code changed. No signed build/upload/deploy run in this phase.
+Changed-file Prettier and git diff --check pass. Repository-wide pnpm format fails only on three
+pre-existing ignored credentials/push-test*-result.json artifacts; these private files were not
+rewritten. EAS Android resolution independently confirms the push flag remains false.
+
+After owner review, commit ONLY these files from repo root:
+
+```sh
+git add -- apps/mobile/app.config.ts apps/mobile/eas.json apps/mobile/tests/release.test.mjs apps/mobile/PHASE9.md apps/web/middleware.ts apps/web/app/privacy/yellowshifts/page.tsx apps/web/app/support/yellowshifts/page.tsx
+git commit -m "Prepare iOS TestFlight push and public privacy support pages"
+```
+
+No push performed. After separately authorizing deployment, publish this commit to the worker
+project with the env above. Verify each host directly (do not hide redirects with curl -L):
+
+```sh
+curl -i https://paz.darb.co.il/.well-known/apple-app-site-association
+curl -i https://paz-shifts.vercel.app/.well-known/apple-app-site-association
+curl -I https://paz.darb.co.il/privacy/yellowshifts
+curl -I https://paz.darb.co.il/support/yellowshifts
+```
+
+Build only after approval; use the working production credentials, never Apple-login regeneration:
+
+```sh
+cd /Users/zangeel/Documents/GitHub/PazShifts/apps/mobile
+EAS_BUILD_PROFILE=production pnpm dlx eas-cli@24.3.0 build --platform ios --profile production
+```
+
+After success, verify artifact ID/bundle/version and download that exact production IPA. Upload
+manually with Apple's Transporter (sign into the active App Store Connect account, Add App → IPA →
+Deliver) to avoid the broken EAS Apple Developer credential-login path. This is an UPLOAD step for
+the owner, not performed here. Wait for processing, resolve export compliance if asked, then App Store
+Connect → YellowShifts → TestFlight → Internal Testing → create group → select users → add build.
+Install via TestFlight and recheck production push permission/token registration and foreground,
+background/terminated taps. No Supabase command beyond optional `supabase migration list` is needed.
+
+**Decision: READY AFTER MINOR MANUAL STEPS for internal TestFlight, not public App Store ready.**
+Rebuild/upload/processing and the production-device smoke test remain. Web publication can proceed
+separately; AASA and unavailable Android/NFC/geofence QA do not block the deliberately restricted
+internal candidate. No push, deploy, upload, submission, DNS change or scheduler activation performed.
+
+Sources: [EAS platform overrides](https://docs.expo.dev/build/eas-json/),
+[Apple internal testers](https://developer.apple.com/help/glossary/internal-testers/),
+[Internal groups](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers),
+[Apple AASA format](https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links).
