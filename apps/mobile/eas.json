@@ -36,6 +36,11 @@
         "EXPO_PUBLIC_NATIVE_NFC_ENABLED": "false",
         "EXPO_PUBLIC_BACKGROUND_LOCATION_ENABLED": "false",
         "EXPO_PUBLIC_NOTIFICATIONS_ENABLED": "false"
+      },
+      "ios": {
+        "env": {
+          "EXPO_PUBLIC_NOTIFICATIONS_ENABLED": "true"
+        }
       }
     }
   }

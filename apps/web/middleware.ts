@@ -14,6 +14,8 @@ export async function middleware(request: NextRequest) {
     [
       '/.well-known/apple-app-site-association',
       '/.well-known/assetlinks.json',
+      '/privacy/yellowshifts',
+      '/support/yellowshifts',
       '/fonts/Heebo-Regular.ttf',
       '/fonts/Heebo-OFL.txt',
     ].includes(request.nextUrl.pathname)

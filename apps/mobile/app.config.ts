@@ -27,6 +27,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: identity,
     supportsTablet: true,
+    infoPlist: { ITSAppUsesNonExemptEncryption: false },
     associatedDomains: nativeNfc
       ? ['applinks:paz.darb.co.il', 'applinks:paz-shifts.vercel.app']
       : [],

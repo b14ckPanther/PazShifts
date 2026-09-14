@@ -110,3 +110,18 @@ test('release plist guard removes unused permissions and preserves opted-in geof
   );
   assert.throws(() => config({ EAS_BUILD_PROFILE: 'unknown-release' }));
 });
+
+test('TestFlight enables only iOS push and declares exempt encryption', () => {
+  const eas = JSON.parse(readFileSync(new URL('../eas.json', import.meta.url), 'utf8'));
+  const profile = eas.build.production;
+  const ios = { ...profile.env, ...profile.ios.env };
+  const android = { ...profile.env, ...profile.android?.env };
+  assert.equal(ios.EXPO_PUBLIC_NOTIFICATIONS_ENABLED, 'true');
+  assert.equal(android.EXPO_PUBLIC_NOTIFICATIONS_ENABLED, 'false');
+  for (const env of [ios, android]) {
+    const c = config({ ...env, EAS_BUILD_PROFILE: 'production' });
+    assert.equal(c.ios.infoPlist.ITSAppUsesNonExemptEncryption, false);
+    assert.equal(c.extra.features.nativeNfc, false);
+    assert.equal(c.extra.features.backgroundLocation, false);
+  }
+});
