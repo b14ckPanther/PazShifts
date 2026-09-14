@@ -111,7 +111,7 @@ test('release plist guard removes unused permissions and preserves opted-in geof
   assert.throws(() => config({ EAS_BUILD_PROFILE: 'unknown-release' }));
 });
 
-test('TestFlight enables only iOS push and declares exempt encryption', () => {
+test('TestFlight enables iOS push and NFC while keeping background location disabled', () => {
   const eas = JSON.parse(readFileSync(new URL('../eas.json', import.meta.url), 'utf8'));
   const profile = eas.build.production;
   const ios = { ...profile.env, ...profile.ios.env };
@@ -121,7 +121,12 @@ test('TestFlight enables only iOS push and declares exempt encryption', () => {
   for (const env of [ios, android]) {
     const c = config({ ...env, EAS_BUILD_PROFILE: 'production' });
     assert.equal(c.ios.infoPlist.ITSAppUsesNonExemptEncryption, false);
-    assert.equal(c.extra.features.nativeNfc, false);
+    assert.equal(c.extra.features.nativeNfc, env === ios);
+    assert.equal(c.ios.bundleIdentifier, 'il.co.darb.yellowshifts');
+    assert.equal(
+      c.ios.associatedDomains.join(','),
+      env === ios ? 'applinks:paz.darb.co.il,applinks:paz-shifts.vercel.app' : ''
+    );
     assert.equal(c.extra.features.backgroundLocation, false);
   }
 });
