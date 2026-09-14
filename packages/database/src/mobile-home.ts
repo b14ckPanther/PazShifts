@@ -1,3 +1,4 @@
+import { scheduledWallTimeToInstant } from './schedule-instant';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, AttendanceRecord } from '@yellowshifts/types';
 import {
@@ -60,11 +61,9 @@ export async function getMobileHome(
       .eq('station_id', stationId)
       .eq('station_membership_id', station.membershipId)
       .eq('scheduled_shifts.schedules.status', 'PUBLISHED')
-      .gte('scheduled_shifts.start_at', start)
-      .lt(
-        'scheduled_shifts.start_at',
-        new Date(dayBoundary(addDays(today, 28), timezone)).toISOString()
-      )
+      // Include Saturday overnight shifts that are still running on Sunday.
+      .gte('scheduled_shifts.shift_date', addDays(week, -1))
+      .lt('scheduled_shifts.shift_date', addDays(today, 28))
       .order('id')
       .limit(301),
     client
@@ -111,8 +110,15 @@ export async function getMobileHome(
   )
     throw new Error('Home data unavailable');
   const shifts = assigned.data
-    .map((row) => row.scheduled_shifts as unknown as MobileShift)
-    .sort((a, b) => a.start_at.localeCompare(b.start_at));
+    .map((row) => {
+      const shift = row.scheduled_shifts as unknown as MobileShift;
+      return {
+        ...shift,
+        start_at: scheduledWallTimeToInstant(shift.start_at, timezone),
+        end_at: scheduledWallTimeToInstant(shift.end_at, timezone),
+      };
+    })
+    .sort((a, b) => a.start_at.localeCompare(b.start_at) || a.id.localeCompare(b.id));
   const entries = shiftReportEntries(
     attendance.data as AttendanceRecord[],
     week,

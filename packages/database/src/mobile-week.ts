@@ -1,3 +1,4 @@
+import { scheduledWallTimeToInstant } from './schedule-instant';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Database,
@@ -62,8 +63,8 @@ export async function getMobileWorkerSchedule(
       .map((s) => ({
         id: s.id,
         date: s.shift_date,
-        start: s.start_at,
-        end: s.end_at,
+        start: scheduledWallTimeToInstant(s.start_at, member.timezone),
+        end: scheduledWallTimeToInstant(s.end_at, member.timezone),
         notes: s.notes,
         name: s.shift_templates?.name ?? 'משמרת',
         coworkers: s.shift_assignments
@@ -73,7 +74,8 @@ export async function getMobileWorkerSchedule(
             const p = m?.profiles;
             return p ? [{ id: m.id, name: p.full_name, role: m.role }] : [];
           }),
-      })),
+      }))
+      .sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id)),
   };
 }
 export async function getMobileAvailabilityWeek(

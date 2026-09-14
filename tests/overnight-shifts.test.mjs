@@ -1,3 +1,4 @@
+import { scheduleInstant } from '../apps/mobile/tests/schedule-instant-loader.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -166,6 +167,7 @@ test('Home keeps selected-station totals scoped and exposes latest closed shift 
     { id: 'curdani', membershipId: 'c', name: 'Curdani', timezone: 'Asia/Jerusalem' },
   ];
   const { getMobileHome } = load('database/src/mobile-home.ts', {
+    './schedule-instant': scheduleInstant,
     '@yellowshifts/reports': { ...h, shiftReportEntries },
     './worker-context': { getNativeWorkerContext: async () => ({ stations }) },
     './hours-query': {
