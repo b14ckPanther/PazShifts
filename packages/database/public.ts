@@ -43,3 +43,12 @@ export {
 } from './src/mobile-nfc';
 
 export { isAvailabilitySubmitted } from './src/availability-status';
+
+export {
+  validateStationInterest,
+  emptyInterest,
+  stationRoles,
+  type StationInterest,
+  type StationRole,
+  type InterestErrors,
+} from './src/station-interest';

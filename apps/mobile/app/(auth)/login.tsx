@@ -21,6 +21,7 @@ import { safeReturnPath } from '../../src/auth/return-path';
 import { Button, Field, Label, Message, Screen, Skeleton, Surface } from '../../src/ui';
 import logomark from '../../assets/logomark.png';
 import { colors } from '../../src/ui/theme';
+import { StationInterestEntry } from '../../src/acquisition/StationInterest';
 export default function Login() {
   const { state } = useSession();
   const params = useLocalSearchParams();
@@ -207,6 +208,7 @@ export default function Login() {
           </>
         )}
       </Surface>
+      <StationInterestEntry />
     </Screen>
   );
 }

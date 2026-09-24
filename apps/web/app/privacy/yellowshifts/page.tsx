@@ -9,7 +9,7 @@ export default function Privacy() {
     >
       <h1>YellowShifts privacy notice</h1>
       <p>
-        Updated 14 September 2026. YellowShifts helps workers and their station administrators
+        Updated 16 September 2026. YellowShifts helps workers and their station administrators
         manage shifts and attendance. Darb provides the application; your employer or station
         administrator manages your work records and account access.
       </p>
@@ -24,6 +24,17 @@ export default function Privacy() {
         platform, app version, notification preferences and activity timestamps. Notification inbox
         and read status are associated with your account. You can change preferences in the app or
         disable permission in device settings.
+      </p>
+      <h2>Station interest requests</h2>
+      <p>
+        If you ask to bring YellowShifts to your station, we collect your name, mobile number,
+        station and city, and any optional email, role or notes you provide. We use these details to
+        respond to your request and manage follow-up, separately from worker accounts. We also
+        record the app platform/version and use a keyed hash of your IP address for abuse limits;
+        these rate-limit records are removed after 24 hours when the next request is processed.
+        Authorized operators can review requests. If email alerts are configured, Resend processes
+        the submitted contact details to notify our team. Contact us to request deletion or stop
+        follow-up; no fixed retention period for interest requests has yet been established.
       </p>
       <h2>Location and station attendance</h2>
       <p>

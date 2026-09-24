@@ -12,6 +12,15 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "NOTIFICATIONS_ENABLED",
+        "NOTIFICATIONS_CRON_SECRET",
+        "EXPO_ACCESS_TOKEN",
+        "STATION_LEADS_RATE_SECRET",
+        "STATION_LEADS_EMAIL",
+        "STATION_LEADS_FROM",
+        "RESEND_API_KEY"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
