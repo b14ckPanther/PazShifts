@@ -1,22 +1,26 @@
 import { redirect, notFound } from 'next/navigation';
-import { getServerContext } from '@/app/lib/server-context';
-import { getHourPolicies, getStationById } from '@yellowshifts/database';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
+import { getHourPolicies } from '@yellowshifts/database';
 import { localDate } from '@yellowshifts/reports';
 import { HourRulesForm } from './HourRulesForm';
 export default async function HourRulesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, context } = await getServerContext();
   if (!context) redirect('/login');
+
+  const station = await getCachedStation(id);
+  if (!station) notFound();
+
   if (
     !context.isPlatformAdmin &&
     !context.memberships.some(
       (m) =>
-        m.station.id === id && m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
+        (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
+        m.membership.role === 'ADMIN' &&
+        m.membership.status === 'ACTIVE'
     )
   )
     redirect('/');
-  const station = await getStationById(supabase, id);
-  if (!station) notFound();
   try {
     const policies = await getHourPolicies(supabase, id);
     return (

@@ -1,7 +1,7 @@
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import { getStationById, getStationMembers, listAssignableUsers } from '@yellowshifts/database';
+import { getStationMembers, listAssignableUsers } from '@yellowshifts/database';
 import {
   Container,
   PageHeader,
@@ -35,11 +35,16 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+  if (!station) {
+    notFound();
+  }
+
   // Caller authorization: Platform Admin OR Station Admin of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      m.station.id === stationId &&
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -48,15 +53,10 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
     redirect('/');
   }
 
-  const [station, stationMembers, assignableUsers] = await Promise.all([
-    getStationById(supabase, stationId),
-    getStationMembers(supabase, stationId),
+  const [stationMembers, assignableUsers] = await Promise.all([
+    getStationMembers(supabase, station.id),
     listAssignableUsers(supabase).catch(() => []),
   ]);
-
-  if (!station) {
-    notFound();
-  }
 
   const adminMembers = stationMembers.filter(
     (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
@@ -151,7 +151,7 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
         <div style={{ margin: '32px 0 24px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Link
-              href={`/stations/${station.id}`}
+              href={`/stations/${encodeURIComponent(station.code)}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

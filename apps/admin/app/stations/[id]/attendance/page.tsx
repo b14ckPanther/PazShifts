@@ -1,7 +1,7 @@
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import { getStationById, listStationAttendance, getStationMembers } from '@yellowshifts/database';
+import { listStationAttendance, getStationMembers } from '@yellowshifts/database';
 import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
 import {
   StationIcon,
@@ -26,10 +26,15 @@ export default async function StationAttendancePage({ params }: StationAttendanc
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+  if (!station) {
+    notFound();
+  }
+
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      m.station.id === stationId &&
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -39,14 +44,10 @@ export default async function StationAttendancePage({ params }: StationAttendanc
     redirect('/');
   }
 
-  const [station, { activeRecords, completedRecords }, members] = await Promise.all([
-    getStationById(supabase, stationId),
-    listStationAttendance(supabase, stationId),
-    getStationMembers(supabase, stationId),
+  const [{ activeRecords, completedRecords }, members] = await Promise.all([
+    listStationAttendance(supabase, station.id),
+    getStationMembers(supabase, station.id),
   ]);
-  if (!station) {
-    notFound();
-  }
 
   const canManageAttendance = isPlatformAdmin || isStationAdmin;
 
@@ -142,7 +143,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
         >
           <div>
             <Link
-              href={`/stations/${station.id}`}
+              href={`/stations/${encodeURIComponent(station.code)}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -168,7 +169,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <Link href={`/stations/${station.id}/exceptions`} style={{ textDecoration: 'none' }}>
+            <Link href={`/stations/${encodeURIComponent(station.code)}/exceptions`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <WarningIcon size={16} />
@@ -177,7 +178,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
               </Button>
             </Link>
 
-            <Link href={`/stations/${station.id}/schedules`} style={{ textDecoration: 'none' }}>
+            <Link href={`/stations/${encodeURIComponent(station.code)}/schedules`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <CalendarIcon size={16} />
@@ -186,7 +187,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
               </Button>
             </Link>
 
-            <Link href={`/stations/${station.id}/staff`} style={{ textDecoration: 'none' }}>
+            <Link href={`/stations/${encodeURIComponent(station.code)}/staff`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <UsersIcon size={16} />

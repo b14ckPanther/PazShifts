@@ -157,13 +157,13 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
 
   // CASE 2: Platform Admin (Global Shell)
   if (isPlatformAdmin) {
-    const stations = await listAllStations(supabase);
-
-    // Fetch memberships across all stations to calculate real counts
-    const { data: allMemberships } = await supabase
-      .from('station_memberships')
-      .select('station_id, role, status')
-      .eq('status', 'ACTIVE');
+    const [stations, { data: allMemberships }] = await Promise.all([
+      listAllStations(supabase),
+      supabase
+        .from('station_memberships')
+        .select('station_id, role, status')
+        .eq('status', 'ACTIVE'),
+    ]);
 
     interface StationMembershipSummary {
       station_id: string;

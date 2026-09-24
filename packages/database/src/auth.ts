@@ -73,12 +73,16 @@ export async function getAuthenticatedUserContext(
       if (rawStation && rawStation.is_active) {
         const station: Station = {
           id: rawStation.id,
+          latitude: rawStation.latitude,
+          longitude: rawStation.longitude,
+          attendanceRadiusM: rawStation.attendance_radius_m,
           code: rawStation.code,
           name: rawStation.name,
           address: rawStation.address,
           phone: rawStation.phone,
           timezone: rawStation.timezone,
           isActive: rawStation.is_active,
+          nfcPublicToken: rawStation.nfc_public_token,
           allowedLateMinutes: rawStation.allowed_late_minutes,
           allowedEarlyLeaveMinutes: rawStation.allowed_early_leave_minutes,
           leftOpenWarningHours: rawStation.left_open_warning_hours,

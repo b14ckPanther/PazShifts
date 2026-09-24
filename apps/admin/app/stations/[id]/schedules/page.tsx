@@ -1,9 +1,8 @@
 import { localDate } from '@yellowshifts/reports';
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
-  getStationById,
   getWeeklySchedule,
   listShiftTemplates,
   getStationMembers,
@@ -34,10 +33,15 @@ export default async function StationSchedulesPage({
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+  if (!station) notFound();
+
   // Caller authorization: Platform Admin OR Station Admin / Shift Manager of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const userMembership = context.memberships.find(
-    (m) => m.station.id === stationId && m.membership.status === 'ACTIVE'
+    (m) =>
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
+      m.membership.status === 'ACTIVE'
   );
 
   const canAccess =
@@ -56,16 +60,14 @@ export default async function StationSchedulesPage({
       (userMembership.membership.role === 'ADMIN' ||
         userMembership.membership.role === 'SHIFT_MANAGER'));
 
-  const station = await getStationById(supabase, stationId);
-  if (!station) notFound();
   const currentWeekStart = getWeekStartDate(localDate(new Date(), station.timezone));
   const selectedWeekStart = getWeekStartDate(weekQuery || currentWeekStart);
 
   const [schedule, templates, members, weeklyAvailabilityMap] = await Promise.all([
-    getWeeklySchedule(supabase, stationId, selectedWeekStart),
-    listShiftTemplates(supabase, stationId, true),
-    getStationMembers(supabase, stationId),
-    getStationWeeklyAvailability(supabase, stationId, selectedWeekStart),
+    getWeeklySchedule(supabase, station.id, selectedWeekStart),
+    listShiftTemplates(supabase, station.id, true),
+    getStationMembers(supabase, station.id),
+    getStationWeeklyAvailability(supabase, station.id, selectedWeekStart),
   ]);
 
   if (!station) {
@@ -190,7 +192,7 @@ export default async function StationSchedulesPage({
               href={
                 userMembership?.membership.role === 'SHIFT_MANAGER' && !isPlatformAdmin
                   ? '/'
-                  : `/stations/${station.id}`
+                  : `/stations/${encodeURIComponent(station.code)}`
               }
               style={{
                 color: 'var(--ys-color-text-secondary, #6B7280)',
@@ -215,7 +217,7 @@ export default async function StationSchedulesPage({
             href={
               userMembership?.membership.role === 'SHIFT_MANAGER' && !isPlatformAdmin
                 ? '/'
-                : `/stations/${station.id}`
+                : `/stations/${encodeURIComponent(station.code)}`
             }
             style={{
               display: 'inline-flex',

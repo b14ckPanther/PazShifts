@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation';
-import { getStationById, getHourPolicies } from '@yellowshifts/database';
+import { getHourPolicies, getStationById } from '@yellowshifts/database';
 import { getServerContext } from '@/app/lib/server-context';
 import {
   addDays,
@@ -12,24 +12,27 @@ import {
 import { readReportAttendance, readReportPeople } from '@/app/lib/report-query';
 import { HoursReportClient } from './HoursReportClient';
 
-export default async function ReportsPage({
-  params,
-  searchParams,
-}: {
+interface ReportsPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string; to?: string }>;
-}) {
+}
+
+export default async function ReportsPage({ params, searchParams }: ReportsPageProps) {
   const { id } = await params;
   const { supabase, context } = await getServerContext();
   if (!context) redirect('/login');
+
   if (
     !context.isPlatformAdmin &&
     !context.memberships.some(
       (m) =>
-        m.station.id === id && m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
+        (m.station.id === id || m.station.code?.toUpperCase() === id.toUpperCase()) &&
+        m.membership.role === 'ADMIN' &&
+        m.membership.status === 'ACTIVE'
     )
   )
     redirect('/');
+
   const station = await getStationById(supabase, id);
   if (!station) notFound();
   const today = localDate(new Date(), station.timezone);

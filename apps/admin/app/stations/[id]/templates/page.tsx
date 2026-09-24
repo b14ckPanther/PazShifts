@@ -1,7 +1,7 @@
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import { getStationById, listShiftTemplates } from '@yellowshifts/database';
+import { listShiftTemplates } from '@yellowshifts/database';
 import { Container, PageHeader, Badge } from '@yellowshifts/ui';
 import { ArrowRightIcon, StationIcon } from '@yellowshifts/icons';
 import { LogoutButton } from '../../../components/LogoutButton';
@@ -20,11 +20,16 @@ export default async function StationTemplatesPage({ params }: StationTemplatesP
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+  if (!station) {
+    notFound();
+  }
+
   // Caller authorization: Platform Admin OR Station Admin of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      m.station.id === stationId &&
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -33,14 +38,7 @@ export default async function StationTemplatesPage({ params }: StationTemplatesP
     redirect('/');
   }
 
-  const [station, templates] = await Promise.all([
-    getStationById(supabase, stationId),
-    listShiftTemplates(supabase, stationId, false),
-  ]);
-
-  if (!station) {
-    notFound();
-  }
+  const templates = await listShiftTemplates(supabase, station.id, false);
 
   return (
     <main
@@ -148,7 +146,7 @@ export default async function StationTemplatesPage({ params }: StationTemplatesP
             </Link>
             <span style={{ color: 'var(--ys-color-text-muted, #9CA3AF)' }}>/</span>
             <Link
-              href={`/stations/${station.id}`}
+              href={`/stations/${encodeURIComponent(station.code)}`}
               style={{
                 color: 'var(--ys-color-text-secondary, #6B7280)',
                 textDecoration: 'none',
@@ -169,7 +167,7 @@ export default async function StationTemplatesPage({ params }: StationTemplatesP
       <Container size="lg" style={{ marginTop: '24px' }}>
         <div style={{ marginBottom: '20px' }}>
           <Link
-            href={`/stations/${station.id}`}
+            href={`/stations/${encodeURIComponent(station.code)}`}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

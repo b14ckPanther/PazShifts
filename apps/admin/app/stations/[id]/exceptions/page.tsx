@@ -1,7 +1,7 @@
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import { getStationById, getStationExceptionsForDate } from '@yellowshifts/database';
+import { getStationExceptionsForDate } from '@yellowshifts/database';
 import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
 import { StationIcon, ArrowRightIcon, ClockIcon, CalendarIcon } from '@yellowshifts/icons';
 import { LogoutButton } from '../../../components/LogoutButton';
@@ -20,10 +20,15 @@ export default async function StationExceptionsPage({ params }: StationException
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+  if (!station) {
+    notFound();
+  }
+
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      m.station.id === stationId &&
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -31,11 +36,6 @@ export default async function StationExceptionsPage({ params }: StationException
   // Authorized: Platform Admin or active Station Admin
   if (!isPlatformAdmin && !isStationAdmin) {
     redirect('/');
-  }
-
-  const station = await getStationById(supabase, stationId);
-  if (!station) {
-    notFound();
   }
 
   // Get today's date in station timezone
@@ -46,7 +46,7 @@ export default async function StationExceptionsPage({ params }: StationException
     day: '2-digit',
   }).format(new Date());
 
-  const exceptionsResult = await getStationExceptionsForDate(supabase, stationId, today);
+  const exceptionsResult = await getStationExceptionsForDate(supabase, station.id, today);
 
   return (
     <main
@@ -140,7 +140,7 @@ export default async function StationExceptionsPage({ params }: StationException
         >
           <div>
             <Link
-              href={`/stations/${station.id}`}
+              href={`/stations/${encodeURIComponent(station.code)}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -169,7 +169,7 @@ export default async function StationExceptionsPage({ params }: StationException
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <Link href={`/stations/${station.id}/attendance`} style={{ textDecoration: 'none' }}>
+            <Link href={`/stations/${encodeURIComponent(station.code)}/attendance`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <ClockIcon size={16} />
@@ -178,7 +178,7 @@ export default async function StationExceptionsPage({ params }: StationException
               </Button>
             </Link>
 
-            <Link href={`/stations/${station.id}/schedules`} style={{ textDecoration: 'none' }}>
+            <Link href={`/stations/${encodeURIComponent(station.code)}/schedules`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <CalendarIcon size={16} />

@@ -65,16 +65,17 @@ export async function listAllStations(supabase: TypedSupabaseClient): Promise<St
 }
 
 /**
- * Retrieves a single station by its unique ID.
+ * Retrieves a single station by its unique ID or code.
  */
 export async function getStationById(
   supabase: TypedSupabaseClient,
   stationId: string
 ): Promise<Station | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stationId);
   const { data, error } = await supabase
     .from('stations')
     .select('*')
-    .eq('id', stationId)
+    .eq(isUuid ? 'id' : 'code', isUuid ? stationId : stationId.toUpperCase())
     .maybeSingle();
 
   if (error) {

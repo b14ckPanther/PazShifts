@@ -1,10 +1,9 @@
 import { StationLocationSettings } from '@/app/components/StationLocationSettings';
-import { getServerContext } from '@/app/lib/server-context';
+import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { StationAdminSelector } from '../../components/StationAdminSelector';
 import { StationOperations } from '../../components/StationOperations';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import { getStationById } from '@yellowshifts/database';
 import {
   Container,
   PageHeader,
@@ -40,29 +39,31 @@ interface StationDetailsPageProps {
 export default async function StationDetailsPage({ params }: StationDetailsPageProps) {
   const { id: stationId } = await params;
 
-  const { supabase, context } = await getServerContext();
+  const { context } = await getServerContext();
 
   if (!context) {
     redirect('/login');
   }
 
+  const station = await getCachedStation(stationId);
+
+  if (!station) {
+    notFound();
+  }
+
+  const canonicalCode = encodeURIComponent(station.code);
+
   // Verify access: Platform Admin OR Station Admin of this station
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      m.station.id === stationId &&
+      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
 
   if (!isPlatformAdmin && !isStationAdmin) {
     redirect('/');
-  }
-
-  const station = await getStationById(supabase, stationId);
-
-  if (!station) {
-    notFound();
   }
 
   return (
@@ -193,66 +194,66 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <Link href={`/stations/${station.id}/attendance`} style={{ textDecoration: 'none' }}>
-              <Button variant="primary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <ClockIcon size={16} />
-                  נוכחות ושעון NFC
-                </span>
-              </Button>
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <Link href={`/stations/${canonicalCode}/attendance`} style={{ textDecoration: 'none' }}>
+                <Button variant="primary" size="md">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <ClockIcon size={16} />
+                    נוכחות ושעון NFC
+                  </span>
+                </Button>
+              </Link>
 
-            <Link href={`/stations/${station.id}/schedules`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <CalendarIcon size={16} />
-                  סידור עבודה שבועי
-                </span>
-              </Button>
-            </Link>
+              <Link href={`/stations/${canonicalCode}/schedules`} style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="md">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <CalendarIcon size={16} />
+                    סידור עבודה שבועי
+                  </span>
+                </Button>
+              </Link>
 
-            <Link href={`/stations/${station.id}/templates`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <ClockIcon size={16} />
-                  תבניות משמרת
-                </span>
-              </Button>
-            </Link>
+              <Link href={`/stations/${canonicalCode}/templates`} style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="md">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <ClockIcon size={16} />
+                    תבניות משמרת
+                  </span>
+                </Button>
+              </Link>
 
-            <Link href={`/stations/${station.id}/staff`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <UsersIcon size={16} />
-                  ניהול צוות מלא
-                </span>
-              </Button>
-            </Link>
+              <Link href={`/stations/${canonicalCode}/staff`} style={{ textDecoration: 'none' }}>
+                <Button variant="secondary" size="md">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <UsersIcon size={16} />
+                    ניהול צוות מלא
+                  </span>
+                </Button>
+              </Link>
 
-            {isPlatformAdmin && (
-              <>
-                <Link href={`/stations/${station.id}/edit`} style={{ textDecoration: 'none' }}>
-                  <Button variant="secondary" size="md">
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <EditIcon size={16} />
-                      עריכת פרטי תחנה
-                    </span>
-                  </Button>
-                </Link>
+              {isPlatformAdmin && (
+                <>
+                  <Link href={`/stations/${canonicalCode}/edit`} style={{ textDecoration: 'none' }}>
+                    <Button variant="secondary" size="md">
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <EditIcon size={16} />
+                        עריכת פרטי תחנה
+                      </span>
+                    </Button>
+                  </Link>
 
-                <StationStatusToggle
-                  stationId={station.id}
-                  isActive={station.isActive}
-                  stationName={station.name}
-                />
-              </>
-            )}
-          </div>
+                  <StationStatusToggle
+                    stationId={station.id}
+                    isActive={station.isActive}
+                    stationName={station.name}
+                  />
+                </>
+              )}
+            </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <StationOperations stationId={station.id} />
+          <StationOperations stationId={encodeURIComponent(station.code)} />
 
           <details className="station-settings">
             <summary>הגדרות התחנה ופרטי קשר</summary>
@@ -453,7 +454,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                       }}
                     >
                       <ShieldCheckIcon size={16} />
-                      <Link href={`/stations/${station.id}/staff`}>צפייה בצוות ובהרשאות</Link>
+                      <Link href={`/stations/${canonicalCode}/staff`}>צפייה בצוות ובהרשאות</Link>
                     </div>
                   </div>
                 </div>
