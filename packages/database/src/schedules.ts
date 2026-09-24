@@ -21,6 +21,8 @@ import type {
   Database,
   StationRole,
   MembershipStatus,
+  StationMemberWithProfile,
+  WeeklyAvailabilityWithEntries,
 } from '@yellowshifts/types';
 import type { TypedSupabaseClient } from './auth';
 
@@ -73,7 +75,7 @@ function mapScheduledShiftRow(
   };
 }
 
-function mapShiftAssignmentRow(
+export function mapShiftAssignmentRow(
   row: Database['public']['Tables']['shift_assignments']['Row']
 ): ShiftAssignment {
   return {
@@ -388,6 +390,252 @@ export async function getWeeklySchedule(
   };
 }
 
+export interface ScheduleWorkspaceData {
+  schedule: WeeklyScheduleDetails | null;
+  templates: ShiftTemplate[];
+  members: StationMemberWithProfile[];
+  weeklyAvailabilityMap: Map<string, WeeklyAvailabilityWithEntries>;
+}
+
+/**
+ * Loads the complete weekly schedule workspace in a single authenticated database round-trip.
+ * Falls back to parallel individual queries if the RPC is unavailable (e.g. test mocks).
+ */
+export async function getScheduleWorkspace(
+  supabase: TypedSupabaseClient,
+  stationId: string,
+  weekStartDate: string
+): Promise<ScheduleWorkspaceData> {
+  const normWeekStart = getWeekStartDate(weekStartDate);
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rpcData, error: rpcError } = await (supabase.rpc as any)(
+      'get_station_schedule_workspace',
+      {
+        p_station_id: stationId,
+        p_week_start: normWeekStart,
+      }
+    );
+
+    if (!rpcError && rpcData) {
+      let schedule: WeeklyScheduleDetails | null = null;
+      if (rpcData.schedule) {
+        const s = rpcData.schedule;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const shifts: ScheduledShiftWithDetails[] = (s.scheduled_shifts ?? []).map((sh: any) => {
+          const assignments: ShiftAssignmentWithProfile[] = (sh.shift_assignments ?? []).map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (a: any) => {
+              const mem = a.station_memberships;
+              const prof = mem?.profiles;
+              return {
+                id: a.id,
+                scheduledShiftId: a.scheduled_shift_id,
+                stationId: a.station_id,
+                stationMembershipId: a.station_membership_id,
+                status: a.status,
+                createdAt: a.created_at,
+                updatedAt: a.updated_at,
+                membership: {
+                  id: mem?.id ?? a.station_membership_id,
+                  role: (mem?.role as StationRole) ?? 'WORKER',
+                  status: (mem?.status as MembershipStatus) ?? 'ACTIVE',
+                  employeeCode: mem?.employee_code ?? null,
+                },
+                user: {
+                  id: prof?.id ?? '',
+                  fullName: prof?.full_name ?? 'משתמש',
+                  email: prof?.email ?? null,
+                  phone: prof?.phone ?? null,
+                  avatarUrl: prof?.avatar_url ?? null,
+                },
+              };
+            }
+          );
+
+          return {
+            id: sh.id,
+            scheduleId: sh.schedule_id,
+            stationId: sh.station_id,
+            shiftTemplateId: sh.shift_template_id,
+            shiftDate: sh.shift_date,
+            startAt: sh.start_at,
+            endAt: sh.end_at,
+            notes: sh.notes,
+            createdAt: sh.created_at,
+            updatedAt: sh.updated_at,
+            templateName: sh.shift_templates?.name ?? null,
+            assignments,
+          };
+        });
+
+        schedule = {
+          id: s.id,
+          stationId: s.station_id,
+          weekStartDate: s.week_start_date,
+          status: s.status,
+          createdBy: s.created_by,
+          createdAt: s.created_at,
+          updatedAt: s.updated_at,
+          shifts,
+        };
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const templates: ShiftTemplate[] = (rpcData.templates ?? []).map((t: any) => ({
+        id: t.id,
+        stationId: t.station_id,
+        name: t.name,
+        startTime: t.start_time.slice(0, 5),
+        endTime: t.end_time.slice(0, 5),
+        isActive: t.is_active,
+        displayOrder: t.display_order,
+        createdAt: t.created_at,
+        updatedAt: t.updated_at,
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const members: StationMemberWithProfile[] = (rpcData.members ?? []).map((m: any) => ({
+        membership: {
+          id: m.id,
+          stationId: m.station_id,
+          userId: m.user_id,
+          role: m.role,
+          status: m.status,
+          employeeCode: m.employee_code,
+          createdAt: m.created_at,
+          updatedAt: m.updated_at,
+        },
+        profile: {
+          id: m.profiles.id,
+          email: m.profiles.email,
+          fullName: m.profiles.full_name,
+          phone: m.profiles.phone,
+          preferredLocale: m.profiles.preferred_locale,
+          avatarUrl: m.profiles.avatar_url,
+          isActive: m.profiles.is_active,
+          createdAt: m.profiles.created_at,
+          updatedAt: m.profiles.updated_at,
+        },
+      }));
+
+      const weeklyAvailabilityMap = new Map<string, WeeklyAvailabilityWithEntries>();
+      if (Array.isArray(rpcData.availabilities)) {
+        for (const item of rpcData.availabilities) {
+          weeklyAvailabilityMap.set(item.station_membership_id, {
+            week: {
+              id: item.id,
+              stationId: item.station_id,
+              stationMembershipId: item.station_membership_id,
+              weekStartDate: item.week_start_date,
+              notes: item.notes,
+              submittedAt: item.submitted_at,
+              updatedAt: item.updated_at,
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            entries: (item.availability_entries ?? []).map((e: any) => ({
+              id: e.id,
+              availabilityWeekId: e.availability_week_id,
+              date: e.date,
+              availabilityType: e.availability_type,
+              startTime: e.start_time,
+              endTime: e.end_time,
+              notes: e.notes,
+              createdAt: e.created_at,
+              updatedAt: e.updated_at,
+            })),
+          });
+        }
+      }
+
+      return {
+        schedule,
+        templates,
+        members,
+        weeklyAvailabilityMap,
+      };
+    }
+  } catch {
+    // Fall back to parallel individual queries
+  }
+
+  const [schedule, templates, membersRes, availRes] = await Promise.all([
+    getWeeklySchedule(supabase, stationId, normWeekStart),
+    listShiftTemplates(supabase, stationId, true),
+    supabase
+      .from('station_memberships')
+      .select('*, profiles(*)')
+      .eq('station_id', stationId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('availability_weeks')
+      .select('*, availability_entries(*)')
+      .eq('station_id', stationId)
+      .eq('week_start_date', normWeekStart),
+  ]);
+
+  const members: StationMemberWithProfile[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const item of (membersRes.data ?? []) as any[]) {
+    if (item.profiles) {
+      members.push({
+        membership: {
+          id: item.id,
+          stationId: item.station_id,
+          userId: item.user_id,
+          role: item.role,
+          status: item.status,
+          employeeCode: item.employee_code,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+        },
+        profile: {
+          id: item.profiles.id,
+          email: item.profiles.email,
+          fullName: item.profiles.full_name,
+          phone: item.profiles.phone,
+          preferredLocale: item.profiles.preferred_locale,
+          avatarUrl: item.profiles.avatar_url,
+          isActive: item.profiles.is_active,
+          createdAt: item.profiles.created_at,
+          updatedAt: item.profiles.updated_at,
+        },
+      });
+    }
+  }
+
+  const weeklyAvailabilityMap = new Map<string, WeeklyAvailabilityWithEntries>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const item of (availRes.data ?? []) as any[]) {
+    weeklyAvailabilityMap.set(item.station_membership_id, {
+      week: {
+        id: item.id,
+        stationId: item.station_id,
+        stationMembershipId: item.station_membership_id,
+        weekStartDate: item.week_start_date,
+        notes: item.notes,
+        submittedAt: item.submitted_at,
+        updatedAt: item.updated_at,
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      entries: (item.availability_entries ?? []).map((e: any) => ({
+        id: e.id,
+        availabilityWeekId: e.availability_week_id,
+        date: e.date,
+        availabilityType: e.availability_type,
+        startTime: e.start_time,
+        endTime: e.end_time,
+        notes: e.notes,
+        createdAt: e.created_at,
+        updatedAt: e.updated_at,
+      })),
+    });
+  }
+
+  return { schedule, templates, members, weeklyAvailabilityMap };
+}
+
 export async function createWeeklySchedule(
   supabase: TypedSupabaseClient,
   input: CreateScheduleInput
@@ -510,7 +758,49 @@ export async function deleteScheduledShift(
 export async function assignWorkerToShift(
   supabase: TypedSupabaseClient,
   input: AssignShiftWorkerInput
-): Promise<ShiftAssignment> {
+): Promise<ShiftAssignmentWithProfile> {
+  // Fast path: single-round-trip transactional RPC
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rpcData, error: rpcError } = await (supabase.rpc as any)(
+      'assign_worker_to_shift_rpc',
+      {
+        p_station_id: input.stationId,
+        p_shift_id: input.scheduledShiftId,
+        p_membership_id: input.stationMembershipId,
+      }
+    );
+
+    if (!rpcError && rpcData && rpcData.id) {
+      const mem = rpcData.station_memberships;
+      const prof = mem?.profiles;
+      return {
+        id: rpcData.id,
+        scheduledShiftId: rpcData.scheduled_shift_id,
+        stationId: rpcData.station_id,
+        stationMembershipId: rpcData.station_membership_id,
+        status: rpcData.status,
+        createdAt: rpcData.created_at,
+        updatedAt: rpcData.updated_at,
+        membership: {
+          id: mem?.id ?? rpcData.station_membership_id,
+          role: (mem?.role as StationRole) ?? 'WORKER',
+          status: (mem?.status as MembershipStatus) ?? 'ACTIVE',
+          employeeCode: mem?.employee_code ?? null,
+        },
+        user: {
+          id: prof?.id ?? '',
+          fullName: prof?.full_name ?? 'משתמש',
+          email: prof?.email ?? null,
+          phone: prof?.phone ?? null,
+          avatarUrl: prof?.avatar_url ?? null,
+        },
+      };
+    }
+  } catch {
+    // Fall back to direct insert
+  }
+
   const { data, error } = await supabase
     .from('shift_assignments')
     .insert({
@@ -519,7 +809,7 @@ export async function assignWorkerToShift(
       station_membership_id: input.stationMembershipId,
       status: input.status ?? 'ASSIGNED',
     })
-    .select()
+    .select('*, station_memberships(*, profiles(*))')
     .single();
 
   if (error) {
@@ -529,13 +819,54 @@ export async function assignWorkerToShift(
     throw new Error(`שגיאה בשיבוץ עובד למשמרת: ${error.message}`);
   }
 
-  return mapShiftAssignmentRow(data);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mem = (data as any).station_memberships;
+  const prof = mem?.profiles;
+
+  return {
+    id: data.id,
+    scheduledShiftId: data.scheduled_shift_id,
+    stationId: data.station_id,
+    stationMembershipId: data.station_membership_id,
+    status: data.status,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    membership: {
+      id: mem?.id ?? data.station_membership_id,
+      role: (mem?.role as StationRole) ?? 'WORKER',
+      status: (mem?.status as MembershipStatus) ?? 'ACTIVE',
+      employeeCode: mem?.employee_code ?? null,
+    },
+    user: {
+      id: prof?.id ?? '',
+      fullName: prof?.full_name ?? 'משתמש',
+      email: prof?.email ?? null,
+      phone: prof?.phone ?? null,
+      avatarUrl: prof?.avatar_url ?? null,
+    },
+  };
 }
 
 export async function removeWorkerFromShift(
   supabase: TypedSupabaseClient,
-  assignmentId: string
+  assignmentId: string,
+  stationId?: string
 ): Promise<void> {
+  if (stationId) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('remove_worker_from_shift_rpc', {
+        p_station_id: stationId,
+        p_assignment_id: assignmentId,
+      });
+      if (!error && data) {
+        return;
+      }
+    } catch {
+      // Fall back
+    }
+  }
+
   const { error } = await supabase.from('shift_assignments').delete().eq('id', assignmentId);
   if (error) {
     throw new Error(`שגיאה בהסרת שיבוץ עובד: ${error.message}`);

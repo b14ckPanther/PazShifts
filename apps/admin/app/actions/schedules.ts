@@ -23,12 +23,13 @@ import {
   validateWeeklyScheduleForPublish,
   revertScheduleToDraft,
 } from '@yellowshifts/database';
-import type { ScheduleStatus, CopyWeekResult, ScheduleValidationResult } from '@yellowshifts/types';
+import type { ScheduleStatus, CopyWeekResult, ScheduleValidationResult, ShiftAssignmentWithProfile } from '@yellowshifts/types';
 
 export interface ScheduleActionResult {
   success: boolean;
   id?: string;
   error?: string;
+  assignment?: ShiftAssignmentWithProfile;
 }
 
 // ---------------------------------------------------------------------------
@@ -419,9 +420,7 @@ export async function assignWorkerToShiftAction(
       stationMembershipId,
     });
 
-    revalidatePath(`/stations/${stationId}/schedules`);
-
-    return { success: true, id: assignment.id };
+    return { success: true, id: assignment.id, assignment };
   } catch (err) {
     return {
       success: false,
@@ -441,9 +440,7 @@ export async function removeWorkerFromShiftAction(
     const cookieStore = await cookies();
     const supabase = createServerSupabaseClient(cookieStore);
 
-    await removeWorkerFromShift(supabase, assignmentId);
-
-    revalidatePath(`/stations/${stationId}/schedules`);
+    await removeWorkerFromShift(supabase, assignmentId, stationId);
 
     return { success: true, id: assignmentId };
   } catch (err) {

@@ -6,6 +6,7 @@ import type {
   StationMemberWithProfile,
   StationRole,
   WeeklyAvailabilityWithEntries,
+  ShiftAssignmentWithProfile,
 } from '@yellowshifts/types';
 import { matchShiftWithAvailability } from '@yellowshifts/database';
 import { assignWorkerToShiftAction, removeWorkerFromShiftAction } from '../actions/schedules';
@@ -31,7 +32,12 @@ interface QuickStaffAssignmentDrawerProps {
   canEdit: boolean;
   isDraft: boolean;
   onClose: () => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
+  onOptimisticAssign?: (shiftId: string, member: StationMemberWithProfile, tempAssignmentId: string) => void;
+  onReconcileAssign?: (shiftId: string, tempAssignmentId: string, realAssignment: ShiftAssignmentWithProfile) => void;
+  onRollbackAssign?: (shiftId: string, tempAssignmentId: string) => void;
+  onOptimisticRemove?: (shiftId: string, assignmentId: string) => void;
+  onRollbackRemove?: (shiftId: string, removedAssignment: ShiftAssignmentWithProfile) => void;
 }
 
 export function QuickStaffAssignmentDrawer({
@@ -43,10 +49,16 @@ export function QuickStaffAssignmentDrawer({
   isDraft,
   onClose,
   onRefresh,
+  onOptimisticAssign,
+  onReconcileAssign,
+  onRollbackAssign,
+  onOptimisticRemove,
+  onRollbackRemove,
 }: QuickStaffAssignmentDrawerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<StationRole | 'ALL'>('ALL');
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [pendingMemberIds, setPendingMemberIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(
     null
   );
@@ -85,14 +97,35 @@ export function QuickStaffAssignmentDrawer({
     const assignmentId = assignedMap.get(membershipId);
 
     if (assignmentId) {
-      // Remove assignment directly
+      // Remove assignment directly with immediate optimistic update
+      const assignmentToRemove = shift.assignments.find((a) => a.id === assignmentId);
+      onOptimisticRemove?.(shift.id, assignmentId);
+
+      setPendingMemberIds((prev) => new Set(prev).add(membershipId));
+
       startTransition(async () => {
-        const res = await removeWorkerFromShiftAction(stationId, assignmentId);
-        if (res.success) {
-          setFeedback({ type: 'success', text: 'שיבוץ העובד הוסר' });
-          onRefresh();
-        } else {
-          setFeedback({ type: 'error', text: res.error || 'שגיאה בהסרת שיבוץ' });
+        try {
+          const res = await removeWorkerFromShiftAction(stationId, assignmentId);
+          if (res.success) {
+            setFeedback({ type: 'success', text: 'שיבוץ העובד הוסר' });
+            if (onRefresh && !onOptimisticRemove) onRefresh();
+          } else {
+            if (assignmentToRemove) {
+              onRollbackRemove?.(shift.id, assignmentToRemove);
+            }
+            setFeedback({ type: 'error', text: res.error || 'שגיאה בהסרת שיבוץ' });
+          }
+        } catch {
+          if (assignmentToRemove) {
+            onRollbackRemove?.(shift.id, assignmentToRemove);
+          }
+          setFeedback({ type: 'error', text: 'שגיאה בהסרת שיבוץ' });
+        } finally {
+          setPendingMemberIds((prev) => {
+            const next = new Set(prev);
+            next.delete(membershipId);
+            return next;
+          });
         }
       });
       return;
@@ -119,18 +152,39 @@ export function QuickStaffAssignmentDrawer({
 
     setOverrideWarning(null);
 
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.append('stationId', stationId);
-      formData.append('scheduledShiftId', shift.id);
-      formData.append('stationMembershipId', membershipId);
+    const memberToAssign = activeMembers.find((m) => m.membership.id === membershipId);
+    if (!memberToAssign) return;
 
-      const res = await assignWorkerToShiftAction(null, formData);
-      if (res.success) {
-        setFeedback({ type: 'success', text: 'עובד שובץ למשמרת' });
-        onRefresh();
-      } else {
-        setFeedback({ type: 'error', text: res.error || 'שגיאה בשיבוץ עובד' });
+    const tempId = 'temp-' + Math.random().toString(36).slice(2);
+    onOptimisticAssign?.(shift.id, memberToAssign, tempId);
+
+    setPendingMemberIds((prev) => new Set(prev).add(membershipId));
+
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('stationId', stationId);
+        formData.append('scheduledShiftId', shift.id);
+        formData.append('stationMembershipId', membershipId);
+
+        const res = await assignWorkerToShiftAction(null, formData);
+        if (res.success && res.assignment) {
+          onReconcileAssign?.(shift.id, tempId, res.assignment);
+          setFeedback({ type: 'success', text: 'עובד שובץ למשמרת' });
+          if (onRefresh && !onOptimisticAssign) onRefresh();
+        } else {
+          onRollbackAssign?.(shift.id, tempId);
+          setFeedback({ type: 'error', text: res.error || 'שגיאה בשיבוץ עובד' });
+        }
+      } catch {
+        onRollbackAssign?.(shift.id, tempId);
+        setFeedback({ type: 'error', text: 'שגיאה בשיבוץ עובד' });
+      } finally {
+        setPendingMemberIds((prev) => {
+          const next = new Set(prev);
+          next.delete(membershipId);
+          return next;
+        });
       }
     });
   };
@@ -418,7 +472,7 @@ export function QuickStaffAssignmentDrawer({
                     size="sm"
                     variant="brandYellow"
                     onClick={() => handleToggleAssignment(overrideWarning.membershipId, true)}
-                    disabled={isPending}
+                    disabled={pendingMemberIds.has(overrideWarning.membershipId)}
                     style={{
                       fontSize: '0.75rem',
                       padding: '4px 12px',
@@ -432,7 +486,7 @@ export function QuickStaffAssignmentDrawer({
                     size="sm"
                     variant="secondary"
                     onClick={() => setOverrideWarning(null)}
-                    disabled={isPending}
+                    disabled={pendingMemberIds.has(overrideWarning.membershipId)}
                     style={{ fontSize: '0.75rem', padding: '4px 12px' }}
                   >
                     ביטול
@@ -573,7 +627,7 @@ export function QuickStaffAssignmentDrawer({
                         <Button
                           variant={isAssigned ? 'secondary' : 'primary'}
                           size="sm"
-                          disabled={isPending}
+                          disabled={pendingMemberIds.has(member.membership.id)}
                           onClick={() => handleToggleAssignment(member.membership.id)}
                           style={{
                             display: 'flex',

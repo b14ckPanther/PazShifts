@@ -3,11 +3,8 @@ import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
-  getWeeklySchedule,
-  listShiftTemplates,
-  getStationMembers,
+  getScheduleWorkspace,
   getWeekStartDate,
-  getStationWeeklyAvailability,
 } from '@yellowshifts/database';
 import type { WeeklyAvailabilityWithEntries } from '@yellowshifts/types';
 import { Container, PageHeader, Badge } from '@yellowshifts/ui';
@@ -63,12 +60,11 @@ export default async function StationSchedulesPage({
   const currentWeekStart = getWeekStartDate(localDate(new Date(), station.timezone));
   const selectedWeekStart = getWeekStartDate(weekQuery || currentWeekStart);
 
-  const [schedule, templates, members, weeklyAvailabilityMap] = await Promise.all([
-    getWeeklySchedule(supabase, station.id, selectedWeekStart),
-    listShiftTemplates(supabase, station.id, true),
-    getStationMembers(supabase, station.id),
-    getStationWeeklyAvailability(supabase, station.id, selectedWeekStart),
-  ]);
+  const { schedule, templates, members, weeklyAvailabilityMap } = await getScheduleWorkspace(
+    supabase,
+    station.id,
+    selectedWeekStart
+  );
 
   if (!station) {
     notFound();

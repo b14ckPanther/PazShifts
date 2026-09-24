@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type {
   WeeklyScheduleDetails,
@@ -9,6 +9,7 @@ import type {
   ScheduledShiftWithDetails,
   CopyWeekResult,
   WeeklyAvailabilityWithEntries,
+  ShiftAssignmentWithProfile,
 } from '@yellowshifts/types';
 import {
   createWeeklyScheduleAction,
@@ -82,6 +83,12 @@ export function WeeklyScheduleManager({
     null
   );
 
+  // Optimistic schedule state
+  const [localSchedule, setLocalSchedule] = useState<WeeklyScheduleDetails | null>(schedule);
+  useEffect(() => {
+    setLocalSchedule(schedule);
+  }, [schedule]);
+
   // Modal & Drawer states
   const [addShiftDate, setAddShiftDate] = useState<string | null>(null);
   const [editingShift, setEditingShift] = useState<ScheduledShiftWithDetails | null>(null);
@@ -90,9 +97,123 @@ export function WeeklyScheduleManager({
   const [showCopyWeekModal, setShowCopyWeekModal] = useState(false);
   const [showPublishValidationModal, setShowPublishValidationModal] = useState(false);
 
-  // Derive the active shift for drawer from the latest schedule data
+  // Optimistic assignment handlers
+  const handleOptimisticAssign = (
+    shiftId: string,
+    member: StationMemberWithProfile,
+    tempAssignmentId: string
+  ) => {
+    setLocalSchedule((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        shifts: prev.shifts.map((s) => {
+          if (s.id !== shiftId) return s;
+          const newAssignment: ShiftAssignmentWithProfile = {
+            id: tempAssignmentId,
+            scheduledShiftId: shiftId,
+            stationId,
+            stationMembershipId: member.membership.id,
+            status: 'ASSIGNED',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            membership: {
+              id: member.membership.id,
+              role: member.membership.role,
+              status: member.membership.status,
+              employeeCode: member.membership.employeeCode,
+            },
+            user: {
+              id: member.profile.id,
+              fullName: member.profile.fullName,
+              email: member.profile.email ?? null,
+              phone: member.profile.phone ?? null,
+              avatarUrl: member.profile.avatarUrl ?? null,
+            },
+          };
+          return {
+            ...s,
+            assignments: [...s.assignments, newAssignment],
+          };
+        }),
+      };
+    });
+  };
+
+  const handleReconcileAssign = (
+    shiftId: string,
+    tempAssignmentId: string,
+    realAssignment: ShiftAssignmentWithProfile
+  ) => {
+    setLocalSchedule((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        shifts: prev.shifts.map((s) => {
+          if (s.id !== shiftId) return s;
+          return {
+            ...s,
+            assignments: s.assignments.map((a) => (a.id === tempAssignmentId ? realAssignment : a)),
+          };
+        }),
+      };
+    });
+  };
+
+  const handleRollbackAssign = (shiftId: string, tempAssignmentId: string) => {
+    setLocalSchedule((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        shifts: prev.shifts.map((s) => {
+          if (s.id !== shiftId) return s;
+          return {
+            ...s,
+            assignments: s.assignments.filter((a) => a.id !== tempAssignmentId),
+          };
+        }),
+      };
+    });
+  };
+
+  const handleOptimisticRemove = (shiftId: string, assignmentId: string) => {
+    setLocalSchedule((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        shifts: prev.shifts.map((s) => {
+          if (s.id !== shiftId) return s;
+          return {
+            ...s,
+            assignments: s.assignments.filter((a) => a.id !== assignmentId),
+          };
+        }),
+      };
+    });
+  };
+
+  const handleRollbackRemove = (
+    shiftId: string,
+    removedAssignment: ShiftAssignmentWithProfile
+  ) => {
+    setLocalSchedule((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        shifts: prev.shifts.map((s) => {
+          if (s.id !== shiftId) return s;
+          return {
+            ...s,
+            assignments: [...s.assignments, removedAssignment],
+          };
+        }),
+      };
+    });
+  };
+
+  // Derive the active shift for drawer from the latest optimistic schedule data
   const drawerShift = activeShiftIdForDrawer
-    ? (schedule?.shifts.find((s) => s.id === activeShiftIdForDrawer) ?? null)
+    ? (localSchedule?.shifts.find((s) => s.id === activeShiftIdForDrawer) ?? null)
     : null;
 
   const currentSunday = currentWeekStart;
@@ -455,11 +576,11 @@ export function WeeklyScheduleManager({
         <WeeklyScheduleGrid
           stationId={stationId}
           weekStartDate={selectedWeekStart}
-          shifts={schedule.shifts}
+          shifts={localSchedule?.shifts ?? schedule.shifts}
           templates={templates}
           activeMembers={activeMembers}
           canEdit={canEdit}
-          isDraft={schedule.status === 'DRAFT'}
+          isDraft={localSchedule?.status === 'DRAFT'}
           onOpenAddShift={(dateStr: string) => setAddShiftDate(dateStr)}
           onOpenQuickAssign={(shift: ScheduledShiftWithDetails) =>
             setActiveShiftIdForDrawer(shift.id)
@@ -478,9 +599,13 @@ export function WeeklyScheduleManager({
           activeMembers={activeMembers}
           availabilityRecords={availabilityRecords}
           canEdit={canEdit}
-          isDraft={schedule?.status === 'DRAFT'}
+          isDraft={localSchedule?.status === 'DRAFT'}
           onClose={() => setActiveShiftIdForDrawer(null)}
-          onRefresh={() => router.refresh()}
+          onOptimisticAssign={handleOptimisticAssign}
+          onReconcileAssign={handleReconcileAssign}
+          onRollbackAssign={handleRollbackAssign}
+          onOptimisticRemove={handleOptimisticRemove}
+          onRollbackRemove={handleRollbackRemove}
         />
       )}
 

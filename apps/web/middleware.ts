@@ -3,7 +3,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { Database } from '@yellowshifts/types';
 import { getSupabaseEnv, isSupabaseConfigured, safeNextPath } from '@yellowshifts/database';
 
-const stationCache = new Map<string, { id: string; code: string; timestamp: number }>();
+declare global {
+  var __paz_station_cache: Map<string, { id: string; code: string; timestamp: number }> | undefined;
+}
+
+const stationCache =
+  globalThis.__paz_station_cache ||
+  (globalThis.__paz_station_cache = new Map<string, { id: string; code: string; timestamp: number }>());
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -56,18 +62,34 @@ export async function middleware(request: NextRequest) {
   // Fast-path: Check for presence and validity of Supabase auth tokens in cookies
   const allCookies = request.cookies.getAll();
   const authChunks = allCookies
-    .filter((c) => c.name.includes('-auth-token'))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .filter((c) => /-auth-token(\.\d+)?$/.test(c.name))
+    .sort((a, b) => {
+      const idxA = a.name.match(/\.(\d+)$/)?.[1];
+      const idxB = b.name.match(/\.(\d+)$/)?.[1];
+      return (idxA !== undefined ? parseInt(idxA, 10) : -1) - (idxB !== undefined ? parseInt(idxB, 10) : -1);
+    });
 
   let cachedUser: { id: string; email?: string | null } | null = null;
   let needsRefresh = false;
 
   if (authChunks.length > 0) {
     try {
-      const rawVal = authChunks.map((c) => c.value).join('');
+      let rawVal = authChunks.map((c) => c.value).join('');
+      if (rawVal.includes('%')) {
+        try {
+          rawVal = decodeURIComponent(rawVal);
+        } catch {
+          // ignore decode error and proceed
+        }
+      }
       let jsonStr = rawVal;
       if (rawVal.startsWith('base64-')) {
-        jsonStr = Buffer.from(rawVal.slice(7), 'base64').toString('utf8');
+        const b64 = rawVal.slice(7);
+        try {
+          jsonStr = Buffer.from(b64, 'base64url').toString('utf8');
+        } catch {
+          jsonStr = Buffer.from(b64, 'base64').toString('utf8');
+        }
       }
       const session = JSON.parse(jsonStr);
       if (session?.access_token && session?.user) {
@@ -157,7 +179,7 @@ export async function middleware(request: NextRequest) {
     if (friendly || request.method === 'GET' || request.method === 'HEAD') {
       let station: { id: string; code: string };
       const cached = stationCache.get(value);
-      if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+      if (cached && Date.now() - cached.timestamp < 30 * 60 * 1000) {
         station = { id: cached.id, code: cached.code };
       } else {
         if (!supabase) {
@@ -225,6 +247,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|icons/|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|ico)$).*)',
   ],
 };
