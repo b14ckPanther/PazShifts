@@ -2,7 +2,6 @@ import { localDate } from '@yellowshifts/reports';
 import { getServerContext } from '@/app/lib/server-context';
 import { BrandMark } from '@yellowshifts/ui';
 import { redirect } from 'next/navigation';
-import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   Card,
   CardHeader,
@@ -16,7 +15,7 @@ import {
   Container,
   PageHeader,
 } from '@yellowshifts/ui';
-import { ShieldCheckIcon, BriefcaseIcon, CalendarIcon } from '@yellowshifts/icons';
+import { ShieldCheckIcon } from '@yellowshifts/icons';
 import {
   isSupabaseConfigured,
   getWeekStartDate,
@@ -24,6 +23,7 @@ import {
   configuredAppOrigin,
 } from '@yellowshifts/database';
 import { StationSelector } from './components/StationSelector';
+import { WorkerHeader } from './components/WorkerHeader';
 import { LogoutButton } from './components/LogoutButton';
 import { WorkerScheduleView } from './components/WorkerScheduleView';
 
@@ -69,18 +69,19 @@ export default async function WebHomePage({ searchParams }: PageProps) {
         }}
       >
         <header
+          className="worker-header-root"
           style={{
-            backgroundColor: '#FFFFFF',
-            borderBottom: '3px solid var(--ys-color-brand-yellow)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            padding: '16px 0',
+            backgroundColor: '#fcbc00',
+            background: '#fcbc00',
           }}
         >
           <Container size="lg">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <BrandMark size={36} />
-                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: '#111827' }}>
+                <div className="worker-header-logo-badge">
+                  <BrandMark size={28} />
+                </div>
+                <h2 style={{ fontSize: '17px', fontWeight: 800, margin: 0, color: '#8f002b' }}>
                   YellowShifts • פורטל עובדים
                 </h2>
               </div>
@@ -88,6 +89,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
             </div>
           </Container>
         </header>
+        <div className="worker-header-spacer" aria-hidden="true" />
 
         <Container size="md">
           <div style={{ marginTop: '48px' }}>
@@ -199,112 +201,25 @@ export default async function WebHomePage({ searchParams }: PageProps) {
         direction: 'rtl',
       }}
     >
-      {/* Top Header */}
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '3px solid var(--ys-color-brand-yellow)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          padding: '16px 0',
-        }}
-      >
-        <Container size="lg">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
-            <div
-              className="worker-header-identity"
-              style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
-            >
-              <BrandMark size={36} />
-              <div>
-                <h2
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    margin: 0,
-                    lineHeight: '1.2',
-                    color: '#111827',
-                  }}
-                >
-                  YellowShifts • {activeContext.station.name}
-                </h2>
-                <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
-                  קוד תחנה: {activeContext.station.code} • {profile?.fullName || user.email}
-                </p>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <Link
-                href={`/stations/${encodeURIComponent(activeContext.station.code)}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: 'var(--ys-radius-md)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  color: 'var(--ys-color-text-primary)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                }}
-              >
-                <BriefcaseIcon size={16} />
-                <span>המשמרות שלי</span>
-              </Link>
-
-              <Link
-                href={`/stations/${encodeURIComponent(activeContext.station.code)}/availability`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: 'var(--ys-radius-md)',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #D1D5DB',
-                  color: '#4B5563',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                }}
-              >
-                <CalendarIcon size={16} />
-                <span>זמינות</span>
-              </Link>
-              <Link
-                href={`/stations/${encodeURIComponent(activeContext.station.code)}/hours`}
-                style={{ color: '#111827', padding: '10px 14px', fontWeight: 600 }}
-              >
-                השעות שלי
-              </Link>
-            </div>
-
-            <div className="worker-header-actions">
-              {memberships.length > 1 && (
-                <StationSelector
-                  memberships={memberships}
-                  activeStationId={activeContext.station.id}
-                />
-              )}
-              <LogoutButton variant="outline" />
-            </div>
-          </div>
-        </Container>
-      </header>
+      <WorkerHeader
+        station={activeContext.station}
+        user={user}
+        profile={profile}
+        role={activeContext.membership.role}
+        isPlatformAdmin={isPlatformAdmin}
+        activeTab="shifts"
+        pageTitle="המשמרות שלי"
+      />
 
       {/* Main Container */}
       <Container size="md">
-        <div style={{ marginTop: '28px' }}>
+        <div style={{ marginTop: '16px' }}>
+          {memberships.length > 1 && (
+            <StationSelector
+              memberships={memberships}
+              activeStationId={activeContext.station.id}
+            />
+          )}
           <PageHeader
             title="המשמרות שלי"
             description={`צפייה במשמרות המאושרות ששובצת אליהן בתחנת ${activeContext.station.name}. מוצגות רק משמרות מתוך סידורי עבודה רשמיים שפורסמו.`}

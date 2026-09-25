@@ -1,7 +1,17 @@
 @import '../../../packages/ui/src/styles/tokens.css';
 @import '../../../packages/ui/src/styles/mobile.css';
 
-/* Custom application level styles if needed */
+/* Lock horizontal viewport to eliminate side bouncing on mobile */
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -9,15 +19,18 @@ body {
   background-color: var(--ys-color-surface-base);
   color: var(--ys-color-text-primary);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-}
-
-html {
-  max-width: 100%;
-  overflow-x: clip;
-}
-body {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+body.app-shell {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Seamless mobile status bar notch color matching mustard yellow */
+.app-shell::before {
+  background: var(--ys-color-brand-yellow, #fcbc00) !important;
 }
 .attendance-panel {
   width: min(100%, 420px);
@@ -364,37 +377,73 @@ body {
   min-width: 0;
   flex: 1;
 }
-.worker-station-selector label {
-  white-space: nowrap;
+/* Mobile Dock - Native Paz Mustard Yellow & Dark Crimson Branding */
+.mobile-dock {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 90 !important;
+  background: var(--ys-color-brand-yellow, #fcbc00) !important;
+  border-top: 1.5px solid #e0a500 !important;
+  box-shadow: 0 -4px 20px rgba(180, 83, 9, 0.18), 0 -1px 3px rgba(0, 0, 0, 0.05) !important;
 }
-.worker-station-selector select {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  min-height: 44px;
-  text-overflow: ellipsis;
+
+.mobile-dock a {
+  color: #700020 !important;
+  font-weight: 700 !important;
+  transition: all 160ms ease !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
-.worker-station-selector select:focus-visible {
-  outline: 3px solid #b48a19;
-  outline-offset: 2px;
+
+.mobile-dock a svg {
+  color: #700020 !important;
+  stroke: #700020 !important;
+  transition: transform 160ms ease, color 160ms ease !important;
 }
-@media (max-width: 767px) {
-  .worker-header-actions {
-    width: 100%;
-  }
-  .worker-station-selector select {
-    font-size: 16px !important;
-  }
+
+.mobile-dock a span {
+  color: #700020 !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
 }
-@media (max-width: 359px) {
-  .worker-header-actions {
-    flex-wrap: wrap;
-  }
-  .worker-station-selector {
-    flex-basis: 100%;
-  }
-  .worker-header-actions > button {
-    margin-inline-start: auto;
-  }
+
+.mobile-dock a:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
 }
+
+.mobile-dock a:active {
+  transform: scale(0.95) !important;
+}
+
+/* Active Dock Item - High-Contrast Dark Crimson Capsule */
+.mobile-dock a[aria-current='page'] {
+  background: #8f002b !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(112, 0, 32, 0.3) !important;
+  border-radius: 14px !important;
+}
+
+.mobile-dock a[aria-current='page'] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.mobile-dock a[aria-current='page'] span {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+/* Unified Active Red Branding across Worker Portal */
+:root {
+  --ys-color-brand-crimson: #8f002b !important;
+  --ys-color-brand-crimson-hover: #700020 !important;
+  --ys-color-brand-crimson-active: #5c001a !important;
+}
+
+.ys-btn-primary,
+button[data-variant='primary'] {
+  background-color: #8f002b !important;
+  color: #ffffff !important;
+}
+

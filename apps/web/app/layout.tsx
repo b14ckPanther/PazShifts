@@ -22,7 +22,7 @@ const ubuntu = Ubuntu({
 
 export const metadata: Metadata = {
   applicationName: 'YellowShifts',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'YellowShifts' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'YellowShifts' },
   icons: {
     icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
     apple: '/icons/apple-touch-icon.png',
@@ -37,7 +37,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   interactiveWidget: 'resizes-content',
-  themeColor: '#ffffff',
+  themeColor: '#fcbc00',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

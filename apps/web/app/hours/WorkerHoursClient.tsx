@@ -1,7 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
   hoursExportName,
   addDays,
@@ -12,7 +11,10 @@ import {
   weekStart,
   type HoursReport,
 } from '@yellowshifts/reports';
-import { HoursTable, RateBreakdown } from '@yellowshifts/ui';
+import { HoursTable, RateBreakdown, PageHeader } from '@yellowshifts/ui';
+import type { StationWithMembership } from '@yellowshifts/types';
+import { WorkerHeader } from '@/app/components/WorkerHeader';
+import { StationSelector } from '@/app/components/StationSelector';
 import './hours.css';
 
 function saveCsv(value: string, name: string) {
@@ -28,11 +30,19 @@ export function WorkerHoursClient({
   stationId,
   today,
   stations,
+  station,
+  user,
+  profile,
+  memberships,
 }: {
   report: HoursReport;
   stationId: string;
   today: string;
   stations: { id: string; name: string }[];
+  station?: { id: string; name: string; code: string; timezone?: string };
+  user?: { id: string; email?: string | null };
+  profile?: { fullName?: string | null } | null;
+  memberships?: readonly StationWithMembership[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -61,29 +71,41 @@ export function WorkerHoursClient({
     }
   }
   return (
-    <main className="worker-hours" dir="rtl" aria-busy={pending}>
-      <header>
-        <Link href={`/?stationId=${stationId}`}>← המשמרות שלי</Link>
-        <p>{report.station}</p>
-        <h1>השעות שלי</h1>
-        <span>הנוכחות שלך, יום אחרי יום</span>
-      </header>
-      <section className="worker-hours-controls">
-        {stations.length > 1 && (
-          <label>
-            תחנה
-            <select
-              value={stationId}
-              onChange={(e) => navigate(report.from, report.to, e.target.value)}
-            >
-              {stations.map((s) => (
-                <option value={s.id} key={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </label>
+    <>
+      {station && user && (
+        <WorkerHeader
+          station={station}
+          user={user}
+          profile={profile}
+          role={memberships?.find((m) => m.station.id === stationId)?.membership.role}
+          activeTab="hours"
+          pageTitle="השעות שלי"
+        />
+      )}
+      <main className="worker-hours" dir="rtl" aria-busy={pending}>
+        <PageHeader
+          title="השעות שלי"
+          description={`הנוכחות שלך בתחנת ${report.station}, יום אחרי יום.`}
+        />
+        {memberships && memberships.length > 1 && (
+          <StationSelector memberships={memberships} activeStationId={stationId} />
         )}
+        <section className="worker-hours-controls">
+          {!memberships && stations.length > 1 && (
+            <label>
+              תחנה
+              <select
+                value={stationId}
+                onChange={(e) => navigate(report.from, report.to, e.target.value)}
+              >
+                {stations.map((s) => (
+                  <option value={s.id} key={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         <form
           key={`${report.from}-${report.to}`}
           onSubmit={(e) => {
@@ -186,5 +208,6 @@ export function WorkerHoursClient({
         </footer>
       </section>
     </main>
+  </>
   );
 }

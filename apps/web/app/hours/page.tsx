@@ -56,6 +56,10 @@ export default async function WorkerHoursPage({
         stationId={station.id}
         today={today}
         stations={context.memberships.map((m) => ({ id: m.station.id, name: m.station.name }))}
+        station={station}
+        user={context.user}
+        profile={context.profile}
+        memberships={context.memberships}
         report={{
           station: station.name,
           timezone: station.timezone,
