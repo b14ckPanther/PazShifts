@@ -13,6 +13,7 @@ import { saveWorkerAvailabilityAction } from '../actions/availability';
 import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
 import {
   CheckIcon,
+  SendIcon,
   WarningIcon,
   SuccessIcon,
   CloseIcon,
@@ -726,13 +727,23 @@ export function WeeklyAvailabilityForm({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              minWidth: '140px',
+              gap: '6px',
+              minWidth: '88px',
               justifyContent: 'center',
+              whiteSpace: 'nowrap',
             }}
           >
-            <CheckIcon size={16} />
-            <span>שמור זמינות שבועית</span>
+            {isAvailabilitySubmitted(initialData) ? (
+              <>
+                <CheckIcon size={16} />
+                <span>עדכון</span>
+              </>
+            ) : (
+              <>
+                <SendIcon size={16} />
+                <span>שליחה</span>
+              </>
+            )}
           </Button>
         </div>
       )}
