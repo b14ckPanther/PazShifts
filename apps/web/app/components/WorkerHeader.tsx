@@ -118,7 +118,7 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
                   className={`worker-header-tab-link ${activeTab === 'home' ? 'is-active' : ''}`}
                 >
                   <HomeIcon size={15} />
-                  <span>הבית שלי</span>
+                  <span>ראשי</span>
                 </Link>
                 <Link
                   href={`/stations/${canonicalCode}`}

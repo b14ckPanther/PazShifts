@@ -4,6 +4,13 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 const ts = createRequire(import.meta.url)('typescript');
+const redirectHelpers = {};
+runInNewContext(
+  ts.transpileModule(readFileSync('packages/database/src/redirects.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText,
+  { exports: redirectHelpers }
+);
 const id = '7f0dd990-83d8-4588-b3dd-94bf860cdbaf';
 async function run(
   path,
@@ -63,7 +70,7 @@ async function run(
     '@yellowshifts/database': {
       isSupabaseConfigured: () => true,
       getSupabaseEnv: () => ({ url: 'fixture', anonKey: 'fixture' }),
-      safeNextPath: () => '/',
+      safeNextPath: redirectHelpers.safeNextPath,
     },
   };
   const exports = {};
@@ -113,4 +120,12 @@ test('worker login return, denial, and legacy POST behavior are preserved', asyn
   assert.equal((await run('/stations/KURDANI', { station: null })).result.status, 404);
   assert.equal((await run('/stations/KURDANI', { error: {} })).result.status, 503);
   assert.equal((await run('/hours?stationId=' + id, { method: 'POST' })).calls.length, 0);
+});
+
+test('worker entry defaults to overview while explicit return destinations survive', async () => {
+  assert.equal((await run('/login')).result.url.pathname, '/home');
+  assert.equal(
+    (await run('/login?next=/stations/KURDANI/hours')).result.url.pathname,
+    '/stations/KURDANI/hours'
+  );
 });

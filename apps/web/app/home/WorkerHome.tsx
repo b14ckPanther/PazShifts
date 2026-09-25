@@ -3,19 +3,16 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { MobileHome } from '@yellowshifts/database/public';
 import { ClockIcon, CalendarIcon, RefreshIcon } from '@yellowshifts/icons';
-import { NavigationLink } from '../components/NavigationLink';
 import { elapsedClock, nextHomeShift } from './home-view';
 
 export function WorkerHome({
   data,
   name,
   station,
-  code,
 }: {
   data: MobileHome | null;
   name: string;
   station: string;
-  code: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -35,7 +32,6 @@ export function WorkerHome({
       window.removeEventListener('online', refresh);
     };
   }, [router]);
-  const base = `/stations/${encodeURIComponent(code)}`;
   const clock = data?.active ? elapsedClock(data.active.clock_in_at, now) : null;
   const stale = data && now - data.fetchedAt > 90000;
   const next = data ? nextHomeShift(data, now) : null;
@@ -104,11 +100,6 @@ export function WorkerHome({
               </div>
               <div className="worker-active-bottom">
                 <span>הספירה מתעדכנת בזמן אמת</span>
-                <NavigationLink
-                  href={`/hours?stationId=${encodeURIComponent(data.active.station_id)}`}
-                >
-                  לפרטי הנוכחות ←
-                </NavigationLink>
               </div>
             </section>
           ) : (
@@ -150,7 +141,6 @@ export function WorkerHome({
             ) : (
               <p>אין משמרת קרובה שפורסמה ב־28 הימים הקרובים.</p>
             )}
-            <NavigationLink href={base}>לסידור העבודה ←</NavigationLink>
           </section>
         </>
       )}

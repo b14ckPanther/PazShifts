@@ -39,7 +39,7 @@ export default async function HomePage({
         role={membership.membership.role}
         isPlatformAdmin={context.isPlatformAdmin}
         activeTab="home"
-        pageTitle="הבית שלי"
+        pageTitle="ראשי"
       />
       <Container size="md">
         {context.memberships.length > 1 && (
@@ -53,7 +53,6 @@ export default async function HomePage({
           data={data}
           name={context.profile?.fullName || 'לך'}
           station={membership.station.name}
-          code={membership.station.code}
         />
       </Container>
     </main>

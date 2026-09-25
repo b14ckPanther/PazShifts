@@ -50,7 +50,7 @@ export async function loginAction(
     };
   }
 
-  redirect(safeNextPath(formData.get('next')));
+  redirect(safeNextPath(formData.get('next') || '/home'));
 }
 
 export async function logoutAction(): Promise<void> {

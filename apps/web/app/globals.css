@@ -447,3 +447,11 @@ button[data-variant='primary'] {
   color: #ffffff !important;
 }
 
+
+/* The worker dock needs one clearance region, owned by the body, not two. */
+@media (max-width: 767px) {
+  .app-shell:has(.mobile-dock-space) main:not(.mobile-flow) {
+    min-height: calc(100dvh - 76px - var(--app-safe-bottom, 0px)) !important;
+    padding-bottom: 16px !important;
+  }
+}

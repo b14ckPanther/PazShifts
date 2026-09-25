@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
 import './components/worker-cards.css';
-import { BrandSplash, DarbFooter } from '@yellowshifts/ui';
+import { BrandSplash } from '@yellowshifts/ui';
 import { PwaRegistration } from './components/PwaRegistration';
 
 const heebo = Heebo({
@@ -48,7 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegistration />
         <BrandSplash waitForContent />
         {children}
-        <DarbFooter />
         <Suspense fallback={null}>
           <WorkerDock />
         </Suspense>

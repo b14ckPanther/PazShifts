@@ -24,7 +24,7 @@ export function WorkerDock() {
     <MobileDock>
       <Link href={link('/home')} aria-current={route === '/home' ? 'page' : undefined}>
         <HomeIcon size={22} />
-        <span>הבית שלי</span>
+        <span>ראשי</span>
       </Link>
       <Link href={link('/')} aria-current={route === '/' ? 'page' : undefined}>
         <BriefcaseIcon size={22} />
