@@ -345,6 +345,7 @@
   inset: 0;
   border: 1.5px solid rgba(112, 0, 32, 0.22);
   border-radius: 50%;
+  animation: brand-orbit 4200ms linear infinite;
 }
 .brand-orbit-ring::after {
   content: '';
@@ -356,7 +357,7 @@
 .brand-orbit-dot {
   position: absolute;
   inset: 0;
-  animation: brand-orbit 1400ms linear infinite;
+  animation: brand-orbit 1200ms linear infinite;
 }
 .brand-orbit-dot::after {
   content: '';
@@ -388,7 +389,7 @@
   height: 100%;
   background: #700020;
   transform-origin: right;
-  animation: brand-progress 1400ms ease-in-out infinite;
+  animation: brand-progress 1200ms ease-in-out infinite;
 }
 @keyframes brand-reveal {
   from {

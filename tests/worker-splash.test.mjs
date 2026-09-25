@@ -94,7 +94,7 @@ test('minimum splash duration, then wait for actual navigation or login readines
   const ui = mount();
   assert.equal(ui.visible(), true);
   ui.pending(true);
-  assert.equal(ui.tick(), 1400);
+  assert.equal(ui.tick(), 1800);
   assert.equal(ui.visible(), true);
   assert.equal(ui.tick(), 100);
   ui.pending(false);

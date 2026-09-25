@@ -19,7 +19,7 @@ export function BrandEntrance() {
   );
 }
 
-const SPLASH_DURATION_MS = 1400;
+const SPLASH_DURATION_MS = 1800;
 
 /** Branded splash screen for initial load and smooth tab transitions. */
 export function BrandSplash({ waitForContent = false }: { waitForContent?: boolean }) {
@@ -152,7 +152,8 @@ export function BrandSplash({ waitForContent = false }: { waitForContent?: boole
       aria-label="טוענים את התחנה שלכם"
       data-wait-for-content={waitForContent}
     >
-      <BrandEntrance />
+      {/* Mount on each opening so entrance animations do not finish while hidden. */}
+      {visible && <BrandEntrance />}
     </div>
   );
 }
