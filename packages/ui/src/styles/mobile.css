@@ -458,6 +458,11 @@
   .brand-splash {
     display: none;
   }
+  .brand-splash[data-wait-for-content='true'],
+  .brand-splash[data-route-loading] {
+    display: grid;
+    transition: none;
+  }
   .brand-entrance *,
   .login-identity {
     animation: none !important;

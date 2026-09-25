@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="he" dir="rtl" className={`${heebo.variable} ${ubuntu.variable}`}>
       <body className="app-shell" style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
         <PwaRegistration />
-        <BrandSplash />
+        <BrandSplash waitForContent />
         {children}
         <DarbFooter />
         <Suspense fallback={null}>

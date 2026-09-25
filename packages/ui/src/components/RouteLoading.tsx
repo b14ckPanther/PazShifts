@@ -4,6 +4,7 @@ import { BrandEntrance } from './BrandSplash';
 export function RouteLoading() {
   return (
     <div
+      data-route-loading="true"
       className="brand-splash brand-splash-visible"
       role="status"
       aria-busy="true"

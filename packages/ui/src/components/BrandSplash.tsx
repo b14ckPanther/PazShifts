@@ -22,27 +22,42 @@ export function BrandEntrance() {
 const SPLASH_DURATION_MS = 1400;
 
 /** Branded splash screen for initial load and smooth tab transitions. */
-export function BrandSplash() {
+export function BrandSplash({ waitForContent = false }: { waitForContent?: boolean }) {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<number | null>(null);
 
-  const triggerSplash = useCallback((duration = SPLASH_DURATION_MS) => {
-    if (typeof window === 'undefined') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (window.location.pathname.startsWith('/nfc/')) return;
+  const triggerSplash = useCallback(
+    (duration = SPLASH_DURATION_MS) => {
+      if (typeof window === 'undefined') return;
+      if (!waitForContent && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.location.pathname.startsWith('/nfc/')) return;
 
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
 
-    setVisible(true);
+      setVisible(true);
 
-    timerRef.current = window.setTimeout(() => {
-      setVisible(false);
-      timerRef.current = null;
-    }, duration);
-  }, []);
+      const finishWhenReady = () => {
+        // Next's link status covers server navigation; loading boundaries cover
+        // streamed content, and the login form exposes its server-action state.
+        const pending =
+          waitForContent &&
+          document.querySelector(
+            '[data-route-loading], .navigation-pending[data-pending="true"], .compact-login-form[aria-busy="true"]'
+          );
+        if (pending) {
+          timerRef.current = window.setTimeout(finishWhenReady, 100);
+          return;
+        }
+        setVisible(false);
+        timerRef.current = null;
+      };
+      timerRef.current = window.setTimeout(finishWhenReady, duration);
+    },
+    [waitForContent]
+  );
 
   // 1. Initial page load splash
   useEffect(() => {
@@ -108,21 +123,34 @@ export function BrandSplash() {
       triggerSplash(customEvent.detail?.duration || SPLASH_DURATION_MS);
     };
 
+    const handleLogin = (e: Event) => {
+      if (!waitForContent || !(e.target instanceof HTMLFormElement)) return;
+      if (!e.target.matches('.compact-login-form')) return;
+      const next = new FormData(e.target).get('next');
+      if (typeof next === 'string' && next.startsWith('/nfc/')) return;
+      triggerSplash();
+    };
+
     document.addEventListener('click', handleClick, { capture: true });
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('ys-show-splash', handleCustomSplash);
+    document.addEventListener('submit', handleLogin, { capture: true });
 
     return () => {
       document.removeEventListener('click', handleClick, { capture: true });
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('ys-show-splash', handleCustomSplash);
+      document.removeEventListener('submit', handleLogin, { capture: true });
     };
-  }, [triggerSplash]);
+  }, [triggerSplash, waitForContent]);
 
   return (
     <div
       className={`brand-splash ${visible ? 'brand-splash-visible' : ''}`}
       aria-hidden={!visible}
+      role="status"
+      aria-label="טוענים את התחנה שלכם"
+      data-wait-for-content={waitForContent}
     >
       <BrandEntrance />
     </div>
