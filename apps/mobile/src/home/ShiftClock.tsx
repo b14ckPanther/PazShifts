@@ -104,7 +104,7 @@ export function Elapsed({ start, featured = false }: { start: string; featured?:
   const elapsed = useElapsed(start);
   const formatted = duration(elapsed);
   const [hours, minutes, seconds] = formatted.split(':');
-  const accessible = `משך המשמרת: ${Math.floor(elapsed / 3600)} שעות, ${Math.floor(elapsed / 60) % 60} דקות ו־${elapsed % 60} שניות`;
+  const accessible = `משך המשמרת: ${Math.floor(elapsed / 3600)} שעות, ${Math.floor(elapsed / 60) % 60} דקות ו-${elapsed % 60} שניות`;
   if (!featured)
     return (
       <Label

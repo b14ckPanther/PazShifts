@@ -82,7 +82,7 @@ export function Hero() {
         <>
           <Elapsed start={data.active.clock_in_at} featured />
           <Label bold style={{ fontSize: 14 }}>
-            כניסה ב־{nativeTime(data.active.clock_in_at, data.activeTimezone)} ·{' '}
+            כניסה ב-{nativeTime(data.active.clock_in_at, data.activeTimezone)} ·{' '}
             {data.activeStation ?? 'תחנה אחרת'}
           </Label>
           {shift && <Label>סיום מתוכנן: {nativeTime(shift.end_at, data.timezone)}</Label>}
@@ -98,7 +98,7 @@ export function Hero() {
           <Label>שעות נוכחות סגורות היום. כל הכבוד.</Label>
           {shift && (
             <Label>
-              המשמרת הבאה ב־
+              המשמרת הבאה ב-
               {new Intl.DateTimeFormat('he-IL', {
                 day: 'numeric',
                 month: 'numeric',

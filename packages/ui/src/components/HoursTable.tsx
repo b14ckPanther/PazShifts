@@ -89,7 +89,7 @@ function HoursDay({
               {clock(e.end, report.timezone)}
               {e.end && localDate(new Date(e.end), report.timezone) !== e.date && (
                 <small dir="rtl">
-                  יציאה ב־<bdi>{localDate(new Date(e.end), report.timezone)}</bdi>
+                  יציאה ב-<bdi>{localDate(new Date(e.end), report.timezone)}</bdi>
                 </small>
               )}
             </td>

@@ -432,7 +432,7 @@ export function HoursContent({
               {e.status === 'הושלמה' &&
                 e.end &&
                 localDate(new Date(e.end), report.timezone) !== e.date && (
-                  <Label>יציאה ב־{dayTitle(localDate(new Date(e.end), report.timezone))}</Label>
+                  <Label>יציאה ב-{dayTitle(localDate(new Date(e.end), report.timezone))}</Label>
                 )}
               {report.sessions?.[e.id] &&
                 (report.sessions[e.id]!.start !== e.start ||

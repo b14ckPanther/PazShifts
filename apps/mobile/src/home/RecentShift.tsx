@@ -22,7 +22,7 @@ export function RecentShift({
       </Label>
       {localDate(new Date(shift.end), shift.timezone) !== shift.date && (
         <Label>
-          יציאה ב־
+          יציאה ב-
           {dateLabel(localDate(new Date(shift.end), shift.timezone))}
         </Label>
       )}

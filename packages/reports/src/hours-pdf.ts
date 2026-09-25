@@ -86,7 +86,7 @@ export function createHoursPdf(report: HoursReport, font: string) {
     doc.setFontSize(9);
     const overnight =
       end && localDate(new Date(end), report.timezone) !== date
-        ? ` · יציאה ב־${localDate(new Date(end), report.timezone)}`
+        ? ` · יציאה ב-${localDate(new Date(end), report.timezone)}`
         : '';
     const lines = doc.splitTextToSize(status + overnight, 60) as string[];
     const height = Math.max(10, lines.length * 5 + 4);

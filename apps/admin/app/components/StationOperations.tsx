@@ -18,7 +18,7 @@ export function StationOperations({ stationId }: { stationId: string }) {
     {
       path: 'reports',
       title: 'דוח שעות עבודה',
-      text: 'סיכומים יומיים ושבועיים, ייצוא PDF ו־CSV לחשבונאות.',
+      text: 'סיכומים יומיים ושבועיים, ייצוא PDF ו-CSV.',
       Icon: ClockIcon,
     },
     {

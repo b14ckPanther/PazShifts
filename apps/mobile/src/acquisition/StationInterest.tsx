@@ -363,7 +363,7 @@ export function StationInterestEntry({
                         </Label>
                       </View>
                       <Label style={styles.description}>
-                        משמרות, נוכחות והיום־יום של הצוות — במקום אחד, עם YellowShifts.
+                        משמרות, נוכחות והיום-יום של הצוות — במקום אחד, עם YellowShifts.
                       </Label>
                       <View style={styles.benefits}>
                         {[
@@ -455,7 +455,7 @@ export function StationInterestEntry({
                         busy={busy}
                       />
                       <Label style={{ fontSize: 13, color: colors.secondary }}>
-                        בשליחה אתם מבקשים שניצור איתכם קשר בנוגע ל־YellowShifts. אין צורך בחשבון
+                        בשליחה אתם מבקשים שניצור איתכם קשר בנוגע ל-YellowShifts. אין צורך בחשבון
                         עובד ואין התחייבות.
                       </Label>
                       <Pressable

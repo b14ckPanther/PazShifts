@@ -114,7 +114,7 @@ export async function createStationAction(
     attendanceRadiusM < 30 ||
     attendanceRadiusM > 200
   ) {
-    return { success: false, error: 'יש להזין מיקום תקין ורדיוס בין 30 ל־200 מטר.' };
+    return { success: false, error: 'יש להזין מיקום תקין ורדיוס בין 30 ל-200 מטר.' };
   }
 
   if (!code || code.length < 2) {

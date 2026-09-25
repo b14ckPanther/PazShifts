@@ -286,13 +286,13 @@ export function HourRulesForm({
                 מתאריך <bdi>{p.effectiveFrom}</bdi> · גרסה {p.id}
               </summary>
               <p>
-                מדרגה ראשונה {p.rules.firstOvertimeMinutes} דקות ב־{p.rules.firstRate}%; יתרה ב־
+                מדרגה ראשונה {p.rules.firstOvertimeMinutes} דקות ב-{p.rules.firstRate}%; יתרה ב-
                 {p.rules.secondRate}%. מכסה שבועית: {p.rules.weeklyMinutes ?? 'ללא'} דקות.
               </p>
               <p>מכסות יומיות (ראשון–שבת): {p.rules.dailyMinutes.join(' / ')}</p>
               <p>
                 הפסקה: {p.rules.breakMinutes} דקות אחרי {p.rules.breakAfterMinutes} דקות; לילה:{' '}
-                {time(p.rules.nightStart)}–{time(p.rules.nightEnd)} ב־{p.rules.nightRate}%; מנוחה:{' '}
+                {time(p.rules.nightStart)}–{time(p.rules.nightEnd)} ב-{p.rules.nightRate}%; מנוחה:{' '}
                 {p.rules.restRate}%; חגים: {p.rules.holidayRate}%.
               </p>
               <p>

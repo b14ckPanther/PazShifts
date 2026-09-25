@@ -61,7 +61,7 @@ export function HoursReportClient({
       const { exportHoursPdf } = await import('@/app/lib/hours-pdf');
       await exportHoursPdf(filtered, exportName('pdf'));
     } catch {
-      setError('יצירת ה־PDF נכשלה. נסו שוב או הורידו CSV.');
+      setError('יצירת ה-PDF נכשלה. נסו שוב או הורידו CSV.');
     } finally {
       setBusy(false);
     }
@@ -190,7 +190,7 @@ export function HoursReportClient({
         </details>
         <small className="report-updated">
           <span>
-            הדוח נכון ל־
+            הדוח נכון ל-
             {new Date(report.generatedAt).toLocaleString('he-IL', {
               timeZone: report.timezone,
             })}
