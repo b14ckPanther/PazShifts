@@ -23,11 +23,10 @@ export function SchedulingHome({
               key={station.id}
               href={`/stations/${encodeURIComponent(station.code)}/schedules`}
             >
-              <span>
+              <span className="station-operation-body">
                 <strong>{station.name}</strong>
                 <small>פתיחת סידור העבודה השבועי</small>
               </span>
-              <span aria-hidden="true">←</span>
             </Link>
           ))}
         </nav>

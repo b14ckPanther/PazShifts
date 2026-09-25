@@ -47,11 +47,10 @@ export function StationOperations({ stationId }: { stationId: string }) {
           <span className="station-operation-icon">
             <Icon size={22} />
           </span>
-          <span>
+          <span className="station-operation-body">
             <strong>{title}</strong>
             <small>{text}</small>
           </span>
-          <span aria-hidden="true">←</span>
         </Link>
       ))}
     </nav>

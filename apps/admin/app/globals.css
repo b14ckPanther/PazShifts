@@ -387,7 +387,8 @@ body {
   text-decoration: none;
   min-width: 0;
 }
-.station-operation > span:nth-last-child(2) {
+.station-operation-body,
+.station-operation > span:not(.station-operation-icon) {
   flex: 1;
   min-width: 0;
 }
