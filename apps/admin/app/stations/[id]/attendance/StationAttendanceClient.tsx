@@ -13,7 +13,6 @@ import {
 } from '@yellowshifts/ui';
 import {
   ClockIcon,
-  NfcIcon,
   CheckIcon,
   CopyIcon,
   RotateCcwIcon,
@@ -184,13 +183,13 @@ export function StationAttendanceClient({
     startTransition(async () => {
       const result = await rotateNfcTokenAction(station.id);
       if (!result.success || !result.newToken) {
-        setErrorMessage(result.error || 'שגיאה בסיבוב מזהה ה-NFC');
+        setErrorMessage(result.error || 'שגיאה באיפוס מזהה שעון');
         return;
       }
 
       setNfcToken(result.newToken);
       setShowRotateModal(false);
-      setSuccessMessage('מזהה תג ה-NFC סובב בהצלחה. יש לעדכן את תג ה-NFC הפיזי בקישור החדש.');
+      setSuccessMessage('מזהה עמדת השעון אופס בהצלחה. יש לעדכן את עמדת השעון בקישור החדש.');
     });
   };
 
@@ -306,8 +305,8 @@ export function StationAttendanceClient({
           onClick={() => setActiveTab('NFC')}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <NfcIcon size={16} />
-            תג NFC והגדרות תחנה
+            <ClockIcon size={16} />
+            עמדת שעון נוכחות
           </span>
         </Button>
       </div>
@@ -335,18 +334,13 @@ export function StationAttendanceClient({
           }}
         >
           <CardHeader>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
-                  עובדים פעילים כעת בתחנה
-                </CardTitle>
-                <CardDescription style={{ color: '#6B7280' }}>
-                  נתוני זמן אמת המבוססים על סריקת תג ה-NFC של התחנה
-                </CardDescription>
-              </div>
-              <Badge variant="brandYellow" dot>
-                מתעדכן אוטומטית
-              </Badge>
+            <div>
+              <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
+                עובדים פעילים כעת בתחנה
+              </CardTitle>
+              <CardDescription style={{ color: '#6B7280' }}>
+                מעקב נוכחות ופעילות עובדים בזמן אמת בתחנה
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -367,103 +361,94 @@ export function StationAttendanceClient({
                   אין עובדים פעילים במשמרת כעת
                 </p>
                 <span style={{ fontSize: '13px', color: '#6B7280' }}>
-                  ברגע שעובד יסרוק את תג ה-NFC בתחנה, נוכחותו תופיע כאן בעדכון הבא.
+                  ברגע שעובד ידווח נוכחות בתחנה, נתוניו יופיעו כאן בעדכון הבא.
                 </span>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {activeRecords.map((record) => (
                   <div key={record.id} className="attendance-active-card">
-                    <div className="attendance-card-user">
-                      <div className="attendance-card-avatar" aria-hidden="true">
-                        <UserIcon size={20} />
-                      </div>
-                      <div className="attendance-card-info">
-                        <div className="attendance-card-header-row">
-                          <span className="attendance-card-worker-name">
-                            {record.user?.full_name || 'עובד'}
-                          </span>
-                          <div className="attendance-card-badges">
-                            <Badge variant="neutral">
-                              {record.membership?.role === 'ADMIN'
-                                ? 'מנהל תחנה'
-                                : record.membership?.role === 'SHIFT_MANAGER'
-                                  ? 'מנהל משמרת'
-                                  : 'עובד'}
-                            </Badge>
-                            {record.clock_in_source === 'NFC' && (
-                              <Badge variant="brandYellow">NFC</Badge>
+                    <div className="attendance-card-main">
+                      <div className="attendance-card-user">
+                        <div className="attendance-card-avatar" aria-hidden="true">
+                          <UserIcon size={22} />
+                        </div>
+                        <div className="attendance-card-info">
+                          <div className="attendance-card-header-row">
+                            <span className="attendance-card-worker-name">
+                              {record.user?.full_name || 'עובד'}
+                            </span>
+                            <div className="attendance-card-badges">
+                              <Badge variant="neutral">
+                                {record.membership?.role === 'ADMIN'
+                                  ? 'מנהל תחנה'
+                                  : record.membership?.role === 'SHIFT_MANAGER'
+                                    ? 'מנהל משמרת'
+                                    : 'עובד'}
+                              </Badge>
+                              {(() => {
+                                const dev = getRecordDeviation(record);
+                                return (
+                                  <Badge
+                                    variant="neutral"
+                                    style={{
+                                      backgroundColor: dev.bg,
+                                      color: dev.color,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {dev.label}
+                                  </Badge>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                          <div className="attendance-card-meta">
+                            <span>כניסה: {formatStationTime(record.clock_in_at)}</span>
+                            {record.scheduled_shift ? (
+                              <span>
+                                משמרת: {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#9CA3AF' }}>ללא שיבוץ מוקדם</span>
                             )}
                             {(() => {
                               const dev = getRecordDeviation(record);
-                              return (
-                                <Badge
-                                  variant="neutral"
-                                  style={{
-                                    backgroundColor: dev.bg,
-                                    color: dev.color,
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {dev.label}
-                                </Badge>
-                              );
+                              return dev.detail ? (
+                                <div className="attendance-card-warning-pill">
+                                  <span>•</span>
+                                  <span>{dev.detail}</span>
+                                </div>
+                              ) : null;
                             })()}
                           </div>
                         </div>
-                        <div className="attendance-card-meta">
-                          <span>כניסה: {formatStationTime(record.clock_in_at)}</span>
-                          {record.scheduled_shift ? (
-                            <span>
-                              משמרת: {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
-                            </span>
-                          ) : (
-                            <span style={{ color: '#9CA3AF' }}>ללא שיבוץ מוקדם</span>
-                          )}
-                          {(() => {
-                            const dev = getRecordDeviation(record);
-                            return dev.detail ? (
-                              <span style={{ color: dev.color, fontWeight: 500 }}>
-                                • {dev.detail}
-                              </span>
-                            ) : null;
-                          })()}
-                        </div>
                       </div>
-                    </div>
 
-                    <div className="attendance-card-actions-wrapper">
                       {/* Live Ticking Duration */}
                       <div className="attendance-card-duration">
-                        <span className="attendance-card-duration-label">משך זמן נוכחי</span>
+                        <span className="attendance-card-duration-label">
+                          <span className="attendance-pulse-dot" aria-hidden="true" />
+                          <span>זמן נוכחי במשמרת</span>
+                        </span>
                         <p className="attendance-card-duration-value">
                           <ElapsedDuration start={record.clock_in_at} />
                         </p>
                       </div>
-
-                      <div className="attendance-card-buttons">
-                        {canManageAttendance && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRecord(record);
-                              setShowManual(true);
-                            }}
-                          >
-                            עריכת זמנים
-                          </Button>
-                        )}
-                        {canManageAttendance && (
-                          <AttendanceRecordActions
-                            record={record}
-                            onSaved={() => {
-                              void refreshAttendance();
-                            }}
-                          />
-                        )}
-                      </div>
                     </div>
+
+                    {canManageAttendance && (
+                      <AttendanceRecordActions
+                        record={record}
+                        onSaved={() => {
+                          void refreshAttendance();
+                        }}
+                        onEdit={() => {
+                          setSelectedRecord(record);
+                          setShowManual(true);
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -583,22 +568,14 @@ export function StationAttendanceClient({
                     </div>
 
                     {canManageAttendance && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedRecord(record);
-                          setShowManual(true);
-                        }}
-                      >
-                        עריכת זמני כניסה ויציאה
-                      </Button>
-                    )}
-                    {canManageAttendance && (
                       <AttendanceRecordActions
                         record={record}
                         onSaved={() => {
                           void refreshAttendance();
+                        }}
+                        onEdit={() => {
+                          setSelectedRecord(record);
+                          setShowManual(true);
                         }}
                       />
                     )}
@@ -632,7 +609,7 @@ export function StationAttendanceClient({
         </Card>
       )}
 
-      {/* TAB 3: Station NFC Tag */}
+      {/* TAB 3: Station Clock Setup */}
       {activeTab === 'NFC' && (
         <Card
           style={{
@@ -655,14 +632,14 @@ export function StationAttendanceClient({
                   color: 'var(--ys-color-brand-crimson)',
                 }}
               >
-                <NfcIcon size={22} />
+                <ClockIcon size={22} />
               </div>
               <div>
                 <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
-                  הגדרות תג NFC פיזי לתחנה
+                  הגדרות עמדת שעון נוכחות
                 </CardTitle>
                 <CardDescription style={{ color: '#4B5563' }}>
-                  קישור ייעודי ומאובטח לצריבה על מדבקת / תג ה-NFC הפיזי המוצב בתחנה
+                  קישור ייעודי ומאובטח לעמדת שעון הנוכחות המוצבת בתחנה
                 </CardDescription>
               </div>
             </div>
@@ -681,9 +658,9 @@ export function StationAttendanceClient({
                   lineHeight: 1.6,
                 }}
               >
-                <strong>אבטחת תגי NFC ברשת YellowShifts:</strong>
+                <strong>אבטחת שעון הנוכחות ברשת YellowShifts:</strong>
                 <p style={{ margin: '6px 0 0 0', color: '#4B5563' }}>
-                  תג ה-NFC הפיזי מכיל אך ורק את כתובת התחנה. התג אינו מכיל מזהה עובד, טוקן הרשאה או
+                  עמדת השעון מכילה קישור מאובטח לזיהוי התחנה בלבד. העמדה אינה שומרת מזהה עובד, טוקן הרשאה או
                   סיסמה. האימות מתבצע אך ורק באמצעות הזדהות מאובטחת של העובד במערכת, והרשאות הכניסה
                   נבדקות בצד השרת.
                 </p>
@@ -699,7 +676,7 @@ export function StationAttendanceClient({
                     marginBottom: '6px',
                   }}
                 >
-                  מזהה ציבורי אקראי לתחנה (NFC Public Token)
+                  מזהה תחנה מאובטח
                 </label>
                 <div
                   style={{
@@ -717,7 +694,7 @@ export function StationAttendanceClient({
                 </div>
               </div>
 
-              {/* NFC URL to Encode Box */}
+              {/* Clock Station URL to Encode Box */}
               <div>
                 <label
                   style={{
@@ -727,7 +704,7 @@ export function StationAttendanceClient({
                     marginBottom: '6px',
                   }}
                 >
-                  כתובת ה-URL לצריבה על תג ה-NFC הפיזי
+                  כתובת ה-URL של עמדת שעון הנוכחות
                 </label>
                 <div
                   style={{
@@ -750,7 +727,7 @@ export function StationAttendanceClient({
                     }}
                   >
                     {nfcStationUrl ||
-                      'קישור NFC אינו זמין. יש להגדיר כתובת תקינה לאפליקציית העובדים לפני כתיבת התג.'}
+                      'קישור לשעון הנוכחות אינו זמין. יש להגדיר כתובת תקינה לאפליקציית העובדים.'}
                   </span>
                   <Button
                     variant={copied ? 'primary' : 'secondary'}
@@ -781,16 +758,16 @@ export function StationAttendanceClient({
                 >
                   <div>
                     <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
-                      החלפת מזהה NFC (Rotation)
+                      איפוס מזהה עמדה (Rotation)
                     </span>
                     <p style={{ fontSize: '12px', color: '#4B5563', margin: '2px 0 0 0' }}>
-                      במקרה של אובדן תג או החלפת מדבקה פיזית בתחנה, ניתן לסובב את המזהה.
+                      במקרה של צורך באבטחה מחדש של עמדת השעון בתחנה, ניתן לאפס את המזהה.
                     </p>
                   </div>
                   <Button variant="destructive" size="sm" onClick={() => setShowRotateModal(true)}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <RotateCcwIcon size={14} />
-                      סובב מזהה NFC
+                      איפוס מזהה שעון
                     </span>
                   </Button>
                 </div>
@@ -854,7 +831,7 @@ export function StationAttendanceClient({
               }}
             >
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-                אישור החלפת מזהה NFC
+                אישור איפוס מזהה שעון
               </h3>
               <button
                 onClick={() => setShowRotateModal(false)}
@@ -872,8 +849,8 @@ export function StationAttendanceClient({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <p style={{ fontSize: '14px', color: '#374151', margin: 0, lineHeight: 1.5 }}>
-                פעולה זו תיצור מזהה תג חדש לתחנה ותבטל את המזהה הקודם. לאחר הפעולה, כל תג פיזי שנצרב
-                בעבר יפסיק לפעול ויחזיר שגיאה, עד אשר תצרוב את הקישור החדש על התג הפיזי.
+                פעולה זו תיצור מזהה חדש לעמדת השעון של התחנה ותבטל את המזהה הקודם. לאחר הפעולה,
+                עמדת השעון הקודמת תפסיק לפעול עד לעדכון הקישור החדש.
               </p>
 
               <div
@@ -898,7 +875,7 @@ export function StationAttendanceClient({
                   isLoading={isPending}
                   onClick={handleRotateToken}
                 >
-                  אשר החלפת מזהה NFC
+                  אשר איפוס מזהה שעון
                 </Button>
               </div>
             </div>

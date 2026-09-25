@@ -1,5 +1,5 @@
 import { NavigationLink as Link } from './NavigationLink';
-import { CalendarIcon, ClockIcon, NfcIcon, WarningIcon, UsersIcon } from '@yellowshifts/icons';
+import { CalendarIcon, ClockIcon, WarningIcon, UsersIcon } from '@yellowshifts/icons';
 
 export function StationOperations({ stationId }: { stationId: string }) {
   const items = [
@@ -11,9 +11,9 @@ export function StationOperations({ stationId }: { stationId: string }) {
     },
     {
       path: 'attendance',
-      title: 'נוכחות ושעון NFC',
+      title: 'נוכחות עובדים',
       text: 'מי במשמרת עכשיו, עריכת כניסה ויציאה ודיווח ידני.',
-      Icon: NfcIcon,
+      Icon: ClockIcon,
     },
     {
       path: 'reports',

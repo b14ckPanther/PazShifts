@@ -3,7 +3,7 @@ import { NavigationLink as Link } from './NavigationLink';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
-import { StationIcon, CalendarIcon, NfcIcon, UsersIcon, ClockIcon } from '@yellowshifts/icons';
+import { StationIcon, CalendarIcon, UsersIcon, ClockIcon, ReportIcon } from '@yellowshifts/icons';
 export function StationDock({ stationId, admin }: { stationId: string; admin: boolean }) {
   const path = usePathname();
   // Rewrites can render a UUID internally; use the browser path after hydration.
@@ -17,8 +17,8 @@ export function StationDock({ stationId, admin }: { stationId: string; admin: bo
     ? [
         { href: base, label: 'התחנה', Icon: StationIcon },
         { href: `${base}/schedules`, label: 'סידור', Icon: CalendarIcon },
-        { href: `${base}/attendance`, label: 'נוכחות', Icon: NfcIcon },
-        { href: `${base}/reports`, label: 'שעות', Icon: ClockIcon },
+        { href: `${base}/attendance`, label: 'נוכחות', Icon: ClockIcon },
+        { href: `${base}/reports`, label: 'שעות', Icon: ReportIcon },
         { href: `${base}/staff`, label: 'צוות', Icon: UsersIcon },
       ]
     : [

@@ -108,7 +108,7 @@ export default async function StationExceptionsPage({ params }: StationException
               <Button variant="secondary" size="md">
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                   <ClockIcon size={16} />
-                  נוכחות ושעון NFC
+                  נוכחות עובדים
                 </span>
               </Button>
             </Link>

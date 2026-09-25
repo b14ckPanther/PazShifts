@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { Button } from '@yellowshifts/ui';
+import { ClockIcon, TrashIcon, EditIcon } from '@yellowshifts/icons';
 import type { AttendanceRecordWithDetails } from '@yellowshifts/types';
 import { StaffDialog } from './StaffDialog';
 import { manageAttendanceRecordAction } from '../actions/attendance';
@@ -8,9 +9,11 @@ import { manageAttendanceRecordAction } from '../actions/attendance';
 export function AttendanceRecordActions({
   record,
   onSaved,
+  onEdit,
 }: {
   record: AttendanceRecordWithDetails;
   onSaved: () => void;
+  onEdit?: () => void;
 }) {
   const [action, setAction] = useState<'CLOSE' | 'DELETE' | null>(null);
   const [pending, setPending] = useState(false);
@@ -18,28 +21,52 @@ export function AttendanceRecordActions({
   const locked = useRef(false);
   return (
     <>
-      <div className="staff-dialog-actions attendance-record-inline-actions">
-        {record.status === 'ACTIVE' && (
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setError('');
-              setAction('CLOSE');
-            }}
-          >
-            סיום משמרת עכשיו
-          </Button>
-        )}
-        <Button
-          variant="ghost"
+      <div className="attendance-card-actions-group">
+        <div className="attendance-card-primary-actions">
+          {onEdit && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="attendance-btn-edit"
+              onClick={onEdit}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <EditIcon size={14} />
+                <span>עריכת זמנים</span>
+              </span>
+            </Button>
+          )}
+          {record.status === 'ACTIVE' && (
+            <Button
+              variant="primary"
+              size="sm"
+              className="attendance-btn-close"
+              onClick={() => {
+                setError('');
+                setAction('CLOSE');
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <ClockIcon size={14} />
+                <span>סיום משמרת עכשיו</span>
+              </span>
+            </Button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="attendance-btn-delete"
           onClick={() => {
             setError('');
             setAction('DELETE');
           }}
         >
-          מחיקת דיווח שגוי
-        </Button>
+          <TrashIcon size={13} />
+          <span>מחיקת דיווח שגוי</span>
+        </button>
       </div>
+
       {action && (
         <StaffDialog
           title={action === 'DELETE' ? 'מחיקת דיווח שגוי' : 'סיום משמרת עכשיו'}

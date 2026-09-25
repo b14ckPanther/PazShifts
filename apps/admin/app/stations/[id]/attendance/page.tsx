@@ -61,7 +61,7 @@ export default async function StationAttendancePage({ params }: StationAttendanc
       }}
     >
       {/* Top Header */}
-      <StationHeader station={station} context={context} subtitle="נוכחות ושעון NFC" />
+      <StationHeader station={station} context={context} subtitle="נוכחות עובדים בזמן אמת" />
 
       <Container size="lg">
         {/* Navigation Breadcrumb & Header */}
@@ -92,8 +92,8 @@ export default async function StationAttendancePage({ params }: StationAttendanc
               חזרה לפרטי התחנה
             </Link>
             <PageHeader
-              title={`נוכחות ושעון NFC — ${station.name}`}
-              description="בקרת עובדים פעילים בזמן אמת, משמרות שהסתיימו היום, הגדרות תג NFC ותיקונים מנהליים."
+              title={`נוכחות עובדים — ${station.name}`}
+              description="בקרת עובדים פעילים בזמן אמת, משמרות שהסתיימו היום, עמדת שעון נוכחות ותיקונים מנהליים."
               badge={
                 <Badge variant={activeRecords.length > 0 ? 'brandYellow' : 'neutral'} dot>
                   {activeRecords.length} פעילים כעת

@@ -24,7 +24,6 @@ import {
   ClockIcon,
   CalendarIcon,
   ShieldCheckIcon,
-  NfcIcon,
   SettingsIcon,
 } from '@yellowshifts/icons';
 import { StationHeader } from '../../components/StationHeader';
@@ -123,7 +122,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                 <Button variant="primary" size="md">
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <ClockIcon size={16} />
-                    נוכחות ושעון NFC
+                    נוכחות עובדים
                   </span>
                 </Button>
               </Link>
@@ -342,7 +341,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                     <div
                       style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
                     >
-                      מזהה NFC ציבורי
+                      מזהה עמדת שעון
                     </div>
                     <div
                       style={{
@@ -355,7 +354,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
                         gap: '6px',
                       }}
                     >
-                      <NfcIcon size={15} color="#B45309" />
+                      <ClockIcon size={15} color="#B45309" />
                       <span>{station.nfcPublicToken || 'טרם הוגדר'}</span>
                     </div>
                   </div>

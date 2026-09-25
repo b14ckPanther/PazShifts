@@ -18,6 +18,7 @@ import {
   Briefcase,
   Clock,
   Calendar,
+  FileText,
   CheckCircle2,
   AlertTriangle,
   AlertCircle,
@@ -95,6 +96,8 @@ export const ClockIcon: React.FC<IconProps> = (props) => <Clock {...props} />;
 export const CalendarIcon: React.FC<IconProps> = (props) => <Calendar {...props} />;
 export const NfcIcon: React.FC<IconProps> = (props) => <Radio {...props} />;
 export const QrCodeIcon: React.FC<IconProps> = (props) => <QrCode {...props} />;
+export const ReportIcon: React.FC<IconProps> = (props) => <FileText {...props} />;
+export const FileTextIcon: React.FC<IconProps> = ReportIcon;
 
 // Status Indicators
 export const SuccessIcon: React.FC<IconProps> = (props) => <CheckCircle2 {...props} />;
