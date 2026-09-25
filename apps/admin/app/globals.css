@@ -1,6 +1,15 @@
 @import '../../../packages/ui/src/styles/tokens.css';
 @import '../../../packages/ui/src/styles/mobile.css';
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -8,7 +17,21 @@ body {
   background-color: var(--ys-color-surface-base);
   color: var(--ys-color-text-primary);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
+
+main {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 
 /* Staff management: scoped controls, readable RTL layouts, and accessible dialogs. */
 .staff-directory {
@@ -473,6 +496,13 @@ body {
   align-items: center;
   gap: 8px;
 }
+.schedule-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .schedule-view-options {
   display: flex;
   align-items: center;
@@ -542,16 +572,40 @@ body {
     min-height: 44px;
     height: auto !important;
   }
-  .schedule-status-actions > .schedule-action-group {
+  .schedule-status-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .schedule-status-badge-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
   }
-  .schedule-status-actions > .schedule-action-group .ys-button {
-    flex: 1 1 130px;
+  .schedule-action-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .schedule-action-buttons button,
+  .schedule-action-buttons .ys-button {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center;
+    font-size: 13.5px !important;
+    white-space: nowrap !important;
+  }
+  .schedule-action-buttons .btn-revert-draft {
+    grid-column: 1 / -1 !important;
+    font-size: 13px !important;
   }
   .schedule-day-tabs button span {
     font-size: 11px !important;
   }
 }
+
 .tolerance-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -716,16 +770,203 @@ body {
 }
 .station-attendance {
   min-width: 0;
+  width: 100%;
 }
 .station-attendance div {
   min-width: 0;
 }
 @media (max-width: 640px) {
-  .station-attendance div[style*='display: flex'] {
-    flex-wrap: wrap;
-  }
   .station-attendance button {
     min-height: 44px;
+  }
+}
+
+/* Attendance Active Worker Cards - High-End Native Mobile UX */
+.attendance-active-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.attendance-active-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.attendance-card-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 300px;
+}
+
+.attendance-card-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #fff7d6;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attendance-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.attendance-card-header-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attendance-card-worker-name {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.attendance-card-badges {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.attendance-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.attendance-card-actions-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.attendance-card-duration {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: left;
+}
+
+.attendance-card-duration-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.attendance-card-duration-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #d97706;
+  margin: 2px 0 0 0;
+}
+
+.attendance-card-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-record-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .attendance-active-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 16px;
+    gap: 12px;
+    border-radius: 14px;
+  }
+
+  .attendance-card-user {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .attendance-card-actions-wrapper {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 10px;
+  }
+
+  .attendance-card-duration {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background-color: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 9px;
+    padding: 7px 12px;
+    box-sizing: border-box;
+  }
+
+  .attendance-card-duration-value {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .attendance-card-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .attendance-card-buttons > button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .attendance-record-inline-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .attendance-record-inline-actions > button {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center;
+  }
+
+  .attendance-record-inline-actions > button:last-child {
+    font-size: 13px !important;
+    color: #b91c1c !important;
   }
 }
 
@@ -775,12 +1016,43 @@ body {
   cursor: not-allowed;
 }
 
+/* Station Hero Section */
+.station-hero-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0 20px 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .station-hero-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin: 14px 0 16px 0;
+  }
+  .station-hero-section > div {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
 /* Mobile-First Navigation Pills */
 .station-nav-pills {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
@@ -789,9 +1061,13 @@ body {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
     scrollbar-width: none;
-    padding: 4px 2px 8px 2px;
-    margin: 0 -4px;
+    padding: 4px 0 8px 0;
+    margin: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
     gap: 8px !important;
   }
   .station-nav-pills::-webkit-scrollbar {
@@ -802,14 +1078,14 @@ body {
   }
   .station-nav-pills button,
   .station-nav-pills a {
-    min-height: 40px;
+    min-height: 42px;
     white-space: nowrap !important;
     font-size: 13px !important;
   }
 
   /* Responsive PageHeader on mobile */
   .ys-page-header {
-    padding: 16px 0 20px 0 !important;
+    padding: 14px 0 18px 0 !important;
   }
   .ys-page-header h1 {
     font-size: 20px !important;

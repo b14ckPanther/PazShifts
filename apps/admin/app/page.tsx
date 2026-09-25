@@ -79,10 +79,15 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
       >
         <header
           style={{
-            backgroundColor: '#FFFFFF',
+            position: 'sticky',
+            top: 0,
+            zIndex: 95,
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             borderBottom: '3px solid var(--ys-color-brand-crimson)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            padding: '16px 0',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+            padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
           }}
         >
           <Container size="lg">
@@ -200,10 +205,15 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
       >
         <header
           style={{
-            backgroundColor: '#FFFFFF',
+            position: 'sticky',
+            top: 0,
+            zIndex: 95,
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             borderBottom: '3px solid var(--ys-color-brand-yellow)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            padding: '16px 0',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+            padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
           }}
         >
           <Container size="lg">

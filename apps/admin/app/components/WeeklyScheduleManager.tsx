@@ -366,7 +366,7 @@ export function WeeklyScheduleManager({
             <div className="schedule-status-actions">
               {schedule ? (
                 <>
-                  <div className="schedule-action-group">
+                  <div className="schedule-action-group schedule-status-badge-group">
                     <span style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>סטטוס:</span>
                     {schedule.status === 'DRAFT' && (
                       <Badge variant="warning">טיוטה (ניתן לעריכה)</Badge>
@@ -386,7 +386,7 @@ export function WeeklyScheduleManager({
                   </div>
 
                   {canEdit && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="schedule-action-buttons">
                       {schedule.status === 'DRAFT' && (
                         <>
                           <Button

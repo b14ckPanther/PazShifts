@@ -90,16 +90,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
           />
         )}
         {/* Top Actions & Page Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
-            margin: '32px 0 24px 0',
-          }}
-        >
+        <div className="station-hero-section">
           <div>
             <Link
               href="/"

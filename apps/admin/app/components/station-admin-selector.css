@@ -322,6 +322,9 @@
     align-items: stretch;
     gap: 8px;
     margin: 12px 0 16px 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .station-admin-selector-label {
@@ -330,10 +333,15 @@
 
   .station-admin-selector-dropdown-box {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .station-admin-selector-trigger {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     min-height: 46px;
   }
 
@@ -343,5 +351,7 @@
     min-width: 0;
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
   }
 }
+

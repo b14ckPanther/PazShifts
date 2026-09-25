@@ -18,7 +18,7 @@ export function AttendanceRecordActions({
   const locked = useRef(false);
   return (
     <>
-      <div className="staff-dialog-actions">
+      <div className="staff-dialog-actions attendance-record-inline-actions">
         {record.status === 'ACTIVE' && (
           <Button
             variant="secondary"

@@ -373,81 +373,49 @@ export function StationAttendanceClient({
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {activeRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '12px',
-                      padding: '16px',
-                      backgroundColor: '#F9FAFB',
-                      borderRadius: 'var(--ys-radius-md)',
-                      border: '1px solid #E5E7EB',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                          color: '#D97706',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
+                  <div key={record.id} className="attendance-active-card">
+                    <div className="attendance-card-user">
+                      <div className="attendance-card-avatar" aria-hidden="true">
                         <UserIcon size={20} />
                       </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                      <div className="attendance-card-info">
+                        <div className="attendance-card-header-row">
+                          <span className="attendance-card-worker-name">
                             {record.user?.full_name || 'עובד'}
                           </span>
-                          <Badge variant="neutral">
-                            {record.membership?.role === 'ADMIN'
-                              ? 'מנהל תחנה'
-                              : record.membership?.role === 'SHIFT_MANAGER'
-                                ? 'מנהל משמרת'
-                                : 'עובד'}
-                          </Badge>
-                          {record.clock_in_source === 'NFC' && (
-                            <Badge variant="brandYellow">NFC</Badge>
-                          )}
-                          {(() => {
-                            const dev = getRecordDeviation(record);
-                            return (
-                              <Badge
-                                variant="neutral"
-                                style={{
-                                  backgroundColor: dev.bg,
-                                  color: dev.color,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {dev.label}
-                              </Badge>
-                            );
-                          })()}
+                          <div className="attendance-card-badges">
+                            <Badge variant="neutral">
+                              {record.membership?.role === 'ADMIN'
+                                ? 'מנהל תחנה'
+                                : record.membership?.role === 'SHIFT_MANAGER'
+                                  ? 'מנהל משמרת'
+                                  : 'עובד'}
+                            </Badge>
+                            {record.clock_in_source === 'NFC' && (
+                              <Badge variant="brandYellow">NFC</Badge>
+                            )}
+                            {(() => {
+                              const dev = getRecordDeviation(record);
+                              return (
+                                <Badge
+                                  variant="neutral"
+                                  style={{
+                                    backgroundColor: dev.bg,
+                                    color: dev.color,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {dev.label}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            fontSize: '12px',
-                            color: '#6B7280',
-                            marginTop: '4px',
-                          }}
-                        >
+                        <div className="attendance-card-meta">
                           <span>כניסה: {formatStationTime(record.clock_in_at)}</span>
                           {record.scheduled_shift ? (
                             <span>
-                              משמרת מתוכננת:{' '}
-                              {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
+                              משמרת: {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
                             </span>
                           ) : (
                             <span style={{ color: '#9CA3AF' }}>ללא שיבוץ מוקדם</span>
@@ -464,43 +432,37 @@ export function StationAttendanceClient({
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div className="attendance-card-actions-wrapper">
                       {/* Live Ticking Duration */}
-                      <div style={{ textAlign: 'left' }}>
-                        <span style={{ fontSize: '11px', color: '#6B7280' }}>משך זמן נוכחי</span>
-                        <p
-                          style={{
-                            fontSize: '18px',
-                            fontWeight: 700,
-                            fontFamily: 'monospace',
-                            color: '#D97706',
-                            margin: '2px 0 0 0',
-                          }}
-                        >
+                      <div className="attendance-card-duration">
+                        <span className="attendance-card-duration-label">משך זמן נוכחי</span>
+                        <p className="attendance-card-duration-value">
                           <ElapsedDuration start={record.clock_in_at} />
                         </p>
                       </div>
 
-                      {canManageAttendance && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedRecord(record);
-                            setShowManual(true);
-                          }}
-                        >
-                          עריכת זמנים
-                        </Button>
-                      )}
-                      {canManageAttendance && (
-                        <AttendanceRecordActions
-                          record={record}
-                          onSaved={() => {
-                            void refreshAttendance();
-                          }}
-                        />
-                      )}
+                      <div className="attendance-card-buttons">
+                        {canManageAttendance && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedRecord(record);
+                              setShowManual(true);
+                            }}
+                          >
+                            עריכת זמנים
+                          </Button>
+                        )}
+                        {canManageAttendance && (
+                          <AttendanceRecordActions
+                            record={record}
+                            onSaved={() => {
+                              void refreshAttendance();
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

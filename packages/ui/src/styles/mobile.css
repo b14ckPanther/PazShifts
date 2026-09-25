@@ -443,10 +443,27 @@
 html {
   color-scheme: light;
   background: #fff;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  position: relative;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 .app-shell {
   --app-safe-top: env(safe-area-inset-top, 0px);
   --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 .mobile-dock-space {
   display: none;
@@ -488,19 +505,16 @@ html {
     box-sizing: border-box;
     position: fixed;
     inset: auto 0 0;
-    z-index: 80;
+    z-index: 90;
     display: flex;
     gap: 4px;
-    padding: 8px max(12px, env(safe-area-inset-right)) calc(8px + var(--app-safe-bottom))
-      max(12px, env(safe-area-inset-left));
-    border-top: 1px solid #e8ebef;
-    background: #ffffffed;
+    padding: 6px max(10px, env(safe-area-inset-right)) calc(6px + var(--app-safe-bottom))
+      max(10px, env(safe-area-inset-left));
+    border-top: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 -4px 24px #17203306;
-  }
-  .mobile-dock[hidden] {
-    display: none;
+    box-shadow: 0 -4px 24px rgba(23, 32, 51, 0.08);
   }
   .mobile-dock a {
     flex: 1;
@@ -670,14 +684,25 @@ body:has(.navigation-pending[data-pending='true'])::before {
 /* The shell alone reserves dock clearance, after the footer, in both apps. */
 @media (max-width: 767px) {
   .app-shell:has(.mobile-dock-space) {
-    padding-bottom: calc(76px + var(--app-safe-bottom));
+    padding-bottom: calc(76px + var(--app-safe-bottom, 0px)) !important;
   }
-  .app-shell:has(.mobile-dock-space) main:not(.route-loading):not(.mobile-flow) {
-    min-height: 0 !important;
-    padding-bottom: 0 !important;
+  .app-shell:has(.mobile-dock-space) main:not(.mobile-flow) {
+    padding-bottom: calc(76px + var(--app-safe-bottom, 0px)) !important;
   }
   .darb-footer {
     padding-block: 16px 20px;
+  }
+}
+
+.ys-container {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 640px) {
+  .ys-container {
+    padding-inline: 14px !important;
   }
 }
 .route-loading-brand {
