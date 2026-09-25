@@ -1,0 +1,223 @@
+.worker-home-page {
+  min-height: 100dvh;
+  direction: rtl;
+}
+.worker-home-content {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0 28px;
+  max-width: 600px;
+  margin: auto;
+}
+.worker-home-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.worker-home-welcome span {
+  font-size: 12px;
+  color: #76656c;
+}
+.worker-home-welcome h1 {
+  font-size: clamp(26px, 7vw, 36px);
+  line-height: 1.3;
+  margin: 6px 0 0;
+  color: #2b1820;
+  letter-spacing: -0.8px;
+}
+.worker-home-welcome button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid #e9e1e3;
+  background: #fff;
+  color: #8f002b;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.worker-home-welcome button:disabled {
+  opacity: 0.5;
+}
+.worker-active-card {
+  border-radius: 28px;
+  padding: 22px;
+  background: radial-gradient(ellipse at 10% 0%, #a81941, #700020 75%);
+  color: white;
+  box-shadow: 0 12px 32px #70002020;
+  overflow: hidden;
+}
+.worker-active-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+.worker-active-top > span:last-child {
+  color: #f8dce4;
+}
+.worker-active-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+.worker-active-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fcbc00;
+  box-shadow: 0 0 0 5px #fcbc0015;
+}
+.worker-active-ring {
+  position: relative;
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  margin: 20px auto;
+  display: grid;
+  place-items: center;
+}
+.worker-active-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke-width: 5;
+}
+.worker-ring-track {
+  stroke: #ffffff20;
+}
+.worker-ring-progress {
+  stroke: #fcbc00;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.7s linear;
+}
+.worker-active-ring > div {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  position: relative;
+}
+.worker-active-ring span {
+  font-size: 12px;
+  color: #f7d9e2;
+}
+.worker-active-ring strong {
+  font-size: clamp(32px, 9vw, 44px);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  font-weight: 600;
+}
+.worker-active-ring small {
+  color: #ffd961;
+  font-size: 12px;
+}
+.worker-active-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #ffffff20;
+  padding-top: 16px;
+  font-size: 11px;
+  color: #f7d9e2;
+}
+.worker-active-bottom a {
+  color: #ffdb07;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.worker-home-next,
+.worker-home-empty {
+  background: #fff;
+  border: 1px solid #eae6e1;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 4px 18px #30201406;
+}
+.worker-home-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8f002b;
+}
+.worker-home-section-title h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.worker-home-next p,
+.worker-home-empty p {
+  color: #70636a;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.worker-home-next > strong {
+  display: block;
+  text-align: right;
+  font-size: 30px;
+  color: #2b1820;
+  font-variant-numeric: tabular-nums;
+}
+.worker-home-next > strong span {
+  color: #baaeb3;
+}
+.worker-home-next small {
+  display: block;
+  color: #76656c;
+  margin-top: 8px;
+}
+.worker-home-next > a {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: #fff2c6;
+  color: #700020;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 16px;
+}
+.worker-home-empty h2 {
+  font-size: 20px;
+  margin: 16px 0 8px;
+  color: #38222b;
+}
+.worker-home-symbol {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background: #fff2c6;
+  color: #8f002b;
+}
+.worker-home-stale {
+  background: #fff2c6;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 12px;
+  color: #700020;
+  margin: 0;
+}
+.worker-home-content a:focus-visible,
+.worker-home-content button:focus-visible {
+  outline: 3px solid #d79e00;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .worker-ring-progress {
+    transition: none;
+  }
+}

@@ -8,6 +8,7 @@
 import React from 'react';
 import {
   Fuel,
+  House,
   Store,
   Building2,
   User,
@@ -76,6 +77,7 @@ export const StationIcon: React.FC<IconProps> = (props) => <Building2 {...props}
 export const BuildingIcon: React.FC<IconProps> = (props) => <Building2 {...props} />;
 
 // Authentication, Authorization & Roles
+export const HomeIcon: React.FC<IconProps> = (props) => <House {...props} />;
 export const UserIcon: React.FC<IconProps> = (props) => <User {...props} />;
 export const UsersIcon: React.FC<IconProps> = (props) => <Users {...props} />;
 export const UserPlusIcon: React.FC<IconProps> = (props) => <UserPlus {...props} />;

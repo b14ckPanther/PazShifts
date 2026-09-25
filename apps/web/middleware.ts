@@ -9,7 +9,10 @@ declare global {
 
 const stationCache =
   globalThis.__paz_station_cache ||
-  (globalThis.__paz_station_cache = new Map<string, { id: string; code: string; timestamp: number }>());
+  (globalThis.__paz_station_cache = new Map<
+    string,
+    { id: string; code: string; timestamp: number }
+  >());
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -66,7 +69,10 @@ export async function middleware(request: NextRequest) {
     .sort((a, b) => {
       const idxA = a.name.match(/\.(\d+)$/)?.[1];
       const idxB = b.name.match(/\.(\d+)$/)?.[1];
-      return (idxA !== undefined ? parseInt(idxA, 10) : -1) - (idxB !== undefined ? parseInt(idxB, 10) : -1);
+      return (
+        (idxA !== undefined ? parseInt(idxA, 10) : -1) -
+        (idxB !== undefined ? parseInt(idxB, 10) : -1)
+      );
     });
 
   let cachedUser: { id: string; email?: string | null } | null = null;
@@ -162,9 +168,9 @@ export async function middleware(request: NextRequest) {
 
   // Public station-code paths; internal pages/actions still receive UUIDs.
   const friendly = request.nextUrl.pathname.match(
-    /^\/stations\/([^/]+)(?:\/(hours|availability))?\/?$/
+    /^\/stations\/([^/]+)(?:\/(home|hours|availability))?\/?$/
   );
-  const legacy = ['/', '/hours', '/availability'].includes(request.nextUrl.pathname);
+  const legacy = ['/', '/home', '/hours', '/availability'].includes(request.nextUrl.pathname);
   const reference =
     friendly?.[1] || (legacy ? request.nextUrl.searchParams.get('stationId') : null);
   if (user && reference) {
@@ -218,7 +224,11 @@ export async function middleware(request: NextRequest) {
         }
 
         station = dbStation;
-        stationCache.set(station.code, { id: station.id, code: station.code, timestamp: Date.now() });
+        stationCache.set(station.code, {
+          id: station.id,
+          code: station.code,
+          timestamp: Date.now(),
+        });
         stationCache.set(station.id, { id: station.id, code: station.code, timestamp: Date.now() });
       }
 

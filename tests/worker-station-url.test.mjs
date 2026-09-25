@@ -91,7 +91,7 @@ test('worker legacy links preserve filters and canonicalize to station-code path
   assert.equal(result.cookies.getAll()[0].value, 'renewed');
 });
 test('worker code URLs resolve every tab, preserving the UUID for reads and actions', async () => {
-  for (const suffix of ['', '/hours', '/availability']) {
+  for (const suffix of ['', '/home', '/hours', '/availability']) {
     for (const method of ['GET', 'POST']) {
       const { result, calls } = await run('/stations/KURDANI' + suffix + '?week=2026-09-07', {
         method,

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { BrandMark, Container, Badge } from '@yellowshifts/ui';
-import { UserIcon, BriefcaseIcon, CalendarIcon, ClockIcon } from '@yellowshifts/icons';
+import { HomeIcon, UserIcon, BriefcaseIcon, CalendarIcon, ClockIcon } from '@yellowshifts/icons';
 import { NavigationLink as Link } from './NavigationLink';
 import { LogoutButton } from './LogoutButton';
 import './worker-header.css';
@@ -23,7 +23,7 @@ interface WorkerHeaderProps {
   } | null;
   role?: string | null;
   isPlatformAdmin?: boolean;
-  activeTab?: 'shifts' | 'availability' | 'hours';
+  activeTab?: 'home' | 'shifts' | 'availability' | 'hours';
   pageTitle?: string;
   subtitle?: string;
 }
@@ -58,10 +58,7 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
     };
   }, []);
 
-  const personName =
-    profile?.fullName?.trim() ||
-    user.email?.split('@')[0] ||
-    'עובד';
+  const personName = profile?.fullName?.trim() || user.email?.split('@')[0] || 'עובד';
 
   const roleText = isPlatformAdmin
     ? 'מנהל מערכת ראשי'
@@ -73,7 +70,8 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
 
   const canonicalCode = encodeURIComponent(station.code);
   const resolvedSubtitle =
-    subtitle || (pageTitle ? `קוד תחנה: ${station.code} • ${pageTitle}` : `קוד תחנה: ${station.code}`);
+    subtitle ||
+    (pageTitle ? `קוד תחנה: ${station.code} • ${pageTitle}` : `קוד תחנה: ${station.code}`);
 
   return (
     <>
@@ -115,6 +113,13 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
 
               {/* Desktop-only Navigation Tabs (hidden on mobile; mobile dock is used instead) */}
               <nav className="worker-header-nav-tabs" aria-label="ניווט ראשי למחשב">
+                <Link
+                  href={`/stations/${canonicalCode}/home`}
+                  className={`worker-header-tab-link ${activeTab === 'home' ? 'is-active' : ''}`}
+                >
+                  <HomeIcon size={15} />
+                  <span>הבית שלי</span>
+                </Link>
                 <Link
                   href={`/stations/${canonicalCode}`}
                   className={`worker-header-tab-link ${activeTab === 'shifts' ? 'is-active' : ''}`}

@@ -4,12 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { StationWithMembership } from '@yellowshifts/types';
 import { t } from '@yellowshifts/i18n';
-import {
-  StationIcon,
-  ChevronDownIcon,
-  CheckIcon,
-  RefreshIcon,
-} from '@yellowshifts/icons';
+import { StationIcon, ChevronDownIcon, CheckIcon, RefreshIcon } from '@yellowshifts/icons';
 import './station-selector.css';
 
 interface StationSelectorProps {
@@ -74,7 +69,9 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
     const canonicalCode = encodeURIComponent(item.station.code);
 
     // Preserve the sub-view if on availability or hours
-    if (pathname.includes('/availability')) {
+    if (pathname.endsWith('/home')) {
+      router.push(`/stations/${canonicalCode}/home`);
+    } else if (pathname.includes('/availability')) {
       router.push(`/stations/${canonicalCode}/availability`);
     } else if (pathname.includes('/hours')) {
       router.push(`/stations/${canonicalCode}/hours`);
@@ -135,12 +132,8 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
             aria-label="רשימת תחנות לבחירה"
           >
             <div className="worker-station-selector-menu-header">
-              <span className="worker-station-selector-menu-title">
-                {t('stationSelect.title')}
-              </span>
-              <span className="worker-station-selector-menu-badge">
-                {memberships.length} תחנות
-              </span>
+              <span className="worker-station-selector-menu-title">{t('stationSelect.title')}</span>
+              <span className="worker-station-selector-menu-badge">{memberships.length} תחנות</span>
             </div>
 
             <div className="worker-station-selector-menu-list">
