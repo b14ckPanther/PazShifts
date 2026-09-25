@@ -51,7 +51,8 @@
   min-width: 0;
   font-size: 13px;
 }
-.worker-hours button,
+/* The station picker owns its dark button surfaces and matching light text. */
+.worker-hours button:not(:where(.worker-station-selector-wrapper button)),
 .worker-hours input,
 .worker-hours select {
   font: inherit;
@@ -69,7 +70,7 @@
   font-size: 16px;
   width: 100%;
 }
-.worker-hours button {
+.worker-hours button:not(:where(.worker-station-selector-wrapper button)) {
   font-weight: 600;
   cursor: pointer;
 }
