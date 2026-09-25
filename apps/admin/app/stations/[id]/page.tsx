@@ -16,7 +16,6 @@ import {
   Button,
 } from '@yellowshifts/ui';
 import {
-  StationIcon,
   UsersIcon,
   EditIcon,
   ArrowRightIcon,
@@ -28,7 +27,7 @@ import {
   NfcIcon,
   SettingsIcon,
 } from '@yellowshifts/icons';
-import { LogoutButton } from '../../components/LogoutButton';
+import { StationHeader } from '../../components/StationHeader';
 import { StationStatusToggle } from '../../components/StationStatusToggle';
 import { EditStationTolerancesModal } from '../../components/EditStationTolerancesModal';
 
@@ -77,72 +76,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
       }}
     >
       {/* Header */}
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '3px solid var(--ys-color-brand-yellow)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          padding: '16px 0',
-        }}
-      >
-        <Container size="lg">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--ys-color-text-primary)',
-                }}
-              >
-                <StationIcon size={22} />
-              </div>
-              <div>
-                <h2
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    margin: 0,
-                    lineHeight: '1.2',
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  {station.name}
-                </h2>
-                <p
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    margin: 0,
-                  }}
-                >
-                  קוד תחנה: {station.code} • YellowShifts
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Badge variant={isPlatformAdmin ? 'brandCrimson' : 'brandYellow'} dot>
-                {isPlatformAdmin ? 'מנהל פלטפורמה' : 'מנהל תחנה'}
-              </Badge>
-              <LogoutButton variant="outline" />
-            </div>
-          </div>
-        </Container>
-      </header>
+      <StationHeader station={station} context={context} />
 
       <Container size="lg">
         {context.memberships.filter(
@@ -193,7 +127,7 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
             />
           </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div className="station-nav-pills">
               <Link href={`/stations/${canonicalCode}/attendance`} style={{ textDecoration: 'none' }}>
                 <Button variant="primary" size="md">
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

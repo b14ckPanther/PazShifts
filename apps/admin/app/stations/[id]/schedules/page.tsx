@@ -7,9 +7,9 @@ import {
   getWeekStartDate,
 } from '@yellowshifts/database';
 import type { WeeklyAvailabilityWithEntries } from '@yellowshifts/types';
-import { Container, PageHeader, Badge } from '@yellowshifts/ui';
+import { Container, PageHeader } from '@yellowshifts/ui';
 import { ArrowRightIcon, StationIcon } from '@yellowshifts/icons';
-import { LogoutButton } from '../../../components/LogoutButton';
+import { StationHeader } from '../../../components/StationHeader';
 import { WeeklyScheduleManager } from '../../../components/WeeklyScheduleManager';
 
 interface StationSchedulesPageProps {
@@ -88,78 +88,7 @@ export default async function StationSchedulesPage({
       }}
     >
       {/* Top Header */}
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '3px solid var(--ys-color-brand-yellow)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          padding: '16px 0',
-        }}
-      >
-        <Container size="lg">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  color: '#16161A',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 900,
-                  fontSize: '1.25rem',
-                }}
-              >
-                P
-              </div>
-              <div>
-                <h1
-                  style={{
-                    margin: 0,
-                    fontSize: '1.25rem',
-                    fontWeight: 800,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  YellowShifts Admin
-                </h1>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.8125rem',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                  }}
-                >
-                  {station.name} ({station.code}) • סידור עבודה שבועי
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {isPlatformAdmin ? (
-                <Badge variant="warning">מנהל מערכת ראשי</Badge>
-              ) : userMembership?.membership.role === 'ADMIN' ? (
-                <Badge variant="neutral">מנהל תחנה</Badge>
-              ) : (
-                <Badge variant="neutral">מנהל משמרת</Badge>
-              )}
-              <LogoutButton variant="outline" />
-            </div>
-          </div>
-        </Container>
-      </header>
+      <StationHeader station={station} context={context} subtitle="סידור עבודה שבועי" />
 
       {/* Breadcrumb & Navigation */}
       <div

@@ -774,3 +774,49 @@ body {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Mobile-First Navigation Pills */
+.station-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .station-nav-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 2px 8px 2px;
+    margin: 0 -4px;
+    gap: 8px !important;
+  }
+  .station-nav-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .station-nav-pills > * {
+    flex-shrink: 0 !important;
+  }
+  .station-nav-pills button,
+  .station-nav-pills a {
+    min-height: 40px;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+  }
+
+  /* Responsive PageHeader on mobile */
+  .ys-page-header {
+    padding: 16px 0 20px 0 !important;
+  }
+  .ys-page-header h1 {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+  }
+  .ys-page-header > div > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}

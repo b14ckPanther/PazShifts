@@ -12,8 +12,8 @@ import {
   CardContent,
   Badge,
 } from '@yellowshifts/ui';
-import { ArrowRightIcon, ShieldCheckIcon, UserIcon } from '@yellowshifts/icons';
-import { LogoutButton } from '../../../../components/LogoutButton';
+import { ArrowRightIcon, ShieldCheckIcon } from '@yellowshifts/icons';
+import { StationHeader } from '../../../../components/StationHeader';
 import { MemberDetailsActions } from '../../../../components/MemberDetailsActions';
 
 interface StaffMemberDetailsPageProps {
@@ -62,51 +62,7 @@ export default async function StaffMemberDetailsPage({ params }: StaffMemberDeta
         direction: 'rtl',
       }}
     >
-      <header
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '3px solid var(--ys-color-brand-yellow)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          padding: '16px 0',
-        }}
-      >
-        <Container size="lg">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--ys-color-text-primary)',
-                }}
-              >
-                <UserIcon size={22} />
-              </div>
-              <h2
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  margin: 0,
-                  color: 'var(--ys-color-text-primary, #111827)',
-                }}
-              >
-                {profile.fullName || 'משתמש'} • פרטי איש צוות
-              </h2>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Badge variant={isPlatformAdmin ? 'brandCrimson' : 'brandYellow'} dot>
-                {isPlatformAdmin ? 'מנהל פלטפורמה' : 'מנהל תחנה'}
-              </Badge>
-              <LogoutButton variant="outline" />
-            </div>
-          </div>
-        </Container>
-      </header>
+      <StationHeader station={station} context={context} subtitle={`איש צוות • ${profile.fullName || 'משתמש'}`} />
 
       <Container size="md">
         <div style={{ margin: '32px 0 24px 0' }}>
