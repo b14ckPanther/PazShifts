@@ -327,8 +327,9 @@ export function WeeklyAvailabilityForm({
           const state = dayStates[day.index];
           if (!state) return null;
 
-          const isPastDay = isHistoricalWeek || state.date < activeToday;
+          const isPastDay = state.date < activeToday;
           const isToday = state.date === activeToday;
+          const isDayDisabled = isClosedWeek || isPastDay;
 
           const overnightFlag =
             state.availabilityType === 'TIME_WINDOW' && isOvernight(state.startTime, state.endTime);
@@ -340,7 +341,7 @@ export function WeeklyAvailabilityForm({
                 padding: 0,
                 overflow: 'hidden',
                 backgroundColor: '#FFFFFF',
-                border: isPastDay
+                border: isDayDisabled
                   ? '1px solid #E5E7EB'
                   : state.availabilityType === 'ALL_DAY_UNAVAILABLE'
                     ? '1px solid #FCA5A5'
@@ -348,7 +349,7 @@ export function WeeklyAvailabilityForm({
                       ? '1px solid #FCD34D'
                       : '1px solid #E5E7EB',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                opacity: isPastDay ? 0.75 : 1,
+                opacity: isDayDisabled ? 0.75 : 1,
               }}
             >
               <CardHeader
@@ -369,14 +370,14 @@ export function WeeklyAvailabilityForm({
                       fontSize: '0.9375rem',
                       fontWeight: 700,
                       margin: 0,
-                      color: isPastDay ? '#6B7280' : '#111827',
+                      color: isDayDisabled ? '#6B7280' : '#111827',
                     }}
                   >
                     {day.name} • {formatDateDisplay(state.date)}
                   </CardTitle>
-                  {isClosedWeek ? (
+                  {isPastDay ? (
                     <Badge variant="neutral" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                      {state.date < activeToday ? 'עבר' : isToday ? 'היום' : 'סגור לעריכה'}
+                      עבר
                     </Badge>
                   ) : isToday ? (
                     <Badge
@@ -385,6 +386,10 @@ export function WeeklyAvailabilityForm({
                     >
                       היום
                     </Badge>
+                  ) : isClosedWeek ? (
+                    <Badge variant="neutral" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
+                      סגור להגשה
+                    </Badge>
                   ) : null}
                 </div>
 
@@ -392,18 +397,18 @@ export function WeeklyAvailabilityForm({
                 <div className="worker-availability-options">
                   <button
                     type="button"
-                    disabled={isPastDay || isPending}
+                    disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_AVAILABLE')}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      cursor: isPastDay ? 'not-allowed' : 'pointer',
-                      opacity: isPastDay ? 0.5 : 1,
+                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDayDisabled ? 0.5 : 1,
                       border:
                         state.availabilityType === 'ALL_DAY_AVAILABLE'
-                          ? '1px solid #86EFAC'
+                           ? '1px solid #86EFAC'
                           : '1px solid #D1D5DB',
                       backgroundColor:
                         state.availabilityType === 'ALL_DAY_AVAILABLE' ? '#DCFCE7' : '#FFFFFF',
@@ -416,15 +421,15 @@ export function WeeklyAvailabilityForm({
 
                   <button
                     type="button"
-                    disabled={isPastDay || isPending}
+                    disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_UNAVAILABLE')}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      cursor: isPastDay ? 'not-allowed' : 'pointer',
-                      opacity: isPastDay ? 0.5 : 1,
+                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDayDisabled ? 0.5 : 1,
                       border:
                         state.availabilityType === 'ALL_DAY_UNAVAILABLE'
                           ? '1px solid #FCA5A5'
@@ -441,15 +446,15 @@ export function WeeklyAvailabilityForm({
 
                   <button
                     type="button"
-                    disabled={isPastDay || isPending}
+                    disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'TIME_WINDOW')}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      cursor: isPastDay ? 'not-allowed' : 'pointer',
-                      opacity: isPastDay ? 0.5 : 1,
+                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDayDisabled ? 0.5 : 1,
                       border:
                         state.availabilityType === 'TIME_WINDOW'
                           ? '1px solid #FCD34D'
@@ -466,7 +471,7 @@ export function WeeklyAvailabilityForm({
               </CardHeader>
 
               <CardContent style={{ padding: '14px 18px' }}>
-                {isPastDay ? (
+                {isDayDisabled ? (
                   <div
                     style={{
                       fontSize: '0.8125rem',
@@ -478,9 +483,9 @@ export function WeeklyAvailabilityForm({
                     }}
                   >
                     <span>
-                      {isClosedWeek && state.date >= activeToday
-                        ? 'השבוע הנוכחי סגור לעדכון זמינות.'
-                        : 'יום זה חלף - לא ניתן לעדכן זמינות.'}
+                      {isPastDay
+                        ? 'יום זה חלף - לא ניתן לעדכן זמינות.'
+                        : 'לא ניתן להגיש עבור שבוע זה.'}
                     </span>
                     {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
                       <span style={{ fontWeight: 600, color: '#15803D' }}>
@@ -492,7 +497,7 @@ export function WeeklyAvailabilityForm({
                     )}
                     {state.availabilityType === 'TIME_WINDOW' && (
                       <span style={{ fontWeight: 600, color: '#92400E' }}>
-                        (נקבע: {state.startTime} — {state.endTime})
+                        (נקבע: {state.startTime} - {state.endTime})
                       </span>
                     )}
                   </div>

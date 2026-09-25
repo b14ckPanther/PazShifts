@@ -63,8 +63,8 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
     selectedWeekStart = maxWeekStart;
   }
 
-  // The current ongoing week and any past weeks are locked for submission
-  const isHistorical = selectedWeekStart <= currentSunday;
+  // Past weeks are historical; current ongoing week is closed for editing
+  const isHistorical = selectedWeekStart < currentSunday;
 
   const availability = await getWorkerWeeklyAvailability(
     supabase,
