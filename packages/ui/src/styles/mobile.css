@@ -322,7 +322,7 @@
 .brand-orbit-dot {
   position: absolute;
   inset: 0;
-  animation: brand-orbit 2000ms linear infinite;
+  animation: brand-orbit 1400ms linear infinite;
 }
 .brand-orbit-dot::after {
   content: '';
@@ -354,7 +354,7 @@
   height: 100%;
   background: #700020;
   transform-origin: right;
-  animation: brand-progress 2000ms ease-in-out infinite;
+  animation: brand-progress 1400ms ease-in-out infinite;
 }
 @keyframes brand-reveal {
   from {

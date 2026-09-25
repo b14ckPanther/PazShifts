@@ -12,7 +12,6 @@ export function BrandEntrance() {
         <img src="/brand/logomark.png" width="80" height="80" alt="" />
       </div>
       <BrandLogo />
-      <span className="brand-entrance-caption">הזמן שלך. המשמרת שלך.</span>
       <span className="brand-entrance-track">
         <span />
       </span>
@@ -20,7 +19,7 @@ export function BrandEntrance() {
   );
 }
 
-const SPLASH_DURATION_MS = 2300;
+const SPLASH_DURATION_MS = 1400;
 
 /** Branded splash screen for initial load and smooth tab transitions. */
 export function BrandSplash() {
