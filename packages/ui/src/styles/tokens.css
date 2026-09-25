@@ -8,9 +8,9 @@
   --ys-color-brand-yellow: #fcbc00;
   --ys-color-brand-yellow-accent: #ffdb07;
   --ys-color-brand-yellow-subtle: #fff7cc;
-  --ys-color-brand-crimson: #d10040;
-  --ys-color-brand-crimson-hover: #b00036;
-  --ys-color-brand-crimson-active: #8f002b;
+  --ys-color-brand-crimson: #8f002b;
+  --ys-color-brand-crimson-hover: #700020;
+  --ys-color-brand-crimson-active: #5c001a;
 
   /* Surfaces */
   --ys-color-surface-base: #f6f6f6;

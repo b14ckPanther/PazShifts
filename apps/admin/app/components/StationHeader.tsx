@@ -59,7 +59,14 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
 
   return (
     <>
-      <header ref={headerRef} className="station-header-root">
+      <header
+        ref={headerRef}
+        className="station-header-root"
+        style={{
+          backgroundColor: '#fcbc00',
+          background: '#fcbc00',
+        }}
+      >
       <Container size="lg">
         <div className="station-header-inner">
           <div className="station-header-main-row">

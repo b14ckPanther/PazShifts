@@ -224,13 +224,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(255, 255, 255, 0.92) !important;
+    background-color: rgba(255, 255, 255, 0.28) !important;
     border: 1px solid rgba(143, 0, 43, 0.2) !important;
     border-radius: 9px;
     padding: 6px 10px;
     width: 100%;
     box-sizing: border-box;
     margin-top: 2px;
+  }
+
+  .station-header-mobile-strip .ys-badge,
+  .station-header-user-chip .ys-badge {
+    background-color: #8f002b !important;
+    color: #ffffff !important;
+    border-color: #8f002b !important;
   }
 
   .station-header-mobile-user {

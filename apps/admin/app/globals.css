@@ -1293,3 +1293,36 @@ body {
   color: #ffffff !important;
   font-weight: 800 !important;
 }
+
+/* Station Fixed Header - Guaranteed Mustard Yellow Branding */
+.station-header-root {
+  background-color: var(--ys-color-brand-yellow, #fcbc00) !important;
+  background: var(--ys-color-brand-yellow, #fcbc00) !important;
+  border-bottom: 2px solid #e0a500 !important;
+  box-shadow: 0 2px 12px rgba(180, 83, 9, 0.16) !important;
+}
+
+/* Unified Active Red Branding across Portal */
+:root {
+  --ys-color-brand-crimson: #8f002b !important;
+  --ys-color-brand-crimson-hover: #700020 !important;
+  --ys-color-brand-crimson-active: #5c001a !important;
+}
+
+/* Primary buttons & active nav pills using unified nav dark red */
+.ys-btn-primary,
+button[data-variant='primary'],
+.attendance-tab-btn.attendance-tab-btn-active,
+.station-nav-pills a .ys-btn-primary,
+.station-nav-pills button.ys-btn-primary {
+  background-color: #8f002b !important;
+  color: #ffffff !important;
+  border-color: #8f002b !important;
+}
+
+.ys-btn-primary:hover,
+button[data-variant='primary']:hover,
+.attendance-tab-btn.attendance-tab-btn-active:hover {
+  background-color: #700020 !important;
+  border-color: #700020 !important;
+}
