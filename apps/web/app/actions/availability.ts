@@ -58,8 +58,11 @@ export async function saveWorkerAvailabilityAction(input: {
     const currentWeekStart = getAvailabilityWeekStart(todayStr);
     const targetWeekStart = getAvailabilityWeekStart(input.weekStartDate);
 
-    if (targetWeekStart < currentWeekStart) {
-      return { success: false, error: 'לא ניתן לעדכן זמינות עבור שבועות היסטוריים שהסתיימו' };
+    if (targetWeekStart <= currentWeekStart) {
+      return {
+        success: false,
+        error: 'לא ניתן להגיש או לעדכן זמינות עבור השבוע הנוכחי או שבועות שעברו. הגשת זמינות פתוחה עבור השבוע הבא ואילך בלבד.',
+      };
     }
 
     const maxWeekStart = addDays(currentWeekStart, 14);

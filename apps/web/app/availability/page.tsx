@@ -20,16 +20,6 @@ function getTodayDateStr(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
 }
 
-function getRelevantUpcomingWeek(currentSunday: string): string {
-  const now = new Date();
-  const d = new Date(`${currentSunday}T00:00:00Z`);
-  // If we are on or past Thursday (day 4) or Sunday (day 0), default to next week, otherwise current week
-  if (now.getDay() >= 4 || now.getDay() === 0) {
-    d.setUTCDate(d.getUTCDate() + 7);
-  }
-  return d.toISOString().slice(0, 10);
-}
-
 export default async function AvailabilityPage({ searchParams }: AvailabilityPageProps) {
   const { supabase, context } = await getServerContext();
 
@@ -58,20 +48,23 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
 
   const todayStr = getTodayDateStr();
   const currentSunday = getAvailabilityWeekStart(todayStr);
+  const nextSunday = addDays(currentSunday, 7);
   const maxWeekStart = addDays(currentSunday, 14);
 
+  // Default to next week: availability submission is strictly for future weeks
   let selectedWeekStart = resolvedSearchParams.week
     ? getAvailabilityWeekStart(resolvedSearchParams.week)
-    : getRelevantUpcomingWeek(currentSunday);
+    : nextSunday;
 
-  // Enforce boundary: do not allow navigating to past weeks or beyond 2 weeks ahead
+  // Enforce boundary: do not allow navigating older than current week or beyond 2 weeks ahead
   if (selectedWeekStart < currentSunday) {
     selectedWeekStart = currentSunday;
   } else if (selectedWeekStart > maxWeekStart) {
     selectedWeekStart = maxWeekStart;
   }
 
-  const isHistorical = selectedWeekStart < currentSunday;
+  // The current ongoing week and any past weeks are locked for submission
+  const isHistorical = selectedWeekStart <= currentSunday;
 
   const availability = await getWorkerWeeklyAvailability(
     supabase,

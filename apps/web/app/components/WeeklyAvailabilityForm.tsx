@@ -139,7 +139,8 @@ export function WeeklyAvailabilityForm({
   }, [weekStartDate, initialData]);
 
   const weekEnd = addDays(weekStartDate, 6);
-  const allDaysPast = dayStates.every((d) => isHistoricalWeek || d.date < activeToday);
+  const isClosedWeek = isHistoricalWeek || weekStartDate <= activeCurrentWeekStart;
+  const allDaysPast = isClosedWeek || dayStates.every((d) => d.date < activeToday);
 
   const navigateWeek = (offsetDays: number) => {
     const nextWeek = addDays(weekStartDate, offsetDays);
@@ -147,30 +148,33 @@ export function WeeklyAvailabilityForm({
   };
 
   const handleTypeChange = (dayIndex: number, type: AvailabilityType) => {
+    if (isClosedWeek) return;
     setDayStates((prev) => {
       const copy = [...prev];
       const current = copy[dayIndex];
-      if (!current || isHistoricalWeek || current.date < activeToday) return prev;
+      if (!current || current.date < activeToday) return prev;
       copy[dayIndex] = { ...current, availabilityType: type };
       return copy;
     });
   };
 
   const handleTimeChange = (dayIndex: number, field: 'startTime' | 'endTime', value: string) => {
+    if (isClosedWeek) return;
     setDayStates((prev) => {
       const copy = [...prev];
       const current = copy[dayIndex];
-      if (!current || isHistoricalWeek || current.date < activeToday) return prev;
+      if (!current || current.date < activeToday) return prev;
       copy[dayIndex] = { ...current, [field]: value };
       return copy;
     });
   };
 
   const handleNotesChange = (dayIndex: number, value: string) => {
+    if (isClosedWeek) return;
     setDayStates((prev) => {
       const copy = [...prev];
       const current = copy[dayIndex];
-      if (!current || isHistoricalWeek || current.date < activeToday) return prev;
+      if (!current || current.date < activeToday) return prev;
       copy[dayIndex] = { ...current, notes: value };
       return copy;
     });
@@ -179,12 +183,19 @@ export function WeeklyAvailabilityForm({
   const handleSave = () => {
     setFeedback(null);
 
-    // Validate any TIME_WINDOW where start == end for active (non-past) days
+    if (isClosedWeek) {
+      setFeedback({
+        type: 'error',
+        text: 'לא ניתן לשמור זמינות עבור השבוע הנוכחי או שבועות שעברו. יש לבחור את השבוע הבא.',
+      });
+      return;
+    }
+
+    // Validate any TIME_WINDOW where start == end for active days
     for (let i = 0; i < dayStates.length; i++) {
       const d = dayStates[i];
       if (!d) continue;
-      const isPast = isHistoricalWeek || d.date < activeToday;
-      if (!isPast && d.availabilityType === 'TIME_WINDOW' && d.startTime === d.endTime) {
+      if (d.availabilityType === 'TIME_WINDOW' && d.startTime === d.endTime) {
         setFeedback({
           type: 'error',
           text: `ביום ${HEBREW_DAYS[i]?.name}: שעת הסיום חייבת להיות שונה משעת ההתחלה`,
@@ -237,13 +248,15 @@ export function WeeklyAvailabilityForm({
         previousDisabled={isPrevDisabled}
         nextDisabled={isNextDisabled}
         label={
-          weekStartDate === activeCurrentWeekStart
-            ? 'השבוע הנוכחי'
-            : weekStartDate === addDays(activeCurrentWeekStart, 7)
-              ? 'השבוע הבא'
-              : weekStartDate === addDays(activeCurrentWeekStart, 14)
-                ? 'בעוד שבועיים'
-                : 'השבוע הנבחר'
+          weekStartDate < activeCurrentWeekStart
+            ? 'שבוע שעבר (היסטורי)'
+            : weekStartDate === activeCurrentWeekStart
+              ? 'השבוע הנוכחי (סגור לעריכה)'
+              : weekStartDate === addDays(activeCurrentWeekStart, 7)
+                ? 'השבוע הבא (פתוח להגשה)'
+                : weekStartDate === addDays(activeCurrentWeekStart, 14)
+                  ? 'בעוד שבועיים (פתוח להגשה)'
+                  : 'השבוע הנבחר'
         }
       >
         {isAvailabilitySubmitted(initialData) ? (
@@ -289,8 +302,8 @@ export function WeeklyAvailabilityForm({
         </div>
       )}
 
-      {/* Historical Week / Passed Days Notice */}
-      {(isHistoricalWeek || allDaysPast) && (
+      {/* Historical Week / Current Closed Week Notice */}
+      {isClosedWeek && (
         <div
           style={{
             backgroundColor: '#F9FAFB',
@@ -301,7 +314,9 @@ export function WeeklyAvailabilityForm({
             color: '#4B5563',
           }}
         >
-          שבוע זה שייך לעבר. לא ניתן להגיש או לעדכן זמינות עבור ימים או שבועות שעברו.
+          {weekStartDate < activeCurrentWeekStart
+            ? 'שבוע זה שייך לעבר. לא ניתן להגיש או לעדכן זמינות עבור שבועות שעברו.'
+            : 'השבוע הנוכחי כבר החל ולא ניתן לשנות את הזמינות עבורו. הגשת זמינות פתוחה עבור השבוע הבא ואילך בלבד.'}
         </div>
       )}
 
@@ -348,18 +363,6 @@ export function WeeklyAvailabilityForm({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span
-                    style={{
-                      backgroundColor: isPastDay ? '#E5E7EB' : 'var(--ys-color-brand-yellow)',
-                      color: isPastDay ? '#6B7280' : '#111827',
-                      fontWeight: 800,
-                      fontSize: '0.75rem',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {day.short}
-                  </span>
                   <CardTitle
                     style={{
                       fontSize: '0.9375rem',
@@ -370,19 +373,18 @@ export function WeeklyAvailabilityForm({
                   >
                     {day.name} • {formatDateDisplay(state.date)}
                   </CardTitle>
-                  {isPastDay && (
+                  {isClosedWeek ? (
                     <Badge variant="neutral" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                      עבר
+                      {state.date < activeToday ? 'עבר' : isToday ? 'היום' : 'סגור לעריכה'}
                     </Badge>
-                  )}
-                  {isToday && (
+                  ) : isToday ? (
                     <Badge
                       variant="brandYellow"
                       style={{ fontSize: '0.6875rem', padding: '1px 6px' }}
                     >
                       היום
                     </Badge>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Direct 1-Tap Toggles */}
@@ -474,7 +476,11 @@ export function WeeklyAvailabilityForm({
                       flexWrap: 'wrap',
                     }}
                   >
-                    <span>יום זה חלף — לא ניתן לעדכן זמינות עבור ימים שעברו.</span>
+                    <span>
+                      {isClosedWeek && state.date >= activeToday
+                        ? 'השבוע הנוכחי סגור לעדכון זמינות.'
+                        : 'יום זה חלף - לא ניתן לעדכן זמינות.'}
+                    </span>
                     {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
                       <span style={{ fontWeight: 600, color: '#15803D' }}>
                         (נקבע: זמין כל היום)
@@ -681,7 +687,7 @@ export function WeeklyAvailabilityForm({
       </Card>
 
       {/* Bottom Save Bar */}
-      {!isHistoricalWeek && !allDaysPast && (
+      {!isClosedWeek && (
         <div
           style={{
             position: 'sticky',
