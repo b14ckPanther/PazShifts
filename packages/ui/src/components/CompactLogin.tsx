@@ -20,7 +20,7 @@ export function CompactLogin({
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [showPassword, setShowPassword] = useState(false);
-  const [method, setMethod] = useState<'phone' | 'email'>(admin ? 'email' : 'phone');
+  const [method, setMethod] = useState<'phone' | 'email'>('phone');
   const [identifiers, setIdentifiers] = useState({ phone: '', email: '' });
   const [dismissedError, setDismissedError] = useState<LoginState | null>(null);
   const nfc = !admin && nextPath.startsWith('/nfc/');
@@ -38,11 +38,13 @@ export function CompactLogin({
         <form action={formAction} className="compact-login-form" aria-busy={pending}>
           <input type="hidden" name="next" value={nextPath} />
           <input type="hidden" name="method" value={method} />
+          {/* Email option hidden in UI for mobile phone-first experience */}
           <div
             className="login-methods"
             role="tablist"
             aria-label="בחירת דרך התחברות"
             data-method={method}
+            style={{ display: 'none' }}
           >
             {(['phone', 'email'] as const).map((option) => (
               <button
