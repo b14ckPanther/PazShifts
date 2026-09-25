@@ -204,3 +204,43 @@
     transition: none;
   }
 }
+
+.worker-past-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 22px 2px 4px;
+  margin-top: 8px;
+  border-top: 1px solid #e7e1e3;
+}
+.worker-past-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #64565d;
+}
+.worker-past-heading > span {
+  font-size: 11px;
+  color: #766970;
+}
+.worker-shift-card.worker-shift-past {
+  background: #faf9f8;
+  box-shadow: none;
+  border-color: #ebe7e5;
+}
+.worker-shift-past .worker-card-date-tile {
+  background: #eeeae8;
+  color: #66575e;
+}
+.worker-shift-past .worker-shift-period {
+  background: #eeeae8;
+  color: #66575e;
+}
+.worker-shift-past .worker-shift-time strong {
+  color: #71636a;
+  font-size: 23px;
+}
+.worker-shift-past .worker-shift-identity h3 {
+  color: #66575e;
+}

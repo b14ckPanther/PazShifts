@@ -215,10 +215,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
       <Container size="md">
         <div style={{ marginTop: '16px' }}>
           {memberships.length > 1 && (
-            <StationSelector
-              memberships={memberships}
-              activeStationId={activeContext.station.id}
-            />
+            <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
           )}
           <PageHeader
             title="המשמרות שלי"
@@ -226,6 +223,8 @@ export default async function WebHomePage({ searchParams }: PageProps) {
           />
 
           <WorkerScheduleView
+            timezone={activeContext.station.timezone}
+            initialNow={Date.now()}
             stationId={activeContext.station.id}
             stationName={activeContext.station.name}
             workerUserId={user.id}

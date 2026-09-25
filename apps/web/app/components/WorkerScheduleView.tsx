@@ -1,7 +1,8 @@
 'use client';
 
 import { WeekNavigator } from './WeekNavigator';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { orderWorkerShifts } from './shift-order';
 import { useRouter } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import type { WeeklyScheduleDetails, ScheduledShiftWithDetails } from '@yellowshifts/types';
@@ -17,6 +18,8 @@ import {
 
 interface WorkerScheduleViewProps {
   stationId: string;
+  timezone: string;
+  initialNow: number;
   stationName: string;
   workerUserId: string;
   selectedWeekStart: string; // YYYY-MM-DD (Sunday)
@@ -53,12 +56,25 @@ function isShiftOvernight(start: string, end: string): boolean {
 
 export function WorkerScheduleView({
   stationId,
+  timezone,
+  initialNow,
   stationName: _stationName,
   workerUserId,
   selectedWeekStart,
   schedule,
 }: WorkerScheduleViewProps) {
   const router = useRouter();
+  const [now, setNow] = useState(initialNow);
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    update();
+    const timer = window.setInterval(update, 30000);
+    document.addEventListener('visibilitychange', update);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', update);
+    };
+  }, []);
   const weekEnd = addDays(selectedWeekStart, 6);
 
   const navigateWeek = (offsetDays: number) => {
@@ -70,6 +86,9 @@ export function WorkerScheduleView({
   const myShifts: ScheduledShiftWithDetails[] = (schedule?.shifts ?? [])
     .filter((s) => s.assignments.some((a) => a.user.id === workerUserId))
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
+
+  const ordered = orderWorkerShifts(myShifts, timezone, now);
+  const remaining = ordered.filter((item) => !item.past).length;
 
   return (
     <div
@@ -142,10 +161,16 @@ export function WorkerScheduleView({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ fontSize: '0.875rem', color: '#4B5563', fontWeight: 600 }}>
-            משובץ ל-<strong>{myShifts.length}</strong> משמרות בשבוע זה:
+            {remaining > 0 ? (
+              <>
+                נותרו לך <strong>{remaining}</strong> משמרות השבוע
+              </>
+            ) : (
+              <>כל המשמרות המתוכננות לשבוע הזה כבר הסתיימו</>
+            )}
           </div>
 
-          {myShifts.map((shift) => {
+          {ordered.map(({ shift, past }, index) => {
             const sTime = shift.startAt.includes('T')
               ? (shift.startAt.split('T')[1]?.slice(0, 5) ?? '')
               : shift.startAt.slice(11, 16);
@@ -158,102 +183,110 @@ export function WorkerScheduleView({
             const coworkers = shift.assignments.filter((a) => a.user.id !== workerUserId);
 
             return (
-              <article className="worker-shift-card" key={shift.id}>
-                <header className="worker-shift-heading">
-                  <div className="worker-card-date-tile">
-                    <span>{getHebrewDayName(shift.shiftDate)}</span>
-                    <strong>{shift.shiftDate.slice(8, 10)}</strong>
+              <React.Fragment key={shift.id}>
+                {past && (index === 0 || !ordered[index - 1]?.past) && (
+                  <div className="worker-past-heading">
+                    <h3>משמרות שעברו</h3>
+                    <span>{ordered.length - remaining} משמרות · לפי שעת הסיום המתוכננת</span>
                   </div>
-                  <div className="worker-shift-identity">
-                    <h3>{shift.templateName || 'משמרת'}</h3>
-                    <time dateTime={shift.shiftDate}>{formatDateDisplay(shift.shiftDate)}</time>
-                  </div>
-                  <span className="worker-shift-period">
-                    {overnight ? <MoonIcon size={14} /> : <SunIcon size={14} />}
-                    {overnight ? 'לילה' : 'יום'}
-                  </span>
-                </header>
-                <div className="worker-shift-body">
-                  <div className="worker-shift-time">
-                    <ClockIcon size={20} aria-hidden="true" />
-                    <strong dir="ltr">
-                      {sTime} <span>—</span> {eTime}
-                    </strong>
-                    {overnight && <span className="worker-shift-overnight">עד למחרת</span>}
-                  </div>
-
-                  {/* Notes */}
-                  {shift.notes && (
-                    <div
-                      style={{
-                        backgroundColor: '#F9FAFB',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        fontSize: '0.8125rem',
-                        color: '#374151',
-                        border: '1px solid #E5E7EB',
-                      }}
-                    >
-                      <strong>הערות למשמרת:</strong> {shift.notes}
+                )}
+                <article className={`worker-shift-card${past ? ' worker-shift-past' : ''}`}>
+                  <header className="worker-shift-heading">
+                    <div className="worker-card-date-tile">
+                      <span>{getHebrewDayName(shift.shiftDate)}</span>
+                      <strong>{shift.shiftDate.slice(8, 10)}</strong>
                     </div>
-                  )}
-
-                  {/* Coworkers */}
-                  <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '10px' }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.8125rem',
-                        color: '#6B7280',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      <UsersIcon size={14} />
-                      <span>צוות נוסף במשמרת ({coworkers.length}):</span>
+                    <div className="worker-shift-identity">
+                      <h3>{shift.templateName || 'משמרת'}</h3>
+                      <time dateTime={shift.shiftDate}>{formatDateDisplay(shift.shiftDate)}</time>
+                    </div>
+                    <span className="worker-shift-period">
+                      {overnight ? <MoonIcon size={14} /> : <SunIcon size={14} />}
+                      {past ? 'עברה' : overnight ? 'לילה' : 'יום'}
+                    </span>
+                  </header>
+                  <div className="worker-shift-body">
+                    <div className="worker-shift-time">
+                      <ClockIcon size={20} aria-hidden="true" />
+                      <strong dir="ltr">
+                        {sTime} <span>—</span> {eTime}
+                      </strong>
+                      {overnight && <span className="worker-shift-overnight">עד למחרת</span>}
                     </div>
 
-                    {coworkers.length === 0 ? (
-                      <span style={{ fontSize: '0.8125rem', color: '#687080' }}>
-                        אין עובדים נוספים משובצים במשמרת זו
-                      </span>
-                    ) : (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {coworkers.map((c) => (
-                          <div
-                            key={c.id}
-                            style={{
-                              backgroundColor: '#F3F4F6',
-                              border: '1px solid #E5E7EB',
-                              borderRadius: '6px',
-                              padding: '4px 10px',
-                              fontSize: '0.8125rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                            }}
-                          >
-                            <span style={{ fontWeight: 600, color: '#111827' }}>
-                              {c.user.fullName}
-                            </span>
-                            <Badge
-                              variant="neutral"
-                              style={{ fontSize: '0.625rem', padding: '1px 5px' }}
-                            >
-                              {c.membership.role === 'ADMIN'
-                                ? 'מנהל תחנה'
-                                : c.membership.role === 'SHIFT_MANAGER'
-                                  ? 'אחמ״ש'
-                                  : 'עובד'}
-                            </Badge>
-                          </div>
-                        ))}
+                    {/* Notes */}
+                    {shift.notes && (
+                      <div
+                        style={{
+                          backgroundColor: '#F9FAFB',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          fontSize: '0.8125rem',
+                          color: '#374151',
+                          border: '1px solid #E5E7EB',
+                        }}
+                      >
+                        <strong>הערות למשמרת:</strong> {shift.notes}
                       </div>
                     )}
+
+                    {/* Coworkers */}
+                    <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '10px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.8125rem',
+                          color: '#6B7280',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        <UsersIcon size={14} />
+                        <span>צוות נוסף במשמרת ({coworkers.length}):</span>
+                      </div>
+
+                      {coworkers.length === 0 ? (
+                        <span style={{ fontSize: '0.8125rem', color: '#687080' }}>
+                          אין עובדים נוספים משובצים במשמרת זו
+                        </span>
+                      ) : (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {coworkers.map((c) => (
+                            <div
+                              key={c.id}
+                              style={{
+                                backgroundColor: '#F3F4F6',
+                                border: '1px solid #E5E7EB',
+                                borderRadius: '6px',
+                                padding: '4px 10px',
+                                fontSize: '0.8125rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                              }}
+                            >
+                              <span style={{ fontWeight: 600, color: '#111827' }}>
+                                {c.user.fullName}
+                              </span>
+                              <Badge
+                                variant="neutral"
+                                style={{ fontSize: '0.625rem', padding: '1px 5px' }}
+                              >
+                                {c.membership.role === 'ADMIN'
+                                  ? 'מנהל תחנה'
+                                  : c.membership.role === 'SHIFT_MANAGER'
+                                    ? 'אחמ״ש'
+                                    : 'עובד'}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </React.Fragment>
             );
           })}
         </div>
