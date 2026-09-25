@@ -48,7 +48,7 @@ export function AttendanceRecordActions({
             >
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <ClockIcon size={14} />
-                <span>סיום משמרת עכשיו</span>
+                <span>סיום משמרת</span>
               </span>
             </Button>
           )}
@@ -69,7 +69,7 @@ export function AttendanceRecordActions({
 
       {action && (
         <StaffDialog
-          title={action === 'DELETE' ? 'מחיקת דיווח שגוי' : 'סיום משמרת עכשיו'}
+          title={action === 'DELETE' ? 'מחיקת דיווח שגוי' : 'סיום משמרת'}
           busy={pending}
           onClose={() => setAction(null)}
         >

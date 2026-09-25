@@ -278,7 +278,7 @@ supabase db push --dry-run
 supabase db push
 ```
 
-On active attendance, choose **סיום משמרת עכשיו** to close at database time, or **מחיקת דיווח שגוי** to remove a mistaken entry. Recent completed records can also be removed. Confirm the worker and supply a reason. Use the existing time editor for a specific checkout time. Removal frees the overlap interval and excludes the row from worker/admin reports after refresh. Workers and shift managers cannot perform these operations.
+On active attendance, choose **סיום משמרת** to close at database time, or **מחיקת דיווח שגוי** to remove a mistaken entry. Recent completed records can also be removed. Confirm the worker and supply a reason. Use the existing time editor for a specific checkout time. Removal frees the overlap interval and excludes the row from worker/admin reports after refresh. Workers and shift managers cannot perform these operations.
 
 Deletion preserves the original snapshot/actor/reason in the RLS-protected `attendance_removals` table and existing manual audit entries. NFC receipts retain original identifiers as replay tombstones: replaying a deleted record returns a stale-checkout error, never a new attendance write. A new scan can start a new shift. No physical attendance/security checks were relaxed. There is no restore button; an administrator can enter a corrected report afterward.
 
