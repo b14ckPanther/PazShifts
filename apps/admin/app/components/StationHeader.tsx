@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Container, Badge, BrandMark } from '@yellowshifts/ui';
 import { UserIcon } from '@yellowshifts/icons';
@@ -23,6 +25,26 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
   pageTitle,
   subtitle,
 }) => {
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const updateHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+    const ro = new ResizeObserver(updateHeight);
+    ro.observe(headerRef.current);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, []);
+
   const personName =
     context.profile?.fullName?.trim() ||
     context.user.email?.split('@')[0] ||
@@ -36,7 +58,8 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
     subtitle || (pageTitle ? `קוד תחנה: ${station.code} • ${pageTitle}` : `קוד תחנה: ${station.code} • YellowShifts`);
 
   return (
-    <header className="station-header-root">
+    <>
+      <header ref={headerRef} className="station-header-root">
       <Container size="lg">
         <div className="station-header-inner">
           <div className="station-header-main-row">
@@ -100,5 +123,12 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
         </div>
       </Container>
     </header>
+    <div
+      className="station-header-spacer"
+      style={{ height: headerHeight ? `${headerHeight}px` : undefined }}
+      aria-hidden="true"
+    />
+  </>
   );
 };
+
