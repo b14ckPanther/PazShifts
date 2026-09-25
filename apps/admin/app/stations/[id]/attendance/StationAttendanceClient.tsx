@@ -263,20 +263,15 @@ export function StationAttendanceClient({
           </Button>
         )}
       </div>
-      {/* Tab Navigation */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          borderBottom: '1px solid #E5E7EB',
-          paddingBottom: '12px',
-          flexWrap: 'wrap',
-        }}
-      >
+      {/* Tab Navigation - Horizontal Rail */}
+      <div className="attendance-tabs-rail" role="tablist" aria-label="לשוניות נוכחות">
         <Button
           variant={activeTab === 'ACTIVE' ? 'primary' : 'ghost'}
           size="sm"
+          className={`attendance-tab-btn ${activeTab === 'ACTIVE' ? 'attendance-tab-btn-active' : ''}`}
           onClick={() => setActiveTab('ACTIVE')}
+          role="tab"
+          aria-selected={activeTab === 'ACTIVE'}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <ClockIcon size={16} />
@@ -290,7 +285,10 @@ export function StationAttendanceClient({
         <Button
           variant={activeTab === 'COMPLETED' ? 'primary' : 'ghost'}
           size="sm"
+          className={`attendance-tab-btn ${activeTab === 'COMPLETED' ? 'attendance-tab-btn-active' : ''}`}
           onClick={() => setActiveTab('COMPLETED')}
+          role="tab"
+          aria-selected={activeTab === 'COMPLETED'}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <CheckIcon size={16} />
@@ -302,7 +300,10 @@ export function StationAttendanceClient({
         <Button
           variant={activeTab === 'NFC' ? 'primary' : 'ghost'}
           size="sm"
+          className={`attendance-tab-btn ${activeTab === 'NFC' ? 'attendance-tab-btn-active' : ''}`}
           onClick={() => setActiveTab('NFC')}
+          role="tab"
+          aria-selected={activeTab === 'NFC'}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <ClockIcon size={16} />
