@@ -418,18 +418,21 @@ export function WeeklyScheduleManager({
                         <Button
                           variant="secondary"
                           size="sm"
+                          className="btn-revert-draft"
                           onClick={handleRevertToDraft}
                           disabled={isPending}
                           style={{
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: '7px',
+                            backgroundColor: '#FFFBEB',
                             borderColor: '#D97706',
-                            color: '#FDE68A',
+                            color: '#92400E',
+                            fontWeight: 600,
                           }}
                           title="החזר את הסידור למצב טיוטה כדי לערוך משמרות ושיבוצים"
                         >
-                          <RotateCcwIcon size={14} />
+                          <RotateCcwIcon size={14} style={{ color: '#D97706', flexShrink: 0 }} />
                           <span>החזר סידור לטיוטה לצורך עריכה</span>
                         </Button>
                       )}
