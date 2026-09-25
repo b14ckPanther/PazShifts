@@ -145,17 +145,16 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
       </header>
 
       <Container size="lg">
-        {!isPlatformAdmin &&
-          context.memberships.filter(
-            (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
-          ).length > 1 && (
-            <StationAdminSelector
-              activeStationId={stationId}
-              adminMemberships={context.memberships.filter(
-                (m) => m.membership.role === 'ADMIN' && m.membership.status === 'ACTIVE'
-              )}
-            />
-          )}
+        {context.memberships.filter(
+          (m) => (m.membership.role === 'ADMIN' || isPlatformAdmin) && m.membership.status === 'ACTIVE'
+        ).length > 1 && (
+          <StationAdminSelector
+            activeStationId={stationId}
+            adminMemberships={context.memberships.filter(
+              (m) => (m.membership.role === 'ADMIN' || isPlatformAdmin) && m.membership.status === 'ACTIVE'
+            )}
+          />
+        )}
         {/* Top Actions & Page Header */}
         <div
           style={{
