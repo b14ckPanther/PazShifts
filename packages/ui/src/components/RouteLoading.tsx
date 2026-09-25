@@ -1,19 +1,15 @@
-import { BrandMark } from './Brand';
+import { BrandEntrance } from './BrandSplash';
 
-/** Lightweight navigation placeholder. Startup branding belongs to BrandSplash. */
+/** Branded route splash screen. Mustard yellow Paz branding. */
 export function RouteLoading() {
   return (
-    <main className="route-loading" aria-busy="true" aria-label="טוענים את המסך">
-      <div className="route-loading-brand">
-        <BrandMark size={44} />
-        <p role="status">טוענים את המסך שלך…</p>
-      </div>
-      <div aria-hidden="true">
-        <div className="route-skeleton route-skeleton-title" />
-        <div className="route-skeleton route-skeleton-subtitle" />
-        <div className="route-skeleton route-skeleton-card" />
-        <div className="route-skeleton route-skeleton-card" />
-      </div>
-    </main>
+    <div
+      className="brand-splash brand-splash-visible"
+      role="status"
+      aria-busy="true"
+      aria-label="טוענים"
+    >
+      <BrandEntrance />
+    </div>
   );
 }

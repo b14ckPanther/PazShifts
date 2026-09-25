@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { BrandLogo } from './Brand';
 
-function BrandEntrance() {
+export function BrandEntrance() {
   return (
     <div className="brand-entrance" aria-hidden="true">
       <div className="brand-orbit">
@@ -20,43 +20,121 @@ function BrandEntrance() {
   );
 }
 
-/** Once per tab. Never intercept input, delay authentication, or replay for NFC receipts. */
+const SPLASH_DURATION_MS = 2300;
+
+/** Branded splash screen for initial load and smooth tab transitions. */
 export function BrandSplash() {
   const [visible, setVisible] = useState(false);
-  useEffect(() => {
+  const timerRef = useRef<number | null>(null);
+
+  const triggerSplash = useCallback((duration = SPLASH_DURATION_MS) => {
+    if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (window.location.pathname.startsWith('/nfc/')) return;
-    try {
-      if (sessionStorage.getItem('ys-brand-intro')) return;
-      sessionStorage.setItem('ys-brand-intro', '1');
-    } catch {
-      // When storage is unavailable, skip decoration so scans remain quick.
-      return;
+
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
+
     setVisible(true);
-    const dismiss = () => setVisible(false);
-    const timer = window.setTimeout(dismiss, 1100);
-    window.addEventListener('pointerdown', dismiss, { once: true });
-    window.addEventListener('keydown', dismiss, { once: true });
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('pointerdown', dismiss);
-      window.removeEventListener('keydown', dismiss);
-    };
+
+    timerRef.current = window.setTimeout(() => {
+      setVisible(false);
+      timerRef.current = null;
+    }, duration);
   }, []);
-  return visible ? (
-    <div className="brand-splash" aria-hidden="true">
+
+  // 1. Initial page load splash
+  useEffect(() => {
+    triggerSplash(SPLASH_DURATION_MS);
+
+    return () => {
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
+  }, [triggerSplash]);
+
+  // 2. Intercept tab clicks in navigation dock & internal links
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      ) {
+        return;
+      }
+      const anchor = (e.target as HTMLElement | null)?.closest('a');
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (
+        !href ||
+        href.startsWith('#') ||
+        href.startsWith('javascript:') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        anchor.target === '_blank'
+      ) {
+        return;
+      }
+
+      try {
+        const targetUrl = new URL(anchor.href, window.location.href);
+        if (targetUrl.origin !== window.location.origin) return;
+        if (targetUrl.pathname.startsWith('/nfc/')) return;
+
+        const currentFull = window.location.pathname + window.location.search;
+        const targetFull = targetUrl.pathname + targetUrl.search;
+        if (currentFull === targetFull) return;
+
+        // Navigating to a different tab or page: trigger splash!
+        triggerSplash(SPLASH_DURATION_MS);
+      } catch {
+        // ignore invalid URLs
+      }
+    };
+
+    const handlePopState = () => {
+      triggerSplash(SPLASH_DURATION_MS);
+    };
+
+    const handleCustomSplash = (e: Event) => {
+      const customEvent = e as CustomEvent<{ duration?: number }>;
+      triggerSplash(customEvent.detail?.duration || SPLASH_DURATION_MS);
+    };
+
+    document.addEventListener('click', handleClick, { capture: true });
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('ys-show-splash', handleCustomSplash);
+
+    return () => {
+      document.removeEventListener('click', handleClick, { capture: true });
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('ys-show-splash', handleCustomSplash);
+    };
+  }, [triggerSplash]);
+
+  return (
+    <div
+      className={`brand-splash ${visible ? 'brand-splash-visible' : ''}`}
+      aria-hidden={!visible}
+    >
       <BrandEntrance />
     </div>
-  ) : null;
+  );
 }
 
-/** Real route loading, with no artificial minimum delay. */
+/** Branded full page loading. */
 export function BrandLoading() {
   return (
     <main className="brand-loading" role="status" aria-busy="true">
       <BrandEntrance />
-      <p>טוענים את המסך שלך…</p>
     </main>
   );
 }
