@@ -82,24 +82,22 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
             position: 'sticky',
             top: 0,
             zIndex: 95,
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderBottom: '3px solid var(--ys-color-brand-crimson)',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+            backgroundColor: 'var(--ys-color-brand-yellow, #fcbc00)',
+            borderBottom: '2px solid #e0a500',
+            boxShadow: '0 2px 10px rgba(180, 83, 9, 0.15)',
             padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
           }}
         >
           <Container size="lg">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <ShieldAlertIcon size={24} color="var(--ys-color-brand-crimson)" />
+                <ShieldAlertIcon size={24} color="#8f002b" />
                 <h2
                   style={{
                     fontSize: '18px',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     margin: 0,
-                    color: 'var(--ys-color-text-primary, #111827)',
+                    color: '#8f002b',
                   }}
                 >
                   YellowShifts Admin
@@ -208,11 +206,9 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
             position: 'sticky',
             top: 0,
             zIndex: 95,
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderBottom: '3px solid var(--ys-color-brand-yellow)',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+            backgroundColor: 'var(--ys-color-brand-yellow, #fcbc00)',
+            borderBottom: '2px solid #e0a500',
+            boxShadow: '0 2px 10px rgba(180, 83, 9, 0.15)',
             padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
           }}
         >
@@ -227,15 +223,29 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <BrandMark size={36} />
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ffffff',
+                    border: '1.5px solid rgba(143, 0, 43, 0.2)',
+                    boxShadow: '0 2px 8px rgba(143, 0, 43, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <BrandMark size={32} />
+                </div>
                 <div>
                   <h2
                     style={{
                       fontSize: '18px',
-                      fontWeight: 700,
+                      fontWeight: 800,
                       margin: 0,
                       lineHeight: '1.2',
-                      color: 'var(--ys-color-text-primary, #111827)',
+                      color: '#8f002b',
                     }}
                   >
                     YellowShifts Admin
@@ -243,7 +253,9 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
                   <p
                     style={{
                       fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
+                      fontWeight: 600,
+                      color: '#700020',
+                      opacity: 0.92,
                       margin: 0,
                     }}
                   >
@@ -253,7 +265,7 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Badge variant="brandYellow" dot>
+                <Badge variant="brandCrimson" dot>
                   {t('roles.platformAdmin')}
                 </Badge>
                 <LogoutButton variant="outline" />

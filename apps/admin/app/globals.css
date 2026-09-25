@@ -1241,3 +1241,55 @@ body {
     gap: 8px !important;
   }
 }
+
+/* Mobile Dock - Native Paz Mustard Yellow & Dark Crimson Branding */
+.mobile-dock {
+  background: var(--ys-color-brand-yellow, #fcbc00) !important;
+  border-top: 1.5px solid #e0a500 !important;
+  box-shadow: 0 -4px 20px rgba(180, 83, 9, 0.18), 0 -1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.mobile-dock a {
+  color: #700020 !important;
+  font-weight: 700 !important;
+  transition: all 160ms ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.mobile-dock a svg {
+  color: #700020 !important;
+  stroke: #700020 !important;
+  transition: transform 160ms ease, color 160ms ease !important;
+}
+
+.mobile-dock a span {
+  color: #700020 !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+.mobile-dock a:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.mobile-dock a:active {
+  transform: scale(0.95) !important;
+}
+
+/* Active Dock Item - High-Contrast Dark Crimson Capsule */
+.mobile-dock a[aria-current='page'] {
+  background: #8f002b !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(112, 0, 32, 0.3) !important;
+  border-radius: 14px !important;
+}
+
+.mobile-dock a[aria-current='page'] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.mobile-dock a[aria-current='page'] span {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}

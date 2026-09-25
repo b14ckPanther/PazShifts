@@ -7,11 +7,9 @@
   right: 0 !important;
   width: 100% !important;
   z-index: 100 !important;
-  background-color: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 2.5px solid var(--ys-color-brand-yellow, #fcbc00);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: var(--ys-color-brand-yellow, #fcbc00) !important;
+  border-bottom: 2px solid #e0a500 !important;
+  box-shadow: 0 2px 12px rgba(180, 83, 9, 0.16) !important;
   padding: max(10px, env(safe-area-inset-top, 10px)) 0 10px 0;
   direction: rtl;
   box-sizing: border-box;
@@ -61,8 +59,8 @@
   height: 42px;
   border-radius: 12px;
   background-color: #ffffff;
-  border: 1.5px solid rgba(252, 188, 0, 0.5);
-  box-shadow: 0 2px 8px rgba(252, 188, 0, 0.18);
+  border: 1.5px solid rgba(143, 0, 43, 0.2);
+  box-shadow: 0 2px 8px rgba(143, 0, 43, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,7 +70,7 @@
 
 .station-header-logo-badge:hover {
   transform: scale(1.04);
-  box-shadow: 0 4px 12px rgba(252, 188, 0, 0.28);
+  box-shadow: 0 4px 12px rgba(143, 0, 43, 0.22);
 }
 
 .station-header-titles {
@@ -83,10 +81,10 @@
 
 .station-header-title {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
   line-height: 1.25;
-  color: var(--ys-color-text-primary, #111827);
+  color: #8f002b !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -94,7 +92,9 @@
 
 .station-header-subtitle {
   font-size: 12px;
-  color: var(--ys-color-text-secondary, #6b7280);
+  font-weight: 600;
+  color: #700020 !important;
+  opacity: 0.92;
   margin: 2px 0 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -103,8 +103,8 @@
 
 .station-header-code-tag {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-weight: 700;
-  color: #374151;
+  font-weight: 800;
+  color: #5c001a !important;
 }
 
 .station-header-actions-section {
@@ -118,8 +118,8 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(143, 0, 43, 0.25) !important;
   border-radius: 10px;
   padding: 5px 10px 5px 12px;
   transition: all 0.15s ease;
@@ -129,8 +129,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #fff7cc;
-  color: #b45309;
+  background-color: #8f002b !important;
+  color: #ffffff !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -146,15 +146,28 @@
 
 .station-header-user-name {
   font-size: 13px;
-  font-weight: 700;
-  color: #111827;
+  font-weight: 800;
+  color: #700020 !important;
   white-space: nowrap;
 }
 
 .station-header-user-role-label {
   font-size: 10.5px;
-  color: #6b7280;
+  font-weight: 600;
+  color: #8f002b !important;
   white-space: nowrap;
+}
+
+.station-header-actions-section button {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #8f002b !important;
+  border: 1px solid rgba(143, 0, 43, 0.3) !important;
+  font-weight: 700 !important;
+}
+
+.station-header-actions-section button:hover {
+  background-color: #ffffff !important;
+  color: #700020 !important;
 }
 
 .station-header-mobile-strip {
@@ -211,8 +224,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(143, 0, 43, 0.2) !important;
     border-radius: 9px;
     padding: 6px 10px;
     width: 100%;
@@ -229,13 +242,14 @@
 
   .station-header-mobile-greeting {
     font-size: 12px;
-    color: #6b7280;
+    color: #8f002b !important;
+    font-weight: 600;
   }
 
   .station-header-mobile-name {
     font-size: 12.5px;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 800;
+    color: #700020 !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
