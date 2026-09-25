@@ -16,13 +16,11 @@ import {
   Button,
 } from '@yellowshifts/ui';
 import {
-  UsersIcon,
   EditIcon,
   ArrowRightIcon,
   MapPinIcon,
   PhoneIcon,
   ClockIcon,
-  CalendarIcon,
   ShieldCheckIcon,
   SettingsIcon,
 } from '@yellowshifts/icons';
@@ -117,62 +115,24 @@ export default async function StationDetailsPage({ params }: StationDetailsPageP
             />
           </div>
 
-            <div className="station-nav-pills">
-              <Link href={`/stations/${canonicalCode}/attendance`} style={{ textDecoration: 'none' }}>
-                <Button variant="primary" size="md">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <ClockIcon size={16} />
-                    נוכחות עובדים
-                  </span>
-                </Button>
-              </Link>
+            {isPlatformAdmin && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <Link href={`/stations/${canonicalCode}/edit`} style={{ textDecoration: 'none' }}>
+                  <Button variant="secondary" size="md">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <EditIcon size={16} />
+                      עריכת פרטי תחנה
+                    </span>
+                  </Button>
+                </Link>
 
-              <Link href={`/stations/${canonicalCode}/schedules`} style={{ textDecoration: 'none' }}>
-                <Button variant="secondary" size="md">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <CalendarIcon size={16} />
-                    סידור עבודה שבועי
-                  </span>
-                </Button>
-              </Link>
-
-              <Link href={`/stations/${canonicalCode}/templates`} style={{ textDecoration: 'none' }}>
-                <Button variant="secondary" size="md">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <ClockIcon size={16} />
-                    תבניות משמרת
-                  </span>
-                </Button>
-              </Link>
-
-              <Link href={`/stations/${canonicalCode}/staff`} style={{ textDecoration: 'none' }}>
-                <Button variant="secondary" size="md">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <UsersIcon size={16} />
-                    ניהול צוות מלא
-                  </span>
-                </Button>
-              </Link>
-
-              {isPlatformAdmin && (
-                <>
-                  <Link href={`/stations/${canonicalCode}/edit`} style={{ textDecoration: 'none' }}>
-                    <Button variant="secondary" size="md">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <EditIcon size={16} />
-                        עריכת פרטי תחנה
-                      </span>
-                    </Button>
-                  </Link>
-
-                  <StationStatusToggle
-                    stationId={station.id}
-                    isActive={station.isActive}
-                    stationName={station.name}
-                  />
-                </>
-              )}
-            </div>
+                <StationStatusToggle
+                  stationId={station.id}
+                  isActive={station.isActive}
+                  stationName={station.name}
+                />
+              </div>
+            )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
