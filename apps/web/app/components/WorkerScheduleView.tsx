@@ -5,7 +5,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import type { WeeklyScheduleDetails, ScheduledShiftWithDetails } from '@yellowshifts/types';
-import { Card, CardHeader, CardTitle, CardContent, Badge } from '@yellowshifts/ui';
+import { Card, CardContent, Badge } from '@yellowshifts/ui';
 import {
   CalendarIcon,
   ClockIcon,
@@ -96,7 +96,7 @@ export function WorkerScheduleView({
           }}
         >
           <CardContent style={{ textAlign: 'center', padding: '28px 20px' }}>
-            <BriefcaseIcon size={48} style={{ color: '#9CA3AF', margin: '0 auto 16px' }} />
+            <BriefcaseIcon size={48} style={{ color: '#687080', margin: '0 auto 16px' }} />
             <h3
               style={{
                 fontSize: '1.125rem',
@@ -158,88 +158,28 @@ export function WorkerScheduleView({
             const coworkers = shift.assignments.filter((a) => a.user.id !== workerUserId);
 
             return (
-              <Card
-                key={shift.id}
-                style={{
-                  padding: 0,
-                  overflow: 'hidden',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E5E7EB',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                }}
-              >
-                <CardHeader
-                  style={{
-                    backgroundColor: '#F9FAFB',
-                    borderBottom: '1px solid #F3F4F6',
-                    padding: '12px 18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span
-                      style={{
-                        backgroundColor: 'var(--ys-color-brand-yellow)',
-                        color: '#111827',
-                        fontWeight: 800,
-                        fontSize: '0.8125rem',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      {getHebrewDayName(shift.shiftDate)}
-                    </span>
-                    <CardTitle
-                      style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: '#111827' }}
-                    >
-                      {formatDateDisplay(shift.shiftDate)} • {shift.templateName || 'משמרת'}
-                    </CardTitle>
+              <article className="worker-shift-card" key={shift.id}>
+                <header className="worker-shift-heading">
+                  <div className="worker-card-date-tile">
+                    <span>{getHebrewDayName(shift.shiftDate)}</span>
+                    <strong>{shift.shiftDate.slice(8, 10)}</strong>
                   </div>
-
-                  <div>
-                    {overnight ? (
-                      <Badge
-                        variant="warning"
-                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <MoonIcon size={12} />
-                        <span>לילה (מסתיים למחרת)</span>
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="neutral"
-                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <SunIcon size={12} />
-                        <span>יום</span>
-                      </Badge>
-                    )}
+                  <div className="worker-shift-identity">
+                    <h3>{shift.templateName || 'משמרת'}</h3>
+                    <time dateTime={shift.shiftDate}>{formatDateDisplay(shift.shiftDate)}</time>
                   </div>
-                </CardHeader>
-
-                <CardContent
-                  style={{
-                    padding: '16px 18px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                  }}
-                >
-                  {/* Hours */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ClockIcon size={18} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-                    <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
-                      {sTime} — {eTime}
-                    </span>
-                    {overnight && (
-                      <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                        (מסתיים למחרת ב-{eTime})
-                      </span>
-                    )}
+                  <span className="worker-shift-period">
+                    {overnight ? <MoonIcon size={14} /> : <SunIcon size={14} />}
+                    {overnight ? 'לילה' : 'יום'}
+                  </span>
+                </header>
+                <div className="worker-shift-body">
+                  <div className="worker-shift-time">
+                    <ClockIcon size={20} aria-hidden="true" />
+                    <strong dir="ltr">
+                      {sTime} <span>—</span> {eTime}
+                    </strong>
+                    {overnight && <span className="worker-shift-overnight">עד למחרת</span>}
                   </div>
 
                   {/* Notes */}
@@ -275,7 +215,7 @@ export function WorkerScheduleView({
                     </div>
 
                     {coworkers.length === 0 ? (
-                      <span style={{ fontSize: '0.8125rem', color: '#9CA3AF' }}>
+                      <span style={{ fontSize: '0.8125rem', color: '#687080' }}>
                         אין עובדים נוספים משובצים במשמרת זו
                       </span>
                     ) : (
@@ -312,8 +252,8 @@ export function WorkerScheduleView({
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </article>
             );
           })}
         </div>

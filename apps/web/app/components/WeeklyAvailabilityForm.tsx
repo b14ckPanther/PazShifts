@@ -10,7 +10,7 @@ import type {
   SaveAvailabilityEntryInput,
 } from '@yellowshifts/types';
 import { saveWorkerAvailabilityAction } from '../actions/availability';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
+import { Card, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
 import {
   CheckIcon,
   SendIcon,
@@ -335,35 +335,12 @@ export function WeeklyAvailabilityForm({
             state.availabilityType === 'TIME_WINDOW' && isOvernight(state.startTime, state.endTime);
 
           return (
-            <Card
+            <article
+              className="worker-availability-card"
               key={day.index}
-              style={{
-                padding: 0,
-                overflow: 'hidden',
-                backgroundColor: '#FFFFFF',
-                border: isDayDisabled
-                  ? '1px solid #E5E7EB'
-                  : state.availabilityType === 'ALL_DAY_UNAVAILABLE'
-                    ? '1px solid #FCA5A5'
-                    : state.availabilityType === 'TIME_WINDOW'
-                      ? '1px solid #FCD34D'
-                      : '1px solid #E5E7EB',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                opacity: isDayDisabled ? 0.75 : 1,
-              }}
+              data-disabled={isDayDisabled}
             >
-              <CardHeader
-                style={{
-                  padding: '12px 18px',
-                  borderBottom: '1px solid #F3F4F6',
-                  backgroundColor: '#F9FAFB',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '10px',
-                }}
-              >
+              <header className="worker-availability-heading">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <CardTitle
                     style={{
@@ -399,22 +376,7 @@ export function WeeklyAvailabilityForm({
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_AVAILABLE')}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
-                      opacity: isDayDisabled ? 0.5 : 1,
-                      border:
-                        state.availabilityType === 'ALL_DAY_AVAILABLE'
-                           ? '1px solid #86EFAC'
-                          : '1px solid #D1D5DB',
-                      backgroundColor:
-                        state.availabilityType === 'ALL_DAY_AVAILABLE' ? '#DCFCE7' : '#FFFFFF',
-                      color: state.availabilityType === 'ALL_DAY_AVAILABLE' ? '#15803D' : '#4B5563',
-                      transition: 'all 0.15s ease',
-                    }}
+                    aria-pressed={state.availabilityType === 'ALL_DAY_AVAILABLE'}
                   >
                     זמין כל היום
                   </button>
@@ -423,23 +385,7 @@ export function WeeklyAvailabilityForm({
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_UNAVAILABLE')}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
-                      opacity: isDayDisabled ? 0.5 : 1,
-                      border:
-                        state.availabilityType === 'ALL_DAY_UNAVAILABLE'
-                          ? '1px solid #FCA5A5'
-                          : '1px solid #D1D5DB',
-                      backgroundColor:
-                        state.availabilityType === 'ALL_DAY_UNAVAILABLE' ? '#FEE2E2' : '#FFFFFF',
-                      color:
-                        state.availabilityType === 'ALL_DAY_UNAVAILABLE' ? '#B91C1C' : '#4B5563',
-                      transition: 'all 0.15s ease',
-                    }}
+                    aria-pressed={state.availabilityType === 'ALL_DAY_UNAVAILABLE'}
                   >
                     לא זמין
                   </button>
@@ -448,29 +394,14 @@ export function WeeklyAvailabilityForm({
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'TIME_WINDOW')}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      cursor: isDayDisabled ? 'not-allowed' : 'pointer',
-                      opacity: isDayDisabled ? 0.5 : 1,
-                      border:
-                        state.availabilityType === 'TIME_WINDOW'
-                          ? '1px solid #FCD34D'
-                          : '1px solid #D1D5DB',
-                      backgroundColor:
-                        state.availabilityType === 'TIME_WINDOW' ? '#FEF3C7' : '#FFFFFF',
-                      color: state.availabilityType === 'TIME_WINDOW' ? '#92400E' : '#4B5563',
-                      transition: 'all 0.15s ease',
-                    }}
+                    aria-pressed={state.availabilityType === 'TIME_WINDOW'}
                   >
                     חלון שעות
                   </button>
                 </div>
-              </CardHeader>
+              </header>
 
-              <CardContent style={{ padding: '14px 18px' }}>
+              <div className="worker-availability-body">
                 {isDayDisabled ? (
                   <div
                     style={{
@@ -504,15 +435,13 @@ export function WeeklyAvailabilityForm({
                 ) : (
                   <>
                     {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
-                      <div style={{ fontSize: '0.8125rem', color: '#16A34A', fontWeight: 600 }}>
-                        סימנת שאתה זמין לעבודה בכל שעה במהלך יום זה.
-                      </div>
+                      <div className="worker-availability-summary">זמין לכל משמרת ביום הזה.</div>
                     )}
 
                     {state.availabilityType === 'ALL_DAY_UNAVAILABLE' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ fontSize: '0.8125rem', color: '#DC2626', fontWeight: 600 }}>
-                          סימנת שאינך זמין כלל לעבודה ביום זה.
+                          לא פנוי למשמרות ביום הזה.
                         </div>
                         <div>
                           <input
@@ -638,8 +567,8 @@ export function WeeklyAvailabilityForm({
                     )}
                   </>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </article>
           );
         })}
       </div>
