@@ -2,16 +2,28 @@ import React from 'react';
 import { Spinner } from './Spinner';
 
 export type ButtonVariant =
-  'primary' | 'brandYellow' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+  | 'primary'
+  | 'brandYellow'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'tertiary'
+  | 'destructive'
+  | 'destructiveOutline';
+
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
+  /** Rendered at the inline start (right in RTL), before the label. */
   leftIcon?: React.ReactNode;
+  /** Rendered at the inline start (right in RTL), before the label. */
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
+  /** Square icon-only button; pass an `aria-label`. */
+  iconOnly?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,124 +34,38 @@ export const Button: React.FC<ButtonProps> = ({
   leftIcon,
   rightIcon,
   fullWidth = false,
+  iconOnly = false,
   disabled,
   className = '',
-  style,
   ...props
 }) => {
-  const isDisabled = disabled || isLoading;
-
-  // Variant Styles based on semantic tokens
-  const getVariantStyles = (): React.CSSProperties => {
-    switch (variant) {
-      case 'primary':
-        return {
-          backgroundColor: 'var(--ys-color-brand-crimson)',
-          color: 'var(--ys-color-text-inverse)',
-          border: '1px solid transparent',
-        };
-      case 'brandYellow':
-        return {
-          backgroundColor: 'var(--ys-color-brand-yellow)',
-          color: 'var(--ys-color-text-primary)',
-          border: '1px solid transparent',
-        };
-      case 'secondary':
-        return {
-          backgroundColor: 'var(--ys-color-surface-raised)',
-          color: 'var(--ys-color-text-primary)',
-          border: '1px solid var(--ys-color-border-medium)',
-        };
-      case 'outline':
-        return {
-          backgroundColor: 'transparent',
-          color: 'var(--ys-color-text-primary)',
-          border: '1px solid var(--ys-color-border-subtle)',
-        };
-      case 'ghost':
-        return {
-          backgroundColor: 'transparent',
-          color: 'var(--ys-color-text-secondary)',
-          border: '1px solid transparent',
-        };
-      case 'destructive':
-        return {
-          backgroundColor: 'var(--ys-color-status-danger)',
-          color: 'var(--ys-color-text-inverse)',
-          border: '1px solid transparent',
-        };
-    }
-  };
-
-  // Sizing Styles
-  const getSizeStyles = (): React.CSSProperties => {
-    switch (size) {
-      case 'sm':
-        return {
-          height: '32px',
-          padding: '0 12px',
-          fontSize: '13px',
-          borderRadius: 'var(--ys-radius-sm)',
-        };
-      case 'lg':
-        return {
-          height: '48px',
-          padding: '0 24px',
-          fontSize: '16px',
-          borderRadius: 'var(--ys-radius-md)',
-        };
-      case 'md':
-      default:
-        return {
-          height: '40px',
-          padding: '0 16px',
-          fontSize: '14px',
-          borderRadius: 'var(--ys-radius-md)',
-        };
-    }
-  };
+  const classes = [
+    'ys-button',
+    `ys-button--${variant}`,
+    size !== 'md' && `ys-button--${size}`,
+    fullWidth && 'ys-button--full',
+    iconOnly && 'ys-button--icon',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
+    // No default `type`: inside a form a Button submits, exactly like a native button.
     <button
-      disabled={isDisabled}
-      aria-busy={isLoading}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       aria-label={isLoading && typeof children === 'string' ? children : undefined}
-      className={`ys-button ys-button--${variant} ${className}`}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        fontWeight: 600,
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        opacity: isDisabled ? 0.6 : 1,
-        transition: 'background-color var(--ys-transition-fast), color var(--ys-transition-fast)',
-        position: 'relative',
-        outline: 'none',
-        width: fullWidth ? '100%' : 'auto',
-        ...getVariantStyles(),
-        ...getSizeStyles(),
-        ...style,
-      }}
+      className={classes}
       {...props}
     >
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          opacity: isLoading ? 0 : 1,
-        }}
-      >
-        {rightIcon && <span style={{ display: 'inline-flex' }}>{rightIcon}</span>}
-        <span>{children}</span>
-        {leftIcon && <span style={{ display: 'inline-flex' }}>{leftIcon}</span>}
+      <span className="ys-button-content">
+        {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
+        {children}
+        {leftIcon && <span aria-hidden="true">{leftIcon}</span>}
       </span>
       {isLoading && (
-        <span
-          aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}
-        >
+        <span className="ys-button-spinner" aria-hidden="true">
           <Spinner size={size === 'lg' ? 'md' : 'sm'} />
         </span>
       )}

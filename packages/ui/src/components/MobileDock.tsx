@@ -10,4 +10,3 @@ export function MobileDock({ children }: { children: ReactNode }) {
     </div>
   );
 }
-

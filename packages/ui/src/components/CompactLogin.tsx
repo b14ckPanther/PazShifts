@@ -29,11 +29,16 @@ export function CompactLogin({
       <section className="login-panel" aria-labelledby="login-heading">
         <div className="mobile-brand">
           <BrandLogo />
-          <small>{admin ? 'ניהול התחנה' : 'המשמרת שלך, בפשטות'}</small>
         </div>
         <header className="login-heading">
           <h1 id="login-heading">{nfc ? 'מתחברים ומדווחים' : 'טוב לראות אותך'}</h1>
-          <p>{nfc ? 'מתחברים וממשיכים לסריקה.' : 'המשמרת הבאה מתחילה כאן.'}</p>
+          <p>
+            {nfc
+              ? 'מתחברים וממשיכים לסריקה.'
+              : admin
+                ? 'כניסה לניהול התחנה.'
+                : 'המשמרת הבאה מתחילה כאן.'}
+          </p>
         </header>
         <form action={formAction} className="compact-login-form" aria-busy={pending}>
           <input type="hidden" name="next" value={nextPath} />

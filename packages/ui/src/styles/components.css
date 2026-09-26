@@ -1,0 +1,1107 @@
+/*
+ * YellowShifts component layer. Class-based so every control has real hover, active,
+ * focus, disabled and loading states. Bare form controls get the same defaults through
+ * zero-specificity :where() rules, so any class or inline style still wins.
+ */
+
+/* ---------- Buttons ---------- */
+.ys-button {
+  --btn-h: var(--ys-control-md);
+  --btn-px: 18px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--btn-h);
+  padding: 0 var(--btn-px);
+  border: 1px solid transparent;
+  border-radius: var(--ys-radius-sm);
+  font-family: inherit;
+  font-size: var(--ys-text-md);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background-color var(--ys-transition-fast),
+    border-color var(--ys-transition-fast),
+    color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast),
+    transform 120ms var(--ys-ease-standard);
+}
+.ys-button > .ys-button-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ys-button > .ys-button-content > span {
+  display: inline-flex;
+}
+.ys-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.ys-button:disabled,
+.ys-button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.ys-button[aria-busy='true'] {
+  cursor: progress;
+  opacity: 1;
+}
+.ys-button[aria-busy='true'] > .ys-button-content {
+  visibility: hidden;
+}
+.ys-button-spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.ys-button--full {
+  width: 100%;
+}
+.ys-button--sm {
+  --btn-h: var(--ys-control-sm);
+  --btn-px: 12px;
+  font-size: var(--ys-text-sm);
+  gap: 6px;
+}
+.ys-button--lg {
+  --btn-h: var(--ys-control-lg);
+  --btn-px: 24px;
+  font-size: var(--ys-text-lg);
+  border-radius: var(--ys-radius-md);
+}
+.ys-button--icon {
+  --btn-px: 0;
+  width: var(--btn-h);
+}
+
+.ys-button--primary {
+  background: var(--ys-color-brand-crimson);
+  color: #fff;
+  box-shadow:
+    0 1px 2px rgba(143, 0, 43, 0.25),
+    0 3px 10px rgba(209, 0, 64, 0.18);
+}
+.ys-button--primary:hover:not(:disabled) {
+  background: var(--ys-color-brand-crimson-hover);
+}
+.ys-button--primary:active:not(:disabled) {
+  background: var(--ys-color-brand-crimson-active);
+  box-shadow: 0 1px 2px rgba(143, 0, 43, 0.3);
+}
+
+.ys-button--brandYellow {
+  background: var(--ys-color-brand-yellow);
+  color: var(--ys-color-text-primary);
+  box-shadow: 0 1px 2px rgba(92, 67, 0, 0.2);
+}
+.ys-button--brandYellow:hover:not(:disabled) {
+  background: #f0b000;
+}
+.ys-button--brandYellow:active:not(:disabled) {
+  background: #e0a400;
+}
+
+.ys-button--secondary {
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  border-color: var(--ys-color-border-medium);
+  box-shadow: var(--ys-shadow-subtle);
+}
+.ys-button--secondary:hover:not(:disabled) {
+  border-color: var(--ys-color-border-strong);
+  background: var(--ys-color-surface-soft);
+}
+.ys-button--secondary:active:not(:disabled) {
+  background: var(--ys-color-surface-muted);
+}
+
+.ys-button--outline {
+  background: transparent;
+  color: var(--ys-color-text-primary);
+  border-color: var(--ys-color-border-medium);
+}
+.ys-button--outline:hover:not(:disabled) {
+  background: rgba(28, 23, 20, 0.04);
+  border-color: var(--ys-color-border-strong);
+}
+
+.ys-button--ghost,
+.ys-button--tertiary {
+  background: transparent;
+  color: var(--ys-color-text-secondary);
+}
+.ys-button--ghost:hover:not(:disabled) {
+  background: rgba(28, 23, 20, 0.06);
+  color: var(--ys-color-text-primary);
+}
+.ys-button--tertiary {
+  color: var(--ys-color-brand-crimson-ink);
+  --btn-px: 10px;
+}
+.ys-button--tertiary:hover:not(:disabled) {
+  background: var(--ys-color-brand-crimson-subtle);
+}
+
+.ys-button--destructive {
+  background: var(--ys-color-status-danger);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(161, 13, 38, 0.3);
+}
+.ys-button--destructive:hover:not(:disabled) {
+  background: var(--ys-color-status-danger-ink);
+}
+.ys-button--destructiveOutline {
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-status-danger-ink);
+  border-color: rgba(200, 16, 46, 0.35);
+}
+.ys-button--destructiveOutline:hover:not(:disabled) {
+  background: var(--ys-color-status-danger-subtle);
+}
+
+@media (pointer: fine) {
+  .ys-button {
+    --btn-h: 40px;
+  }
+  .ys-button--sm {
+    --btn-h: 32px;
+  }
+  .ys-button--lg {
+    --btn-h: 48px;
+  }
+}
+
+/* ---------- Form fields ---------- */
+.ys-form-field {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  text-align: start;
+}
+.ys-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.ys-label-required {
+  color: var(--ys-color-brand-crimson);
+}
+.ys-field-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.ys-field-icon {
+  position: absolute;
+  inset-block: 0;
+  display: flex;
+  align-items: center;
+  color: var(--ys-color-text-muted);
+  pointer-events: none;
+}
+.ys-field-icon--start {
+  inset-inline-start: 12px;
+}
+.ys-field-icon--end {
+  inset-inline-end: 12px;
+}
+.ys-field-control:has(.ys-field-icon--start) .ys-input {
+  padding-inline-start: 40px;
+}
+.ys-field-control:has(.ys-field-icon--end) .ys-input {
+  padding-inline-end: 40px;
+}
+.ys-help,
+.ys-error {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  margin: 0;
+}
+.ys-help {
+  color: var(--ys-color-text-muted);
+}
+.ys-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--ys-color-status-danger-ink);
+  font-weight: 500;
+}
+
+.ys-input,
+:where(
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='file'],
+    [type='hidden'],
+    [type='color'],
+    [type='submit'],
+    [type='button']
+  ),
+  select,
+  textarea
+) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--ys-control-md);
+  padding: 10px 14px;
+  border: 1px solid var(--ys-color-border-medium);
+  border-radius: var(--ys-radius-sm);
+  background-color: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.35;
+  transition:
+    border-color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast),
+    background-color var(--ys-transition-fast);
+}
+:where(textarea) {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.55;
+}
+:where(select) {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23554d47' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  cursor: pointer;
+}
+.ys-input:hover:not(:disabled):not(:focus),
+:where(input, select, textarea):hover:not(:disabled):not(:focus) {
+  border-color: var(--ys-color-border-strong);
+}
+.ys-input:focus,
+:where(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--ys-color-text-primary);
+  box-shadow: 0 0 0 4px var(--ys-focus-halo);
+}
+.ys-input:focus-visible,
+:where(input, select, textarea):focus-visible {
+  outline: none;
+}
+.ys-input[aria-invalid='true'],
+:where(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--ys-color-status-danger);
+  background-color: #fffafb;
+}
+.ys-input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.18);
+}
+.ys-input:disabled,
+:where(input, select, textarea):disabled {
+  background-color: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-muted);
+  cursor: not-allowed;
+}
+.ys-input::placeholder,
+:where(input, textarea)::placeholder {
+  color: #8b837b;
+  opacity: 1;
+}
+:where(input[type='checkbox'], input[type='radio']) {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ys-color-brand-crimson);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--ys-transition-fast);
+}
+input::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+}
+:where(
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'],
+  input[type='number'],
+  input[type='tel']
+) {
+  font-family: var(--ys-font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (pointer: fine) {
+  .ys-input,
+  :where(input:not([type='checkbox'], [type='radio']), select) {
+    min-height: 40px;
+    font-size: 0.9375rem;
+    padding-block: 8px;
+  }
+}
+
+/* Groups a long form into titled sections. */
+.ys-fieldset {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  border: 0;
+}
+.ys-fieldset > legend,
+.ys-fieldset-title {
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+  margin-bottom: 4px;
+}
+.ys-fieldset + .ys-fieldset {
+  padding-top: 20px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.ys-form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+.ys-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 8px;
+}
+@media (max-width: 520px) {
+  .ys-form-actions > .ys-button {
+    flex: 1 1 100%;
+  }
+}
+
+/* Binary setting: a checkbox dressed as a switch, still a native checkbox for AT. */
+.ys-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--ys-color-border-medium);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--ys-transition-fast);
+}
+.ys-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(28, 23, 20, 0.3);
+  transition: transform var(--ys-transition-standard);
+}
+.ys-switch:checked {
+  background: var(--ys-color-brand-crimson);
+}
+.ys-switch:checked::after {
+  transform: translateX(-18px);
+}
+[dir='ltr'] .ys-switch:checked::after {
+  transform: translateX(18px);
+}
+
+/* Mutually exclusive options (availability, filters, view modes). */
+.ys-segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-sunken);
+}
+.ys-segmented > button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--ys-transition-fast),
+    color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast);
+}
+.ys-segmented > button:hover:not(:disabled):not([aria-pressed='true']) {
+  color: var(--ys-color-text-primary);
+  background: rgba(255, 255, 255, 0.55);
+}
+.ys-segmented > button[aria-pressed='true'],
+.ys-segmented > button[aria-selected='true'] {
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  box-shadow:
+    0 1px 2px rgba(40, 28, 16, 0.1),
+    0 2px 6px rgba(40, 28, 16, 0.06);
+}
+.ys-segmented > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Surfaces ---------- */
+.ys-card {
+  position: relative;
+  min-width: 0;
+  padding: clamp(16px, 3.2vw, 24px);
+  border-radius: var(--ys-radius-lg);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid var(--ys-color-border-subtle);
+  box-shadow: var(--ys-shadow-card);
+  text-align: start;
+}
+.ys-card--subtle {
+  background: var(--ys-color-surface-muted);
+  border-color: transparent;
+  box-shadow: none;
+}
+.ys-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast),
+    transform var(--ys-transition-fast);
+}
+.ys-card--interactive:hover {
+  border-color: var(--ys-color-border-medium);
+  box-shadow:
+    var(--ys-shadow-raised),
+    0 8px 24px rgba(40, 28, 16, 0.07);
+}
+.ys-card--interactive:active {
+  transform: scale(0.995);
+}
+.ys-card-header {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.ys-card-title {
+  font-size: var(--ys-text-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ys-color-text-primary);
+}
+.ys-card-description {
+  font-size: var(--ys-text-sm);
+  line-height: 1.55;
+  color: var(--ys-color-text-secondary);
+}
+.ys-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* A list of rows inside one panel: hierarchy from dividers, not boxes per row. */
+.ys-list {
+  display: grid;
+  border-radius: var(--ys-radius-lg);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid var(--ys-color-border-subtle);
+  box-shadow: var(--ys-shadow-card);
+  overflow: hidden;
+}
+.ys-list > * + * {
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.ys-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 16px;
+  min-width: 0;
+}
+
+/* ---------- Badges and statuses ---------- */
+.ys-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: var(--ys-radius-pill);
+  border: 1px solid transparent;
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  line-height: 1.45;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.ys-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.ys-badge--neutral {
+  background: var(--ys-color-status-neutral-subtle);
+  color: var(--ys-color-status-neutral-ink);
+}
+.ys-badge--brandYellow {
+  /* Yellow is reserved for the canopy and selection; this variant is a warm emphasis. */
+  background: var(--ys-color-surface-raised);
+  border-color: var(--ys-color-border-medium);
+  color: var(--ys-color-text-primary);
+}
+.ys-badge--brandCrimson {
+  background: var(--ys-color-brand-crimson-subtle);
+  color: var(--ys-color-brand-crimson-ink);
+}
+.ys-badge--success {
+  background: var(--ys-color-status-success-subtle);
+  color: var(--ys-color-status-success-ink);
+}
+.ys-badge--warning {
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
+}
+.ys-badge--danger {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+}
+.ys-badge--info {
+  background: var(--ys-color-status-info-subtle);
+  color: var(--ys-color-status-info-ink);
+}
+
+/* Operational status: icon + text, and the shape changes with the kind of state. */
+.ys-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 10px 3px 12px;
+  border-radius: var(--ys-radius-pill);
+  border: 1px solid transparent;
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.ys-status > svg {
+  flex-shrink: 0;
+}
+.ys-status--live {
+  background: var(--ys-color-brand-crimson);
+  color: #fff;
+}
+.ys-status--live .ys-status-pulse {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ys-color-brand-yellow);
+}
+.ys-status--live .ys-status-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--ys-color-brand-yellow);
+  opacity: 0;
+  animation: ys-status-pulse 2s var(--ys-ease-out) infinite;
+}
+.ys-status--upcoming {
+  background: var(--ys-color-surface-raised);
+  border-color: var(--ys-color-border-medium);
+  color: var(--ys-color-text-primary);
+}
+.ys-status--completed,
+.ys-status--draft,
+.ys-status--offline {
+  background: var(--ys-color-status-neutral-subtle);
+  color: var(--ys-color-status-neutral-ink);
+}
+.ys-status--draft,
+.ys-status--pending {
+  border-style: dashed;
+}
+.ys-status--pending {
+  background: var(--ys-color-surface-raised);
+  border-color: var(--ys-color-status-warning);
+  color: var(--ys-color-status-warning-ink);
+}
+.ys-status--late,
+.ys-status--warning {
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
+  border-radius: var(--ys-radius-xs);
+}
+.ys-status--approved,
+.ys-status--published,
+.ys-status--success {
+  background: var(--ys-color-status-success-subtle);
+  color: var(--ys-color-status-success-ink);
+}
+.ys-status--rejected,
+.ys-status--error {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+  border-color: rgba(200, 16, 46, 0.3);
+  border-radius: var(--ys-radius-xs);
+}
+@keyframes ys-status-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ---------- Alerts ---------- */
+.ys-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--ys-radius-md);
+  border: 1px solid transparent;
+  text-align: start;
+}
+.ys-alert-icon {
+  flex-shrink: 0;
+  display: flex;
+  margin-top: 1px;
+}
+.ys-alert-body {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.ys-alert-title {
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+}
+.ys-alert-content {
+  font-size: var(--ys-text-sm);
+  line-height: 1.55;
+}
+.ys-alert--info {
+  background: var(--ys-color-status-info-subtle);
+  border-color: rgba(31, 95, 191, 0.18);
+  color: var(--ys-color-status-info-ink);
+}
+.ys-alert--success {
+  background: var(--ys-color-status-success-subtle);
+  border-color: rgba(31, 138, 76, 0.2);
+  color: var(--ys-color-status-success-ink);
+}
+.ys-alert--warning {
+  background: var(--ys-color-status-warning-subtle);
+  border-color: rgba(217, 122, 0, 0.25);
+  color: var(--ys-color-status-warning-ink);
+}
+.ys-alert--danger {
+  background: var(--ys-color-status-danger-subtle);
+  border-color: rgba(200, 16, 46, 0.2);
+  color: var(--ys-color-status-danger-ink);
+}
+.ys-alert--brand {
+  background: var(--ys-color-brand-yellow-subtle);
+  border-color: rgba(252, 188, 0, 0.45);
+  color: var(--ys-color-brand-yellow-ink);
+}
+
+/* ---------- Layout ---------- */
+.ys-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: var(--ys-gutter);
+  min-width: 0;
+}
+.ys-container--sm {
+  max-width: calc(640px + 2 * var(--ys-gutter));
+}
+.ys-container--md {
+  max-width: calc(840px + 2 * var(--ys-gutter));
+}
+.ys-container--lg {
+  max-width: calc(1140px + 2 * var(--ys-gutter));
+}
+.ys-container--xl {
+  max-width: calc(var(--ys-content-max) + 2 * var(--ys-gutter));
+}
+.ys-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 24px 0 20px;
+}
+.ys-page-header-text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 320px;
+}
+.ys-page-header-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.ys-page-header h1 {
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ys-color-text-primary);
+}
+.ys-page-header p {
+  font-size: var(--ys-text-md);
+  line-height: 1.55;
+  color: var(--ys-color-text-secondary);
+  max-width: 62ch;
+}
+.ys-page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .ys-page-header {
+    padding: 16px 0 14px;
+  }
+  .ys-page-header h1 {
+    font-size: 1.375rem;
+  }
+  .ys-page-header p {
+    font-size: var(--ys-text-sm);
+  }
+  .ys-page-header-actions {
+    width: 100%;
+  }
+}
+
+/* ---------- Empty, loading ---------- */
+.ys-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: clamp(24px, 6vw, 40px) 20px;
+  text-align: center;
+}
+.ys-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-brand-yellow-subtle);
+  color: var(--ys-color-brand-yellow-ink);
+}
+.ys-empty-title {
+  font-size: var(--ys-text-lg);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+}
+.ys-empty-text {
+  max-width: 44ch;
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.ys-empty-action {
+  margin-top: 10px;
+}
+.ys-skeleton {
+  display: block;
+  border-radius: var(--ys-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--ys-color-surface-muted) 0%,
+    #f6f5f1 50%,
+    var(--ys-color-surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: ys-shimmer 1.4s linear infinite;
+}
+@keyframes ys-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Dialog / bottom sheet (native <dialog>) ---------- */
+.ys-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(88dvh, 820px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ys-radius-xl);
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  box-shadow: var(--ys-shadow-modal);
+  overflow: hidden;
+  text-align: start;
+}
+.ys-dialog--lg {
+  width: min(820px, calc(100vw - 32px));
+}
+.ys-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  animation: ys-dialog-in 220ms var(--ys-ease-out);
+}
+.ys-dialog::backdrop {
+  background: var(--ys-color-surface-overlay);
+  animation: ys-fade-in 200ms var(--ys-ease-standard);
+}
+.ys-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 12px;
+}
+.ys-dialog-title {
+  font-size: var(--ys-text-xl);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.ys-dialog-description {
+  margin-top: 4px;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+  line-height: 1.55;
+}
+.ys-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 20px 20px;
+}
+.ys-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-soft);
+}
+.ys-dialog-close {
+  flex-shrink: 0;
+  margin: -6px -6px 0 0;
+}
+/* A form's own action row stays reachable while a long dialog body scrolls. */
+.ys-dialog-body > form > .ys-form-actions:last-child,
+.ys-dialog-body > .ys-form-actions:last-child,
+.ys-dialog-body form > .ys-form-actions:last-child {
+  position: sticky;
+  bottom: calc(-1 * var(--ys-dialog-pad-bottom, 20px));
+  z-index: 1;
+  margin-inline: -20px;
+  margin-bottom: calc(-1 * var(--ys-dialog-pad-bottom, 20px));
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-soft);
+}
+html:has(.ys-dialog[open]) {
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .ys-dialog,
+  .ys-dialog--lg {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px));
+    margin: auto 0 0;
+    border-radius: var(--ys-radius-xl) var(--ys-radius-xl) 0 0;
+  }
+  .ys-dialog[open] {
+    animation: ys-sheet-in 280ms var(--ys-ease-out);
+  }
+  .ys-dialog-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    inset-inline: 0;
+    margin-inline: auto;
+    width: 40px;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--ys-color-border-medium);
+  }
+  .ys-dialog-header {
+    position: relative;
+    padding-top: 24px;
+  }
+  .ys-dialog-footer > .ys-button {
+    flex: 1 1 0;
+  }
+}
+@keyframes ys-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes ys-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes ys-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Tables: rows become cards on narrow screens ---------- */
+.ys-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--ys-radius-lg);
+  border: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-raised);
+  box-shadow: var(--ys-shadow-card);
+}
+.ys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ys-text-sm);
+}
+.ys-table th {
+  position: sticky;
+  top: 0;
+  padding: 10px 14px;
+  background: var(--ys-color-surface-soft);
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
+  text-align: start;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--ys-color-border-subtle);
+}
+.ys-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ys-color-border-subtle);
+  vertical-align: middle;
+}
+.ys-table tr:last-child td {
+  border-bottom: 0;
+}
+.ys-table tbody tr:hover td {
+  background: #fcfbf9;
+}
+@media (max-width: 720px) {
+  .ys-table-wrap--stack {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .ys-table-wrap--stack .ys-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .ys-table-wrap--stack .ys-table,
+  .ys-table-wrap--stack .ys-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+  .ys-table-wrap--stack .ys-table tr {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: var(--ys-radius-md);
+    border: 1px solid var(--ys-color-border-subtle);
+    background: var(--ys-color-surface-raised);
+    box-shadow: var(--ys-shadow-card);
+  }
+  .ys-table-wrap--stack .ys-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0;
+    border: 0;
+  }
+  .ys-table-wrap--stack .ys-table td[data-label]::before {
+    content: attr(data-label);
+    color: var(--ys-color-text-muted);
+    font-size: var(--ys-text-xs);
+    font-weight: 600;
+  }
+}
+
+/* ---------- Motion safety ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ys-button,
+  .ys-card--interactive,
+  .ys-segmented > button,
+  .ys-switch,
+  .ys-switch::after {
+    transition: none;
+  }
+  .ys-button:active:not(:disabled),
+  .ys-card--interactive:active {
+    transform: none;
+  }
+  .ys-dialog[open],
+  .ys-dialog::backdrop,
+  .ys-skeleton,
+  .ys-status--live .ys-status-pulse::after {
+    animation: none;
+  }
+}
+
+.ys-spinner {
+  animation: ys-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ys-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ys-spinner {
+    animation-duration: 2s;
+  }
+}

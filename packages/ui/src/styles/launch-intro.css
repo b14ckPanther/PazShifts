@@ -1,0 +1,61 @@
+/* One-shot launch overlay (see LaunchIntro.tsx): plays the reveal, then fades to the app. */
+.launch-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  contain: strict;
+  background: #fcbc00;
+  animation: launch-intro-exit var(--reveal-duration) linear both;
+}
+html[data-launch-intro='skip'] .launch-intro {
+  display: none;
+}
+.launch-intro .brand-reveal__stage {
+  animation: launch-intro-stage var(--reveal-duration) linear both;
+}
+
+@keyframes launch-intro-stage {
+  0%,
+  76% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+@keyframes launch-intro-exit {
+  0%,
+  76% {
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Reduced motion: hold the static splash frame briefly, then a plain fade. */
+@media (prefers-reduced-motion: reduce) {
+  .launch-intro {
+    animation: launch-intro-fade 450ms linear both;
+  }
+  .launch-intro * {
+    animation: none !important;
+  }
+}
+@keyframes launch-intro-fade {
+  0%,
+  45% {
+    opacity: 1;
+    animation-timing-function: ease-out;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

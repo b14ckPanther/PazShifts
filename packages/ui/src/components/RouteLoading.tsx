@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 import { BrandEntrance } from './BrandSplash';
 
 /** Branded route splash screen. Mustard yellow Paz branding. */
-export function RouteLoading() {
+export function RouteLoading({ children }: { children?: ReactNode }) {
   return (
     <div
       data-route-loading="true"
@@ -10,7 +11,7 @@ export function RouteLoading() {
       aria-busy="true"
       aria-label="טוענים"
     >
-      <BrandEntrance />
+      {children ?? <BrandEntrance />}
     </div>
   );
 }

@@ -3,11 +3,11 @@
  */
 
 export const radius = {
-  xs: '4px',
-  sm: '8px',
-  md: '12px',
-  lg: '16px',
-  xl: '24px',
+  xs: '6px',
+  sm: '10px',
+  md: '14px',
+  lg: '18px',
+  xl: '26px',
   pill: '9999px',
 } as const;
 

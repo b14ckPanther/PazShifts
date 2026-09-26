@@ -9,6 +9,17 @@ import {
 import '../styles/hours-table.css';
 import { RateBreakdown } from './RateBreakdown';
 
+const WEEKDAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+/** 2026-09-21 -> "ב׳ 21/09": the day/month format used across the product. */
+function dayLabel(date: string) {
+  const [y, m, d] = date.split('-');
+  const weekday = WEEKDAYS[new Date(Date.UTC(Number(y), Number(m) - 1, Number(d))).getUTCDay()];
+  return `${weekday} ${d}/${m}`;
+}
+function dateLabel(date: string) {
+  return date.split('-').reverse().join('/');
+}
+
 export function HoursTable({ report }: { report: HoursReport }) {
   const days: string[] = [];
   for (let date = report.from; date <= report.to; date = addDays(date, 1)) days.push(date);
@@ -20,7 +31,7 @@ export function HoursTable({ report }: { report: HoursReport }) {
       aria-label="טבלת שעות — ניתן לגלול לרוחב"
     >
       <table className="hours-table" role="table">
-        <caption>שעות נוכחות · {report.timezone}</caption>
+        <caption>שעות נוכחות לפי שעון התחנה</caption>
         <thead>
           <tr>
             <th scope="col">יום</th>
@@ -82,20 +93,24 @@ function HoursDay({
         entries.map((e, index) => (
           <tr key={`${e.id}-${index}`}>
             <th scope="row">
-              <bdi>{date}</bdi>
+              <bdi>{dayLabel(date)}</bdi>
             </th>
             <td dir="ltr">{clock(e.start, report.timezone)}</td>
             <td dir="ltr">
               {clock(e.end, report.timezone)}
               {e.end && localDate(new Date(e.end), report.timezone) !== e.date && (
                 <small dir="rtl">
-                  יציאה ב-<bdi>{localDate(new Date(e.end), report.timezone)}</bdi>
+                  יציאה ב-<bdi>{dateLabel(localDate(new Date(e.end), report.timezone))}</bdi>
                 </small>
               )}
             </td>
             <td dir="ltr">{duration(e.seconds)}</td>
             <td>
-              <span className={e.status === 'הושלמה' ? '' : 'hours-table-warning'}>{e.status}</span>
+              <span
+                className={`hours-status ${e.status === 'הושלמה' ? 'hours-status--done' : 'hours-table-warning hours-status--attention'}`}
+              >
+                {e.status}
+              </span>
               <small>{e.source}</small>
               <RateBreakdown entries={[e]} compact />
               {e.reason && <small>תיקון: {e.reason}</small>}
@@ -105,7 +120,7 @@ function HoursDay({
       ) : (
         <tr>
           <th scope="row">
-            <bdi>{date}</bdi>
+            <bdi>{dayLabel(date)}</bdi>
           </th>
           <td>—</td>
           <td>—</td>
@@ -125,7 +140,7 @@ function HoursDay({
       {weekTotal !== null && (
         <tr className="hours-table-week">
           <th scope="row" colSpan={3}>
-            סיכום שבוע <bdi>{weekStart(date, 0)}</bdi>
+            סיכום שבוע <bdi>{dateLabel(weekStart(date, 0))}</bdi>
           </th>
           <td dir="ltr">{duration(weekTotal)}</td>
           <td />

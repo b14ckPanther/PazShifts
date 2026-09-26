@@ -13,11 +13,6 @@
 .darb-credit-dot {
   color: #ffbf00;
 }
-@keyframes darb-shimmer {
-  to {
-    transform: translateX(120%);
-  }
-}
 /* Match streamed route readiness without a client effect or artificial timer. */
 .app-shell:has(.route-loading) .darb-footer,
 .app-shell:has(.brand-loading) .darb-footer {
@@ -30,7 +25,7 @@
 .login-credit {
   margin-top: 16px;
   padding-top: 10px;
-  border-top: 1px solid #e8ebef;
+  border-top: 1px solid var(--ys-color-border-subtle);
   text-align: center;
 }
 .login-credit a {
@@ -44,25 +39,17 @@
   min-height: 44px;
   padding: 0 8px;
   border-radius: 10px;
-  color: #172033;
+  color: var(--ys-color-text-primary);
   text-decoration: none;
-  background: linear-gradient(110deg, #fff, #fff9e5, #fff);
+  background: var(--ys-color-surface-raised);
+  transition: background-color var(--ys-transition-fast);
 }
-.login-credit a::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(110deg, transparent 30%, #fcbc0026 50%, transparent 70%);
-  transform: translateX(-120%);
-}
-.login-credit a:hover::after,
-.login-credit a:focus-visible::after {
-  animation: darb-shimmer 750ms ease both;
+.login-credit a:hover {
+  background: var(--ys-color-surface-base);
 }
 .login-credit-label {
-  font-size: 10px;
-  color: #687386;
+  font-size: 11px;
+  color: var(--ys-color-text-muted);
 }
 .login-credit-name {
   display: inline-flex;
@@ -79,25 +66,19 @@
 .login-credit-launch {
   display: grid;
   place-items: center;
-  color: #8a6500;
+  color: var(--ys-color-brand-yellow-ink);
 }
 .login-credit small {
   display: block;
   margin-top: 4px;
   font-size: 9px;
   line-height: 1.5;
-  color: #687386;
+  color: var(--ys-color-text-muted);
 }
 @media (max-height: 700px) {
   .login-credit {
     margin-top: 10px;
     padding-top: 6px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .login-credit a:hover::after,
-  .login-credit a:focus-visible::after {
-    animation: none;
   }
 }
 /* Keep the complete login card visible on shorter phones, without shrinking inputs. */
@@ -120,6 +101,6 @@
 }
 
 .login-credit a:focus-visible {
-  outline: 3px solid #b48a19;
+  outline: 2px solid var(--ys-focus-ring);
   outline-offset: 3px;
 }

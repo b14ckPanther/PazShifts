@@ -1,0 +1,195 @@
+/*
+ * 3D logomark reveal (see BrandReveal.tsx), used by the launch intro and the navigation
+ * splash. Frame 0 is the installed-PWA splash: the black logomark on manifest yellow.
+ * Everything is sized from --size, so perspective, depth and shadow scale together;
+ * only transform and opacity animate.
+ */
+.launch-intro,
+.brand-reveal {
+  --reveal-duration: 1150ms;
+}
+.brand-reveal {
+  --size: clamp(112px, 30vmin, 184px);
+  display: grid;
+  place-items: center;
+}
+
+/* Soft key light, matching the in-app brand splash gradient. */
+.brand-reveal__light {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 42%, #ffd233 0%, rgba(252, 188, 0, 0) 62%);
+  opacity: 0;
+  animation: brand-reveal-light var(--reveal-duration) ease-out both;
+}
+
+.brand-reveal__stage {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  perspective: calc(var(--size) * 5);
+}
+
+.brand-reveal__shadow {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 94%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(92, 56, 0, 0.3), rgba(92, 56, 0, 0));
+  opacity: 0;
+  animation: brand-reveal-shadow var(--reveal-duration) both;
+}
+
+.brand-reveal__mark {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  animation: brand-reveal-turn var(--reveal-duration) both;
+}
+
+/* Copies of the mono mark stepped back in Z read as a solid extrusion once it tilts. */
+.brand-reveal__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  transform: translateZ(calc(var(--size) * -0.014 * var(--i, 0)));
+}
+.brand-reveal__face {
+  transform: translateZ(calc(var(--size) * 0.004));
+  opacity: 0;
+  animation: brand-reveal-face var(--reveal-duration) ease-out both;
+}
+
+/* A highlight band clipped to the glyph; it keeps sweeping while a route is still loading. */
+.brand-reveal__sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translateZ(calc(var(--size) * 0.008));
+  -webkit-mask: url('/brand/logomark.png') center / contain no-repeat;
+  mask: url('/brand/logomark.png') center / contain no-repeat;
+  opacity: 0;
+  animation: brand-reveal-sheen-fade var(--reveal-duration) infinite both;
+}
+.brand-reveal__sheen > span {
+  position: absolute;
+  inset: 0 -75%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  transform: translateX(-45%);
+  animation: brand-reveal-sheen var(--reveal-duration) infinite both;
+}
+
+/* 0–10% hold on the OS splash frame, tilt back to show depth, swing toward the
+   viewer with a small overshoot, and settle by 78%. */
+@keyframes brand-reveal-turn {
+  0%,
+  10% {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  36% {
+    transform: rotateX(16deg) rotateY(-28deg) scale(0.94);
+    animation-timing-function: cubic-bezier(0.25, 0, 0.15, 1);
+  }
+  62% {
+    transform: rotateX(-4deg) rotateY(6deg) scale(1.05);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  }
+  78%,
+  100% {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+  }
+}
+@keyframes brand-reveal-face {
+  0%,
+  18% {
+    opacity: 0;
+  }
+  54%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes brand-reveal-sheen-fade {
+  0%,
+  34% {
+    opacity: 0;
+  }
+  46%,
+  60% {
+    opacity: 1;
+  }
+  74%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes brand-reveal-sheen {
+  0%,
+  34% {
+    transform: translateX(-45%);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  74%,
+  100% {
+    transform: translateX(45%);
+  }
+}
+@keyframes brand-reveal-shadow {
+  0%,
+  10% {
+    opacity: 0;
+    transform: scaleX(0.8);
+    animation-timing-function: ease-out;
+  }
+  36% {
+    opacity: 1;
+    transform: scaleX(1.1);
+    animation-timing-function: ease-in-out;
+  }
+  62% {
+    opacity: 0.6;
+    transform: scaleX(0.92);
+  }
+  78%,
+  100% {
+    opacity: 0.7;
+    transform: scaleX(1);
+  }
+}
+@keyframes brand-reveal-light {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* A route's loading screen stays under an already-running navigation splash, so the
+   reveal is not restarted mid-animation; the splash still waits for it to finish. */
+body:has(> .brand-splash.brand-splash-visible:not([data-route-loading])) [data-route-loading] {
+  visibility: hidden;
+  transition: none;
+}
+
+/* Reduced motion: the static front-facing mark only. */
+@media (prefers-reduced-motion: reduce) {
+  .brand-reveal * {
+    animation: none !important;
+  }
+}

@@ -1,63 +1,78 @@
-/* Shared phone-first authentication and NFC surfaces; zoom remains enabled. */
+/*
+ * Shared phone-first shell: authentication and NFC surfaces, brand splash, app shell,
+ * bottom tab bar and navigation feedback. Zoom stays enabled.
+ */
+
+/* ---------- Authentication / full-screen flows ---------- */
 .mobile-flow,
 .mobile-flow * {
   box-sizing: border-box;
 }
 .mobile-flow {
+  position: relative;
+  isolation: isolate;
   min-height: 100svh;
   min-height: 100dvh;
   width: 100%;
   display: grid;
   align-content: center;
   justify-items: center;
-  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: #fdfaf3;
-  background: radial-gradient(circle at 50% 12%, #fff9e6 0%, #fdfbf7 55%, #f7f2e4 100%);
-  color: #111827;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--ys-color-surface-base);
+  color: var(--ys-color-text-primary);
+}
+/* The canopy: a yellow band cut on the logomark's 45-degree stroke angle. */
+.mobile-flow::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: clamp(200px, 38dvh, 340px);
+  background: var(--ys-color-brand-yellow);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
+  z-index: -1;
 }
 .login-panel {
-  width: min(100%, 400px);
-  background: #ffffff;
-  border: 1px solid #f2e7cc;
-  border-top: 4px solid var(--ys-color-brand-yellow, #fcbc00);
-  border-radius: 24px;
-  padding: clamp(24px, 5.5vw, 36px);
-  box-shadow: 0 16px 40px rgba(180, 83, 9, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  width: min(100%, 420px);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  border-radius: var(--ys-radius-xl);
+  padding: clamp(24px, 6vw, 36px);
+  box-shadow:
+    0 2px 4px rgba(40, 28, 16, 0.04),
+    0 18px 48px rgba(40, 28, 16, 0.12);
 }
 .mobile-brand {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0;
+  gap: 10px;
 }
 .mobile-brand small {
-  display: inline-block;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--ys-text-xs);
   font-weight: 700;
-  color: #700020;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
-  border-radius: 6px;
-  padding: 2px 8px;
-  margin-top: 8px;
-  letter-spacing: 0.2px;
+  color: var(--ys-color-brand-yellow-ink);
+  background: var(--ys-color-brand-yellow-subtle);
+  border-radius: var(--ys-radius-pill);
+  padding: 3px 10px;
 }
 .login-heading {
-  margin: 22px 0 20px;
+  margin: 24px 0 22px;
 }
 .login-heading h1 {
-  font-size: clamp(23px, 6vw, 27px);
+  font-size: 1.625rem;
   font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.4px;
-  color: #111827;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ys-color-text-primary);
   margin: 0 0 6px;
 }
 .login-heading p,
 .login-help {
-  color: #4b5563;
-  font-size: 13.5px;
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-md);
   line-height: 1.55;
   margin: 0;
 }
@@ -68,116 +83,125 @@
 .compact-login-form label {
   display: grid;
   gap: 7px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #374151;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
   min-width: 0;
 }
 .compact-login-form input {
   width: 100%;
   min-width: 0;
-  height: 50px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 10px 14px;
-  background: #ffffff;
-  color: #111827;
+  min-height: var(--ys-control-lg);
+  border: 1px solid var(--ys-color-border-medium);
+  border-radius: var(--ys-radius-md);
+  padding: 12px 16px;
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
   font: inherit;
-  font-size: 16px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 17px;
+  font-family: var(--ys-font-numeric);
+  letter-spacing: 0.01em;
 }
 .compact-login-form input:focus {
   outline: none;
-  border-color: var(--ys-color-brand-yellow, #fcbc00);
-  box-shadow: 0 0 0 3px rgba(252, 188, 0, 0.25);
+  border-color: var(--ys-color-text-primary);
+  box-shadow: 0 0 0 4px var(--ys-focus-halo);
 }
 .password-field {
   position: relative;
   min-width: 0;
 }
 .password-field input {
-  padding-right: 64px;
+  padding-right: 76px;
 }
 .password-field button {
   position: absolute;
-  right: 4px;
-  top: 4px;
-  height: 42px;
-  min-width: 55px;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-height: 40px;
+  min-width: 62px;
   background: transparent;
   border: 0;
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--ys-text-sm);
   font-weight: 700;
-  color: #700020;
+  color: var(--ys-color-brand-crimson-ink);
   cursor: pointer;
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
+  border-radius: var(--ys-radius-sm);
+  transition: background-color var(--ys-transition-fast);
 }
 .password-field button:hover {
-  background: #fef2f2;
+  background: var(--ys-color-brand-crimson-subtle);
 }
 .mobile-primary,
 .mobile-secondary {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 8px;
   text-decoration: none;
-  min-height: 50px;
+  min-height: var(--ys-control-lg);
   width: 100%;
-  border: 0;
-  border-radius: 14px;
+  border: 1px solid transparent;
+  border-radius: var(--ys-radius-md);
   font: inherit;
-  font-size: 16px;
+  font-size: var(--ys-text-lg);
   font-weight: 700;
   cursor: pointer;
-  padding: 10px 14px;
-  -webkit-tap-highlight-color: transparent;
+  padding: 10px 16px;
+  transition:
+    background-color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast),
+    transform 120ms var(--ys-ease-standard);
 }
 .mobile-primary {
-  color: #ffffff;
-  background: #700020;
-  box-shadow: 0 4px 14px rgba(112, 0, 32, 0.25);
-  transition: all 160ms ease;
+  color: #fff;
+  background: var(--ys-color-brand-crimson);
+  box-shadow:
+    0 1px 2px rgba(143, 0, 43, 0.25),
+    0 6px 18px rgba(209, 0, 64, 0.22);
 }
 .mobile-primary:hover:not(:disabled) {
-  background: #5a0018;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(112, 0, 32, 0.32);
+  background: var(--ys-color-brand-crimson-hover);
+}
+.mobile-primary:active:not(:disabled),
+.mobile-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .mobile-primary:active:not(:disabled) {
-  background: #4a0014;
-  transform: translateY(0);
+  background: var(--ys-color-brand-crimson-active);
 }
 .mobile-primary:disabled {
-  opacity: 0.6;
-  cursor: wait;
+  opacity: 0.65;
+  cursor: progress;
 }
 .mobile-secondary {
-  color: #354154;
-  border: 1px solid #dbe1e9;
-  background: #fff;
+  color: var(--ys-color-text-primary);
+  border-color: var(--ys-color-border-medium);
+  background: var(--ys-color-surface-raised);
+}
+.mobile-secondary:hover {
+  border-color: var(--ys-color-border-strong);
 }
 .login-help {
   text-align: center;
   margin-top: 20px;
-  font-size: 12.5px;
+  font-size: var(--ys-text-sm);
 }
 .mobile-error {
-  color: #991b1b;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  color: var(--ys-color-status-danger-ink);
+  background: var(--ys-color-status-danger-subtle);
+  border: 1px solid rgba(200, 16, 46, 0.2);
+  border-radius: var(--ys-radius-md);
+  font-size: var(--ys-text-sm);
   font-weight: 600;
   line-height: 1.5;
-  padding: 10px 14px;
+  padding: 12px 14px;
   margin: 0;
   overflow-wrap: anywhere;
-}
-.mobile-flow :focus-visible {
-  outline: 3px solid rgba(252, 188, 0, 0.75);
-  outline-offset: 2px;
 }
 @media (max-height: 620px) {
   .mobile-flow {
@@ -187,13 +211,13 @@
     padding: 20px;
   }
   .login-heading {
-    margin: 17px 0;
+    margin: 16px 0;
   }
   .compact-login-form {
     gap: 13px;
   }
   .login-help {
-    margin-top: 15px;
+    margin-top: 14px;
   }
 }
 @media (max-width: 359px) {
@@ -202,12 +226,15 @@
   }
   .login-panel {
     padding: 20px;
-    border-radius: 18px;
+    border-radius: var(--ys-radius-lg);
   }
 }
 @media (max-height: 450px) {
   .mobile-flow {
     padding-block: 10px;
+  }
+  .mobile-flow::before {
+    height: 120px;
   }
   .login-panel .mobile-brand,
   .login-help {
@@ -217,20 +244,19 @@
     margin: 0 0 12px;
   }
   .login-heading h1 {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
 }
 
-/* A tactile two-position switch, with an independent identity field. */
+/* Two-position method switch (kept for the email option). */
 .login-methods {
   display: grid;
   grid-template-columns: 1fr 1fr;
   position: relative;
   isolation: isolate;
   padding: 4px;
-  border: 1px solid #e8ebef;
-  border-radius: 14px;
-  background: #f3f5f8;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-sunken);
 }
 .login-methods::before {
   content: '';
@@ -241,9 +267,9 @@
   border-radius: 10px;
   background: #fff;
   box-shadow:
-    0 2px 8px #17203312,
-    inset 0 -2px #fcbc00;
-  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    0 1px 2px rgba(40, 28, 16, 0.1),
+    0 2px 6px rgba(40, 28, 16, 0.06);
+  transition: transform 260ms var(--ys-ease-out);
   z-index: -1;
 }
 .login-methods[data-method='email']::before {
@@ -258,15 +284,15 @@
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: #687386;
+  color: var(--ys-color-text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--ys-text-md);
   font-weight: 600;
   cursor: pointer;
   transition: color 180ms;
 }
 .login-methods button[aria-selected='true'] {
-  color: #172033;
+  color: var(--ys-color-text-primary);
 }
 .login-methods button:disabled {
   cursor: wait;
@@ -279,18 +305,15 @@
     opacity: 0.4;
     transform: translateY(5px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 .login-flow .login-heading {
-  margin: 18px 0;
+  margin: 20px 0;
 }
 .login-flow .compact-login-form {
-  gap: 14px;
+  gap: 16px;
 }
 
+/* ---------- Brand splash (launch, navigation, route loading) ---------- */
 .brand-splash,
 .brand-loading {
   box-sizing: border-box;
@@ -306,15 +329,22 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
+  overflow: hidden;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1), visibility 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .brand-splash.brand-splash-visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+/* Content stays mounted while the splash fades out; idle loops stop once hidden. */
+.brand-splash:not(.brand-splash-visible) * {
+  animation-play-state: paused;
 }
 .brand-loading {
   min-height: 100svh;
@@ -430,31 +460,6 @@
     transform: scaleX(1);
   }
 }
-@media (max-height: 620px) {
-  .login-flow .login-heading {
-    margin: 12px 0;
-  }
-  .login-flow .compact-login-form {
-    gap: 11px;
-  }
-  .login-flow .login-help {
-    margin-top: 12px;
-  }
-}
-@media (max-height: 450px) {
-  .login-flow .login-heading {
-    margin: 0 0 10px;
-  }
-  .login-flow .login-heading p {
-    display: none;
-  }
-  .login-flow .login-panel {
-    padding-block: 12px;
-  }
-  .login-flow .compact-login-form {
-    gap: 8px;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .brand-splash {
     display: none;
@@ -469,178 +474,174 @@
     animation: none !important;
   }
   .login-methods::before,
-  .login-methods button {
+  .login-methods button,
+  .mobile-primary,
+  .mobile-secondary {
     transition: none;
   }
 }
 
-/* White device edges, yellow navigation accents, crimson primary actions. */
+/* ---------- App shell ---------- */
+/* `clip` (not `hidden`) stops sideways scroll without turning body into a scroll
+   container, so sticky headers keep working. */
 html {
   color-scheme: light;
-  background: #fff;
+  /* `hidden` is the fallback for iOS 15 (no `clip`); on html it applies to the viewport,
+     so it cannot turn body into a scroll container. */
   overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
-  width: 100%;
-  touch-action: pan-y;
+  touch-action: manipulation;
   overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   width: 100%;
   position: relative;
-  touch-action: pan-y;
   overscroll-behavior-x: none;
 }
 .app-shell {
   --app-safe-top: env(safe-area-inset-top, 0px);
   --app-safe-bottom: env(safe-area-inset-bottom, 0px);
-  overflow-x: hidden;
   max-width: 100%;
   width: 100%;
-}
-.mobile-dock-space {
-  display: none;
-}
-@media (max-width: 767px) {
-  .app-shell {
-    padding-top: var(--app-safe-top);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-  }
-  .app-shell::before {
-    content: '';
-    position: fixed;
-    inset: 0 0 auto;
-    height: var(--app-safe-top);
-    background: #fff;
-    z-index: 90;
-    pointer-events: none;
-  }
-  .app-shell > main > header:first-child {
-    background: #fff;
-  }
-  .app-shell .mobile-flow {
-    min-height: calc(100dvh - var(--app-safe-top));
-    padding-top: 16px;
-  }
-  .app-shell:not(:has(.mobile-dock-space)) {
-    padding-bottom: var(--app-safe-bottom);
-  }
-  .app-shell:not(:has(.mobile-dock-space)) .mobile-flow {
-    min-height: calc(100dvh - var(--app-safe-top) - var(--app-safe-bottom));
-    padding-bottom: 16px;
-  }
-  .mobile-dock-space {
-    display: block;
-    height: 0;
-  }
-  .mobile-dock {
-    box-sizing: border-box;
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 90;
-    display: flex;
-    gap: 4px;
-    padding: 6px max(10px, env(safe-area-inset-right)) calc(6px + var(--app-safe-bottom))
-      max(10px, env(safe-area-inset-left));
-    border-top: 1px solid #e5e7eb;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 -4px 24px rgba(23, 32, 51, 0.08);
-  }
-  .mobile-dock a {
-    flex: 1;
-    min-width: 0;
-    min-height: 52px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-radius: 14px;
-    text-decoration: none;
-    color: #647084;
-    font-size: 11px;
-    font-weight: 600;
-    transition:
-      background 160ms,
-      color 160ms,
-      transform 160ms;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mobile-dock a[aria-current='page'] {
-    color: #684d00;
-    background: #fff2bd;
-  }
-  .mobile-dock a:active {
-    transform: scale(0.96);
-  }
-  .mobile-dock a:focus-visible {
-    outline: 3px solid #b48a19;
-    outline-offset: 1px;
-  }
-  .app-shell {
-    scroll-padding-bottom: calc(88px + var(--app-safe-bottom));
-  }
-  .app-shell input,
-  .app-shell textarea,
-  .app-shell select {
-    scroll-margin-block: 90px;
-  }
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 @media (display-mode: standalone) {
   html {
     overscroll-behavior-y: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
+
+/* ---------- Bottom tab bar (phones) ---------- */
+.mobile-dock-space {
+  display: none;
+}
+@media (max-width: 767px) {
+  .mobile-dock-space {
+    display: block;
+    height: 0;
+  }
+  /* One clearance region, owned by the shell. */
+  .app-shell:has(.mobile-dock-space) {
+    padding-bottom: calc(var(--ys-tabbar-height) + var(--app-safe-bottom) + 12px);
+  }
+  html {
+    scroll-padding-bottom: calc(var(--ys-tabbar-height) + env(safe-area-inset-bottom, 0px) + 24px);
+  }
+  .app-shell input,
+  .app-shell textarea,
+  .app-shell select {
+    scroll-margin-block: 96px;
+  }
+  .mobile-dock {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 90;
+    display: flex;
+    justify-content: space-around;
+    min-height: calc(var(--ys-tabbar-height) + var(--app-safe-bottom));
+    padding: 0 max(6px, env(safe-area-inset-right)) var(--app-safe-bottom)
+      max(6px, env(safe-area-inset-left));
+    background: var(--ys-color-surface-raised);
+    box-shadow: var(--ys-shadow-bar);
+  }
   .mobile-dock a {
+    position: relative;
+    isolation: isolate;
+    flex: 1 1 0;
+    max-width: 120px;
+    min-width: 0;
+    height: var(--ys-tabbar-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding-top: 2px;
+    text-decoration: none;
+    color: var(--ys-color-text-muted);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--ys-transition-fast);
+  }
+  .mobile-dock a > span:not(.navigation-pending) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-inline: 2px;
+  }
+  .mobile-dock a > svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 220ms var(--ys-ease-out);
+  }
+  /* Indicator pill behind the icon; springs in on the selected tab. */
+  .mobile-dock a::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 60px;
+    height: 32px;
+    margin-left: -30px;
+    border-radius: var(--ys-radius-pill);
+    background: var(--ys-color-brand-yellow);
+    opacity: 0;
+    transform: scaleX(0.5);
+    transition:
+      transform 260ms var(--ys-ease-out),
+      opacity 160ms var(--ys-ease-standard);
+    z-index: -1;
+  }
+  .mobile-dock a[aria-current='page'] {
+    color: var(--ys-color-text-primary);
+    font-weight: 700;
+  }
+  .mobile-dock a[aria-current='page']::before {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  .mobile-dock a:active > svg {
+    transform: scale(0.9);
+  }
+  .mobile-dock a:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+  .mobile-dock a:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 4px 2px;
+    border-radius: var(--ys-radius-md);
+    outline: 2px solid var(--ys-focus-ring);
+  }
+  /* A tab whose destination is still loading gets a soft pill immediately. */
+  .mobile-dock a:has(> .navigation-pending[data-pending='true'])::before {
+    opacity: 0.45;
+    transform: scaleX(0.85);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-dock a,
+  .mobile-dock a::before,
+  .mobile-dock a > svg {
     transition: none;
   }
-  .mobile-dock a:active {
+  .mobile-dock a:active > svg {
     transform: none;
   }
 }
-@media (max-width: 767px) {
-  html {
-    scroll-padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-  }
-  .app-shell main > header:first-child {
-    padding-block: 12px !important;
-    border-bottom-width: 2px !important;
-  }
-  .app-shell main > header:first-child h2 {
-    font-size: 16px !important;
-    line-height: 1.35 !important;
-  }
-  .app-shell main > header:first-child .ys-container > div {
-    gap: 10px !important;
-  }
-  .app-shell .ys-page-header {
-    padding: 12px 0 18px !important;
-    gap: 10px !important;
-  }
-  .app-shell .ys-page-header h1 {
-    font-size: 24px !important;
-    margin-block: 0;
-  }
-  .app-shell .ys-page-header p {
-    font-size: 13px !important;
-    margin-block: 0;
-  }
-  .app-shell::after {
-    content: '';
-    position: fixed;
-    inset: auto 0 0;
-    height: var(--app-safe-bottom);
-    background: #fff;
-    pointer-events: none;
-    z-index: 81;
-  }
-}
+
+/* ---------- Navigation feedback ---------- */
 .navigation-pending {
   position: absolute;
   width: 1px;
@@ -651,14 +652,10 @@ body {
 a:has(> .navigation-pending[data-pending='true']) {
   cursor: progress;
 }
-.mobile-dock a:has(> .navigation-pending[data-pending='true']) {
-  background: #fff2bd;
-  color: #684d00;
-}
 body:has(.navigation-pending[data-pending='true'])::before {
   content: '';
   position: fixed;
-  top: var(--app-safe-top, 0px);
+  top: env(safe-area-inset-top, 0px);
   inset-inline: 0;
   height: 3px;
   z-index: 100;
@@ -671,21 +668,32 @@ body:has(.navigation-pending[data-pending='true'])::before {
     background-position: -200% 0;
   }
 }
+
+/* ---------- Route loading skeleton ---------- */
 .route-loading {
   box-sizing: border-box;
   padding: 28px 20px;
   width: min(100%, 900px);
   margin-inline: auto;
   min-height: 55dvh;
-  color: #647084;
+  color: var(--ys-color-text-muted);
 }
 .route-loading > p {
-  font-size: 13px;
+  font-size: var(--ys-text-sm);
   margin: 0 0 20px;
 }
+.route-loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.route-loading-brand p {
+  font-size: var(--ys-text-sm);
+}
 .route-skeleton {
-  border-radius: 12px;
-  background: #e8ebef;
+  border-radius: var(--ys-radius-sm);
+  background: var(--ys-color-surface-muted);
   margin-bottom: 14px;
   animation: route-pulse 1.4s ease-in-out infinite alternate;
 }
@@ -700,9 +708,7 @@ body:has(.navigation-pending[data-pending='true'])::before {
 }
 .route-skeleton-card {
   height: 150px;
-  background: #eef0f4;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
+  border-radius: var(--ys-radius-lg);
 }
 @keyframes route-pulse {
   to {
@@ -716,36 +722,8 @@ body:has(.navigation-pending[data-pending='true'])::before {
   }
 }
 
-/* The shell alone reserves dock clearance, after the footer, in both apps. */
 @media (max-width: 767px) {
-  .app-shell:has(.mobile-dock-space) {
-    padding-bottom: calc(76px + var(--app-safe-bottom, 0px)) !important;
-  }
-  .app-shell:has(.mobile-dock-space) main:not(.mobile-flow) {
-    padding-bottom: calc(76px + var(--app-safe-bottom, 0px)) !important;
-  }
   .darb-footer {
     padding-block: 16px 20px;
   }
-}
-
-.ys-container {
-  box-sizing: border-box !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-@media (max-width: 640px) {
-  .ys-container {
-    padding-inline: 14px !important;
-  }
-}
-.route-loading-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.route-loading-brand p {
-  font-size: 13px;
 }

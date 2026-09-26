@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T21:09:23+00:00",
+  "title": "Design System: YellowShifts",
+  "extensions": {
+    "colorMeta": {
+      "canopy-yellow": {
+        "role": "primary",
+        "displayName": "Canopy Yellow",
+        "canonical": "#fcbc00",
+        "tonalRamp": [
+          "#160700",
+          "#381e00",
+          "#5d3700",
+          "#855200",
+          "#ac7500",
+          "#c99d3e",
+          "#e6c687",
+          "#ffecc4"
+        ]
+      },
+      "canopy-yellow-subtle": {
+        "role": "primary",
+        "displayName": "Canopy Yellow Subtle",
+        "canonical": "#fff4cc",
+        "tonalRamp": [
+          "#0e0b04",
+          "#282414",
+          "#464029",
+          "#665d3f",
+          "#89805f",
+          "#aca58a",
+          "#d0cbb7",
+          "#f2efe2"
+        ]
+      },
+      "canopy-yellow-ink": {
+        "role": "primary",
+        "displayName": "Canopy Yellow Ink",
+        "canonical": "#5c4300",
+        "tonalRamp": [
+          "#100a01",
+          "#2e2209",
+          "#4e3d19",
+          "#715a2a",
+          "#957d4a",
+          "#b6a27b",
+          "#d8c9ac",
+          "#f7edda"
+        ]
+      },
+      "crimson": {
+        "role": "secondary",
+        "displayName": "Forecourt Crimson",
+        "canonical": "#d10040",
+        "tonalRamp": [
+          "#220002",
+          "#4d000f",
+          "#7d0021",
+          "#b00034",
+          "#de3854",
+          "#f77781",
+          "#ffacb0",
+          "#ffdfe0"
+        ]
+      },
+      "crimson-hover": {
+        "role": "secondary",
+        "displayName": "Crimson Hover",
+        "canonical": "#b30037",
+        "tonalRamp": [
+          "#200003",
+          "#490212",
+          "#770e25",
+          "#a91e3a",
+          "#d5465a",
+          "#ef7d86",
+          "#ffb0b4",
+          "#ffdfe1"
+        ]
+      },
+      "crimson-deep": {
+        "role": "secondary",
+        "displayName": "Deep Crimson",
+        "canonical": "#8f002b",
+        "tonalRamp": [
+          "#1d0104",
+          "#440c15",
+          "#701d2a",
+          "#9f3041",
+          "#ca5361",
+          "#e5848b",
+          "#fdb4b8",
+          "#ffe0e2"
+        ]
+      },
+      "crimson-subtle": {
+        "role": "secondary",
+        "displayName": "Crimson Subtle",
+        "canonical": "#fdebf0",
+        "tonalRamp": [
+          "#0e0a0b",
+          "#292224",
+          "#473d3f",
+          "#675a5d",
+          "#8a7c80",
+          "#ada1a4",
+          "#d1c8ca",
+          "#f3edee"
+        ]
+      },
+      "crimson-text": {
+        "role": "secondary",
+        "displayName": "Crimson Text",
+        "canonical": "#c2003b",
+        "tonalRamp": [
+          "#210003",
+          "#4b0010",
+          "#7a0423",
+          "#ac1237",
+          "#da4057",
+          "#f37a83",
+          "#ffaeb2",
+          "#ffe0e1"
+        ]
+      },
+      "splash-wine": {
+        "role": "secondary",
+        "displayName": "Splash Wine",
+        "canonical": "#700020",
+        "tonalRamp": [
+          "#1b0305",
+          "#401218",
+          "#69262e",
+          "#963b46",
+          "#c05d66",
+          "#dc8b90",
+          "#f6b8bb",
+          "#ffe3e4"
+        ]
+      },
+      "concrete-ground": {
+        "role": "neutral",
+        "displayName": "Concrete Ground",
+        "canonical": "#f3f2ee",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#40403d",
+          "#5e5e5a",
+          "#81807d",
+          "#a5a5a1",
+          "#cbcac7",
+          "#efeeea"
+        ]
+      },
+      "panel-white": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "concrete-muted": {
+        "role": "neutral",
+        "displayName": "Concrete Muted",
+        "canonical": "#ecebe6",
+        "tonalRamp": [
+          "#0c0b08",
+          "#252420",
+          "#41403c",
+          "#5e5e59",
+          "#81807c",
+          "#a6a5a0",
+          "#cbcbc6",
+          "#f0eee9"
+        ]
+      },
+      "concrete-sunken": {
+        "role": "neutral",
+        "displayName": "Concrete Sunken",
+        "canonical": "#e7e5df",
+        "tonalRamp": [
+          "#0c0b07",
+          "#252420",
+          "#41403b",
+          "#5f5d58",
+          "#82807b",
+          "#a6a49f",
+          "#cccac4",
+          "#f0eee8"
+        ]
+      },
+      "warm-ink": {
+        "role": "neutral",
+        "displayName": "Warm Ink",
+        "canonical": "#1c1714",
+        "tonalRamp": [
+          "#0f0a07",
+          "#282320",
+          "#443e3b",
+          "#625c58",
+          "#857f7b",
+          "#aaa39f",
+          "#d0c9c5",
+          "#f4ede8"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "#554d47",
+        "tonalRamp": [
+          "#100a06",
+          "#29221d",
+          "#463e38",
+          "#645c56",
+          "#877e78",
+          "#aca39c",
+          "#d2c8c1",
+          "#f6ece5"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#6e665f",
+        "tonalRamp": [
+          "#100a05",
+          "#29231d",
+          "#463e38",
+          "#645c55",
+          "#877f77",
+          "#aca39b",
+          "#d2c9c1",
+          "#f6ede4"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e6e2da",
+        "tonalRamp": [
+          "#0d0b06",
+          "#27241e",
+          "#433f39",
+          "#615d56",
+          "#838079",
+          "#a8a49d",
+          "#cecac2",
+          "#f2eee6"
+        ]
+      },
+      "border-medium": {
+        "role": "neutral",
+        "displayName": "Border Medium",
+        "canonical": "#d5cfc4",
+        "tonalRamp": [
+          "#0f0b04",
+          "#28231b",
+          "#443f36",
+          "#625d53",
+          "#857f75",
+          "#aaa499",
+          "#d0cabf",
+          "#f4eee2"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Border Strong",
+        "canonical": "#9d9489",
+        "tonalRamp": [
+          "#100a04",
+          "#2a231a",
+          "#463e35",
+          "#645c52",
+          "#877f74",
+          "#aca398",
+          "#d2c9bd",
+          "#f7ede1"
+        ]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Success",
+        "canonical": "#1f8a4c",
+        "tonalRamp": [
+          "#001003",
+          "#002d12",
+          "#044d26",
+          "#11703b",
+          "#3b955b",
+          "#75b688",
+          "#a9d8b5",
+          "#d9f8e0"
+        ]
+      },
+      "success-ink": {
+        "role": "status",
+        "displayName": "Success Ink",
+        "canonical": "#17693a",
+        "tonalRamp": [
+          "#010f05",
+          "#092c17",
+          "#1a4b2c",
+          "#2b6d43",
+          "#4d9164",
+          "#7fb38e",
+          "#b0d6ba",
+          "#ddf6e3"
+        ]
+      },
+      "success-subtle": {
+        "role": "status",
+        "displayName": "Success Subtle",
+        "canonical": "#e5f3ea",
+        "tonalRamp": [
+          "#050e08",
+          "#1c2720",
+          "#38433c",
+          "#556159",
+          "#77847c",
+          "#9ba8a0",
+          "#c1cec6",
+          "#e5f3ea"
+        ]
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Warning",
+        "canonical": "#d97a00",
+        "tonalRamp": [
+          "#1a0500",
+          "#3f1700",
+          "#672d00",
+          "#934500",
+          "#bc6700",
+          "#d89358",
+          "#f2bf95",
+          "#ffe7cc"
+        ]
+      },
+      "warning-ink": {
+        "role": "status",
+        "displayName": "Warning Ink",
+        "canonical": "#8a4b00",
+        "tonalRamp": [
+          "#160700",
+          "#381c02",
+          "#5d340b",
+          "#864e19",
+          "#ad703b",
+          "#ca9971",
+          "#e8c2a5",
+          "#ffe9d6"
+        ]
+      },
+      "warning-subtle": {
+        "role": "status",
+        "displayName": "Warning Subtle",
+        "canonical": "#fff0d9",
+        "tonalRamp": [
+          "#0e0b06",
+          "#29231a",
+          "#473e32",
+          "#675c4b",
+          "#8b7e6b",
+          "#ada394",
+          "#d1c9be",
+          "#f3eee6"
+        ]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Danger",
+        "canonical": "#c8102e",
+        "tonalRamp": [
+          "#210001",
+          "#4b0009",
+          "#7b0518",
+          "#ad1429",
+          "#da4149",
+          "#f37b79",
+          "#ffafab",
+          "#ffe1dd"
+        ]
+      },
+      "danger-ink": {
+        "role": "status",
+        "displayName": "Danger Ink",
+        "canonical": "#a10d26",
+        "tonalRamp": [
+          "#1e0002",
+          "#46090f",
+          "#731a21",
+          "#a32c34",
+          "#cf5054",
+          "#e98381",
+          "#ffb3b1",
+          "#ffe0dd"
+        ]
+      },
+      "danger-subtle": {
+        "role": "status",
+        "displayName": "Danger Subtle",
+        "canonical": "#fdeaed",
+        "tonalRamp": [
+          "#0e0a0b",
+          "#292223",
+          "#473d3e",
+          "#67595c",
+          "#8b7c7e",
+          "#aea1a3",
+          "#d1c8c9",
+          "#f3edee"
+        ]
+      },
+      "info": {
+        "role": "status",
+        "displayName": "Info",
+        "canonical": "#1f5fbf",
+        "tonalRamp": [
+          "#000a22",
+          "#06224c",
+          "#143d7b",
+          "#245aae",
+          "#457ed8",
+          "#77a5ee",
+          "#a9ccff",
+          "#d9f0ff"
+        ]
+      },
+      "info-ink": {
+        "role": "status",
+        "displayName": "Info Ink",
+        "canonical": "#174a95",
+        "tonalRamp": [
+          "#020a1e",
+          "#0d2345",
+          "#1e3f71",
+          "#315ca0",
+          "#5180c9",
+          "#7fa6e1",
+          "#afccf8",
+          "#ddf0ff"
+        ]
+      },
+      "info-subtle": {
+        "role": "status",
+        "displayName": "Info Subtle",
+        "canonical": "#e7effb",
+        "tonalRamp": [
+          "#070b13",
+          "#1f242d",
+          "#3a404a",
+          "#575e68",
+          "#7a818b",
+          "#9ea5b0",
+          "#c3cbd7",
+          "#e7effb"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Numeral",
+        "purpose": "Live elapsed timer on the on-shift panel; one per screen."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Shift time ranges, attendance timers, hours totals (Ubuntu tabular, .ys-num)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page h1 and greeting; 1.375rem under 640px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, section and empty-state titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions; 62ch cap in page headers."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, segmented options, canopy tabs."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Statuses, badges, fact labels; never uppercase or tracked."
+      }
+    },
+    "shadows": [
+      {
+        "name": "subtle",
+        "value": "0 1px 2px rgba(40, 28, 16, 0.06)",
+        "purpose": "Secondary buttons."
+      },
+      {
+        "name": "raised",
+        "value": "0 1px 2px rgba(40, 28, 16, 0.05), 0 2px 8px rgba(40, 28, 16, 0.05)",
+        "purpose": "Hover lift base for interactive cards."
+      },
+      {
+        "name": "card",
+        "value": "0 1px 2px rgba(40, 28, 16, 0.05), 0 4px 14px rgba(40, 28, 16, 0.05)",
+        "purpose": "Every white panel, list, table wrap and stacked row card, always with a hairline."
+      },
+      {
+        "name": "segment",
+        "value": "0 1px 2px rgba(40, 28, 16, 0.1), 0 2px 6px rgba(40, 28, 16, 0.06)",
+        "purpose": "Selected white segment on a sunken track."
+      },
+      {
+        "name": "dropdown",
+        "value": "0 4px 12px rgba(40, 28, 16, 0.1), 0 12px 32px rgba(40, 28, 16, 0.1)",
+        "purpose": "Account menu and popovers."
+      },
+      {
+        "name": "modal",
+        "value": "0 12px 28px rgba(40, 28, 16, 0.14), 0 32px 64px rgba(40, 28, 16, 0.14)",
+        "purpose": "Dialogs and sheets."
+      },
+      {
+        "name": "bar",
+        "value": "0 -1px 0 rgba(40, 28, 16, 0.08), 0 -6px 20px rgba(40, 28, 16, 0.06)",
+        "purpose": "Bottom tab bar, cast upward."
+      },
+      {
+        "name": "crimson-lift",
+        "value": "0 1px 2px rgba(143, 0, 43, 0.25), 0 3px 10px rgba(209, 0, 64, 0.18)",
+        "purpose": "Primary buttons only."
+      },
+      {
+        "name": "canopy-edge",
+        "value": "0 1px 0 rgba(92, 67, 0, 0.14)",
+        "purpose": "Line under the sticky canopy."
+      },
+      {
+        "name": "focus",
+        "value": "outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252, 188, 0, 0.55)",
+        "purpose": "The one focus language; fields use an ink border plus 4px halo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrances: dialogs, sheets, tab indicator, account panel."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "State changes: colour, border, shadow."
+      },
+      {
+        "name": "transition-fast",
+        "value": "150ms ease-standard",
+        "purpose": "Hover, focus and selection colour changes."
+      },
+      {
+        "name": "transition-standard",
+        "value": "220ms ease-out",
+        "purpose": "Switch thumb, dialog entrance."
+      },
+      {
+        "name": "press",
+        "value": "transform 120ms; scale(0.97) buttons, scale(0.995) cards, scale(0.9) tab icons",
+        "purpose": "Tactile press feedback."
+      },
+      {
+        "name": "sheet-in",
+        "value": "280ms ease-out translateY(100%)",
+        "purpose": "Bottom sheet on phones; the assignment side sheet enters in 240ms from the inline start."
+      },
+      {
+        "name": "tab-indicator",
+        "value": "260ms ease-out scaleX(0.5 to 1)",
+        "purpose": "Yellow pill springs in under the selected tab."
+      },
+      {
+        "name": "launch-reveal",
+        "value": "1600ms",
+        "purpose": "Worker launch intro: 3D logomark reveal on yellow; static mark under reduced motion."
+      },
+      {
+        "name": "navigation-splash",
+        "value": "1800ms minimum",
+        "purpose": "Yellow splash between tabs and on route loading, waits for content."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Every transition and animation is removed or made static."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tight-phone",
+        "value": "360px"
+      },
+      {
+        "name": "form-stack",
+        "value": "520px"
+      },
+      {
+        "name": "sheet",
+        "value": "640px"
+      },
+      {
+        "name": "table-stack",
+        "value": "720px"
+      },
+      {
+        "name": "canopy-tabs",
+        "value": "768px"
+      },
+      {
+        "name": "tab-labels",
+        "value": "1024px"
+      },
+      {
+        "name": "content-max",
+        "value": "1240px"
+      },
+      {
+        "name": "pointer-fine",
+        "value": "(pointer: fine): controls 40/32/48px, inputs 15px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Crimson action; one per region.",
+      "html": "<button class=\"ds-btn-primary\" dir=\"rtl\">התחלת משמרת</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border:1px solid transparent; border-radius:10px; background:#d10040; color:#fff; font-family:Heebo, -apple-system, sans-serif; font-size:0.9375rem; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(143,0,43,0.25), 0 3px 10px rgba(209,0,64,0.18); transition:background-color 150ms cubic-bezier(0.4,0,0.2,1), transform 120ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background:#b30037; } .ds-btn-primary:active { background:#8f002b; transform:scale(0.97); box-shadow:0 1px 2px rgba(143,0,43,0.3); } .ds-btn-primary:focus-visible { outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White panel button with a medium border.",
+      "html": "<button class=\"ds-btn-secondary\" dir=\"rtl\">עריכה</button>",
+      "css": ".ds-btn-secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 18px; border:1px solid #d5cfc4; border-radius:10px; background:#fff; color:#1c1714; font-family:Heebo, -apple-system, sans-serif; font-size:0.9375rem; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(40,28,16,0.06); transition:border-color 150ms, background-color 150ms, transform 120ms; } .ds-btn-secondary:hover { border-color:#9d9489; background:#fbfaf8; } .ds-btn-secondary:active { background:#ecebe6; transform:scale(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Tertiary Button",
+      "kind": "button",
+      "refersTo": "button-tertiary",
+      "description": "Low-emphasis crimson-text action.",
+      "html": "<button class=\"ds-btn-tertiary\" dir=\"rtl\">מחיקה</button>",
+      "css": ".ds-btn-tertiary { display:inline-flex; align-items:center; min-height:44px; padding:0 10px; border:0; border-radius:10px; background:transparent; color:#8f002b; font-family:Heebo, -apple-system, sans-serif; font-size:0.9375rem; font-weight:600; cursor:pointer; transition:background-color 150ms; } .ds-btn-tertiary:hover { background:#fdebf0; } .ds-btn-tertiary:focus-visible { outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White field, ink border and yellow halo on focus; 16px text on touch.",
+      "html": "<label class=\"ds-field\" dir=\"rtl\"><span>שם העובד</span><input class=\"ds-input\" placeholder=\"לדוגמה: יוסי כהן\"></label>",
+      "css": ".ds-field { display:grid; gap:6px; font-family:Heebo, -apple-system, sans-serif; font-size:0.8125rem; font-weight:600; color:#1c1714; } .ds-input { width:100%; min-height:44px; padding:10px 14px; border:1px solid #d5cfc4; border-radius:10px; background:#fff; color:#1c1714; font:inherit; font-size:16px; font-weight:400; transition:border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color:#8b837b; } .ds-input:hover:not(:focus) { border-color:#9d9489; } .ds-input:focus { outline:none; border-color:#1c1714; box-shadow:0 0 0 4px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segmented-selected",
+      "description": "The in-page selection language: white raised segment on a sunken track.",
+      "html": "<div class=\"ds-seg\" dir=\"rtl\" role=\"group\"><button aria-pressed=\"true\">נוכחים כעת</button><button aria-pressed=\"false\">דיווחים אחרונים</button><button aria-pressed=\"false\">עמדת שעון</button></div>",
+      "css": ".ds-seg { display:flex; gap:4px; padding:4px; border-radius:14px; background:#e7e5df; font-family:Heebo, -apple-system, sans-serif; } .ds-seg > button { flex:1 1 0; min-height:40px; padding:8px 10px; border:0; border-radius:10px; background:transparent; color:#554d47; font:inherit; font-size:0.8125rem; font-weight:600; cursor:pointer; transition:background-color 150ms, color 150ms, box-shadow 150ms; } .ds-seg > button:hover:not([aria-pressed=\"true\"]) { color:#1c1714; background:rgba(255,255,255,0.55); } .ds-seg > button[aria-pressed=\"true\"] { background:#fff; color:#1c1714; box-shadow:0 1px 2px rgba(40,28,16,0.1), 0 2px 6px rgba(40,28,16,0.06); } .ds-seg > button:focus-visible { outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "status-live",
+      "description": "Icon + text, shape varies by kind: filled live, outlined upcoming, dashed pending, squarer warning.",
+      "html": "<div class=\"ds-statuses\" dir=\"rtl\"><span class=\"ds-status ds-status--live\"><span class=\"ds-pulse\"></span>במשמרת עכשיו</span><span class=\"ds-status ds-status--upcoming\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4M3.5 10h17\"/></svg>קרובה</span><span class=\"ds-status ds-status--pending\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4M3.5 10h17\"/></svg>ממתין</span><span class=\"ds-status ds-status--warning\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 2.8 19.5h18.4Z\"/><path d=\"M12 10v4\"/><path d=\"M12 17h.01\"/></svg>באיחור</span><span class=\"ds-status ds-status--success\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m8.5 12.5 2.5 2.5 5-5.5\"/></svg>אושר</span></div>",
+      "css": ".ds-statuses { display:flex; flex-wrap:wrap; gap:8px; font-family:Heebo, -apple-system, sans-serif; } .ds-status { display:inline-flex; align-items:center; gap:6px; min-height:26px; padding:3px 10px 3px 12px; border:1px solid transparent; border-radius:9999px; font-size:0.75rem; font-weight:700; line-height:1.3; white-space:nowrap; } .ds-status--live { background:#d10040; color:#fff; } .ds-pulse { width:8px; height:8px; border-radius:50%; background:#fcbc00; box-shadow:0 0 0 0 rgba(252,188,0,0.7); animation:ds-pulse 2s cubic-bezier(0.16,1,0.3,1) infinite; } @keyframes ds-pulse { to { box-shadow:0 0 0 6px rgba(252,188,0,0); } } @media (prefers-reduced-motion: reduce) { .ds-pulse { animation:none; } } .ds-status--upcoming { background:#fff; border-color:#d5cfc4; color:#1c1714; } .ds-status--pending { background:#fff; border-color:#d97a00; border-style:dashed; color:#8a4b00; } .ds-status--warning { background:#fff0d9; color:#8a4b00; border-radius:8px; } .ds-status--success { background:#e5f3ea; color:#17693a; }"
+    },
+    {
+      "name": "Panel Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White panel with hairline and warm-ink card shadow on the concrete ground; Ubuntu numerals for the time range.",
+      "html": "<div class=\"ds-ground\" dir=\"rtl\"><article class=\"ds-card\"><h2>המשמרת הבאה שלך</h2><p class=\"ds-date\">יום ראשון, 27 בספטמבר</p><p class=\"ds-time\"><span>22:00</span><span class=\"ds-dash\">–</span><span>14:00</span></p><p class=\"ds-meta\">פז חיפה מרכז</p></article></div>",
+      "css": ".ds-ground { background:#f3f2ee; padding:16px; font-family:Heebo, -apple-system, sans-serif; color:#1c1714; } .ds-card { display:grid; gap:6px; padding:18px 20px; border-radius:18px; background:#fff; border:1px solid #e6e2da; box-shadow:0 1px 2px rgba(40,28,16,0.05), 0 4px 14px rgba(40,28,16,0.05); } .ds-card h2 { margin:0; font-size:0.8125rem; font-weight:700; color:#554d47; } .ds-date { margin:0; font-size:1.0625rem; font-weight:700; } .ds-time { margin:0; display:flex; gap:10px; align-items:baseline; font-family:Ubuntu, Heebo, sans-serif; font-variant-numeric:tabular-nums lining-nums; font-size:2rem; font-weight:500; line-height:1.15; letter-spacing:-0.01em; } .ds-dash { color:#9d9489; font-weight:400; } .ds-meta { margin:0; font-size:0.8125rem; color:#554d47; }"
+    },
+    {
+      "name": "Live Shift Panel",
+      "kind": "custom",
+      "refersTo": "live-panel",
+      "description": "Signature: crimson field, one yellow 45-degree cut, elapsed time as a price-board numeral.",
+      "html": "<section class=\"ds-live\" dir=\"rtl\"><span class=\"ds-live-pill\"><span class=\"ds-live-dot\"></span>במשמרת עכשיו</span><div class=\"ds-live-clock\"><span>זמן מתחילת המשמרת</span><strong>02:03:58</strong></div><dl class=\"ds-live-facts\"><div><dt>כניסה</dt><dd>21:56</dd></div><div><dt>תחנה</dt><dd>פז חיפה מרכז</dd></div></dl></section>",
+      "css": ".ds-live { position:relative; isolation:isolate; overflow:hidden; display:grid; gap:18px; padding:18px 20px 20px; border-radius:26px; background:#d10040; color:#fff; font-family:Heebo, -apple-system, sans-serif; box-shadow:0 2px 4px rgba(40,28,16,0.1), 0 12px 28px rgba(40,28,16,0.14); } .ds-live::before { content:\"\"; position:absolute; top:0; left:0; width:88px; height:88px; background:#fcbc00; clip-path:polygon(0 0, 100% 0, 0 100%); z-index:-1; } .ds-live-pill { justify-self:start; display:inline-flex; align-items:center; gap:6px; padding:3px 10px 3px 12px; border-radius:9999px; background:rgba(0,0,0,0.22); font-size:0.75rem; font-weight:700; } .ds-live-dot { width:8px; height:8px; border-radius:50%; background:#fcbc00; } .ds-live-clock { display:grid; gap:2px; } .ds-live-clock span { font-size:0.8125rem; color:#ffd9e3; } .ds-live-clock strong { justify-self:start; font-family:Ubuntu, Heebo, sans-serif; font-variant-numeric:tabular-nums lining-nums; font-size:clamp(3rem, 15vw, 4rem); font-weight:500; line-height:1.05; } .ds-live-facts { display:grid; grid-template-columns:auto minmax(0,1fr); gap:1px; margin:0; overflow:hidden; border-radius:14px; background:rgba(255,255,255,0.18); } .ds-live-facts > div { display:grid; gap:2px; padding:10px 14px; background:rgba(120,0,36,0.35); } .ds-live-facts dt { font-size:0.75rem; color:#ffd9e3; } .ds-live-facts dd { margin:0; font-size:1.0625rem; font-weight:700; }"
+    },
+    {
+      "name": "Canopy Header",
+      "kind": "nav",
+      "refersTo": "canopy-header",
+      "description": "Sticky yellow band with logomark tile and pill tabs from 768px; the current tab is a white pill.",
+      "html": "<header class=\"ds-canopy\" dir=\"rtl\"><div class=\"ds-canopy-brand\"><span class=\"ds-canopy-logo\"></span><span><strong>פז חיפה מרכז</strong><small>נוכחות עובדים בזמן אמת</small></span></div><nav class=\"ds-canopy-tabs\"><a href=\"#\">התחנה</a><a href=\"#\">סידור</a><a href=\"#\" aria-current=\"page\">נוכחות</a><a href=\"#\">צוות</a></nav></header>",
+      "css": ".ds-canopy { display:flex; align-items:center; gap:12px; min-height:60px; padding:8px 16px; background:#fcbc00; color:#1c1714; box-shadow:0 1px 0 rgba(92,67,0,0.14); font-family:Heebo, -apple-system, sans-serif; } .ds-canopy-brand { display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; } .ds-canopy-brand > span:last-child { display:grid; } .ds-canopy-brand strong { font-size:1rem; font-weight:800; line-height:1.25; } .ds-canopy-brand small { font-size:0.75rem; font-weight:600; color:#5c4300; } .ds-canopy-logo { width:40px; height:40px; border-radius:12px; background:#fff; box-shadow:0 1px 2px rgba(92,67,0,0.18); } .ds-canopy-tabs { display:flex; gap:4px; padding:4px; border-radius:9999px; background:rgba(255,255,255,0.32); } .ds-canopy-tabs a { display:inline-flex; align-items:center; min-height:38px; padding:0 14px; border-radius:9999px; font-size:0.8125rem; font-weight:600; color:#5c4300; text-decoration:none; transition:background-color 150ms, color 150ms; } .ds-canopy-tabs a:hover { background:rgba(255,255,255,0.5); color:#1c1714; } .ds-canopy-tabs a[aria-current=\"page\"] { background:#fff; color:#1c1714; font-weight:700; box-shadow:0 1px 2px rgba(92,67,0,0.2), 0 2px 8px rgba(92,67,0,0.12); } .ds-canopy-tabs a:focus-visible { outline: 2px solid #1c1714; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(252,188,0,0.55); }"
+    },
+    {
+      "name": "Bottom Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Phones: white 64px bar, a yellow pill springs in behind the current icon.",
+      "html": "<nav class=\"ds-dock\" dir=\"rtl\"><a href=\"#\" aria-current=\"page\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 10.5 12 4l8 6.5V20H4Z\"/><path d=\"M10 20v-5h4v5\"/></svg><span>ראשי</span></a><a href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"/><path d=\"M8 3v4M16 3v4M3.5 10h17\"/></svg><span>הזמינות שלי</span></a><a href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/></svg><span>השעות שלי</span></a></nav>",
+      "css": ".ds-dock { display:flex; justify-content:space-around; height:64px; background:#fff; box-shadow:0 -1px 0 rgba(40,28,16,0.08), 0 -6px 20px rgba(40,28,16,0.06); font-family:Heebo, -apple-system, sans-serif; } .ds-dock a { position:relative; isolation:isolate; flex:1 1 0; max-width:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6e665f; font-size:11.5px; font-weight:600; text-decoration:none; transition:color 150ms; } .ds-dock a::before { content:\"\"; position:absolute; top:8px; left:50%; width:60px; height:32px; margin-left:-30px; border-radius:9999px; background:#fcbc00; opacity:0; transform:scaleX(0.5); transition:transform 260ms cubic-bezier(0.16,1,0.3,1), opacity 160ms; z-index:-1; } .ds-dock a[aria-current=\"page\"] { color:#1c1714; font-weight:700; } .ds-dock a[aria-current=\"page\"]::before { opacity:1; transform:scaleX(1); } .ds-dock a:focus-visible { outline:2px solid #1c1714; outline-offset:-4px; border-radius:14px; } @media (prefers-reduced-motion: reduce) { .ds-dock a::before { transition:none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Forecourt Board",
+    "overview": "**Creative North Star: \"The Forecourt Board\"**\n\nYellowShifts is the station's operations board: the worker PWA is that board in a pocket, the admin app is the control room for the same forecourt. Both share one token file and one component layer (`packages/ui`). The yellow canopy sits overhead as identity, a warm concrete ground carries white raised panels, and the numbers that matter (elapsed time, shift range, counts) are set like a price sign: large, tabular, calm. Current state leads every screen; navigation follows.\n\nThe worker app is simpler and phone-native (bottom tab bar, one dominant status panel). The admin app is denser (40px controls under a fine pointer, 1240px content cap, tables that fold to row cards under 720px) but unmistakably the same world. Hebrew RTL is the default direction, and every layout rule is written with logical properties.\n\nThe system refuses the generic SaaS stack: no equal-size metric tiles, no row of identical white cards with icon + heading + text, no dark notification banners. Live facts are written as a labelled line; lists are one panel divided by hairlines.",
+    "keyCharacteristics": [
+      "Yellow canopy overhead, crimson for action and live state, warm concrete ground, white panels.",
+      "Heebo for all words, Ubuntu tabular numerals for every time, duration and count.",
+      "Soft offset shadows tinted with warm ink; hairline borders on every panel.",
+      "Statuses always icon + text, with shape varying by kind.",
+      "One selection language inside pages, one navigation language per form factor.",
+      "Phones are first-class: 44px touch targets, 16px inputs on touch, bottom sheets, safe areas."
+    ],
+    "rules": [
+      {
+        "name": "The Canopy Rule",
+        "body": "Yellow is overhead identity and selection, nothing else. If a yellow surface is neither the canopy, a brand moment (splash, reveal, NFC in-progress or confirmation symbol) nor a selected state, it is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Crimson Means Go Rule",
+        "body": "Crimson marks the one thing to do or the one thing happening now. A screen has one crimson primary action per region; the live shift is the only crimson field.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Trio Rule",
+        "body": "Status text uses the `-ink` value on white or on the matching `-subtle` fill. The raw signal colour is for fills, borders and icons, never small text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Price Board Rule",
+        "body": "Every number that carries data (times, durations, counts, dates in numerals, hours) is set in Ubuntu with tabular lining figures (the `.ys-num` utility). Date, time, number and tel inputs inherit it automatically.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "Headings stand alone. The greeting is the h1; no small label above a heading announces its section.",
+        "section": "typography"
+      },
+      {
+        "name": "The Logical Side Rule",
+        "body": "Position with `inline-start` / `inline-end` and `margin-inline`, never left/right, except for physical decorations deliberately pinned to a corner (the live panel cut) and the transforms that must be flipped per direction.",
+        "section": "layout"
+      },
+      {
+        "name": "The Hairline Plus Shadow Rule",
+        "body": "A white panel always carries both a 1px hairline (#e6e2da) and the Card shadow. Quiet panels (Concrete Muted) carry neither.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Focus Rule",
+        "body": "Focus is a 2px warm-ink outline at 2px offset plus a 5px yellow halo `rgba(252, 188, 0, 0.55)`, visible on white, concrete and yellow alike. Fields swap the outline for an ink border plus a 4px halo.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep Canopy Yellow (#fcbc00) to the canopy, brand moments and selection indicators.",
+      "**Do** use Forecourt Crimson (#d10040) for the primary action and the live state, with Deep Crimson (#8f002b) on press.",
+      "**Do** set every time, duration and count in Ubuntu tabular numerals (`.ys-num`).",
+      "**Do** pair every status with a vector icon and text through StatusBadge; let the shape follow the kind.",
+      "**Do** give white panels a hairline plus the warm-ink Card shadow on the Concrete Ground (#f3f2ee).",
+      "**Do** keep touch targets at 44px and inputs at 16px on touch devices.",
+      "**Do** write layout with logical properties so RTL and LTR both hold.",
+      "**Do** gate every transition and animation behind `prefers-reduced-motion`; keep UI motion at 150 to 280ms.",
+      "**Do** use native `<dialog>` for every dialog, becoming a bottom sheet at 640px and under."
+    ],
+    "donts": [
+      "**Don't** fill ordinary buttons, badges or panel headings with yellow.",
+      "**Don't** convey status by colour alone.",
+      "**Don't** build dashboards from equal metric tiles; write live facts as a labelled line.",
+      "**Don't** put a small label, eyebrow or kicker above headings, and don't uppercase or letter-space captions.",
+      "**Don't** use hard offset shadows, black shadows or glows.",
+      "**Don't** repeat the 45-degree cut beyond the full-screen canopy flows and the live panel.",
+      "**Don't** redraw or replace the logomark, or use emoji; icons come from `@yellowshifts/icons`.",
+      "**Don't** stretch content past the 1240px cap on desktop."
+    ]
+  }
+}

@@ -1,47 +1,66 @@
 /**
- * YellowShifts Semantic Design System CSS Custom Properties
- * Derived directly from station brand identity.
+ * YellowShifts design tokens, shared by the worker PWA and the admin app.
+ * Yellow is the canopy (identity and selection), crimson is action and live state,
+ * the ground is warm concrete so white panels read as raised without heavy shadows.
+ * Legacy variable names are kept so existing styles resolve to the current system.
  */
 
 :root {
-  /* Brand Palette */
+  color-scheme: light;
+
+  /* Brand */
   --ys-color-brand-yellow: #fcbc00;
-  --ys-color-brand-yellow-accent: #ffdb07;
-  --ys-color-brand-yellow-subtle: #fff7cc;
-  --ys-color-brand-crimson: #8f002b;
-  --ys-color-brand-crimson-hover: #700020;
-  --ys-color-brand-crimson-active: #5c001a;
+  --ys-color-brand-yellow-accent: #ffd23f;
+  --ys-color-brand-yellow-subtle: #fff4cc;
+  --ys-color-brand-yellow-ink: #5c4300;
+  --ys-color-brand-crimson: #d10040;
+  --ys-color-brand-crimson-hover: #b30037;
+  --ys-color-brand-crimson-active: #8f002b;
+  --ys-color-brand-crimson-subtle: #fdebf0;
+  --ys-color-brand-crimson-ink: #8f002b;
 
-  /* Surfaces */
-  --ys-color-surface-base: #f6f6f6;
+  /* Surfaces: ground < panel < raised control */
+  --ys-color-surface-base: #f3f2ee;
   --ys-color-surface-raised: #ffffff;
-  --ys-color-surface-muted: #efefef;
-  --ys-color-surface-overlay: rgba(0, 0, 0, 0.6);
+  --ys-color-surface-muted: #ecebe6;
+  --ys-color-surface-sunken: #e7e5df;
+  --ys-color-surface-soft: #faf9f6;
+  --ys-color-surface-overlay: rgba(28, 23, 20, 0.52);
 
-  /* Content / Typography */
-  --ys-color-text-primary: #000000;
-  --ys-color-text-secondary: #555555;
-  --ys-color-text-muted: #8e8e93;
+  /* Text */
+  --ys-color-text-primary: #1c1714;
+  --ys-color-text-secondary: #554d47;
+  --ys-color-text-muted: #6e665f;
   --ys-color-text-inverse: #ffffff;
-  --ys-color-text-brand: #d10040;
+  --ys-color-text-brand: #c2003b;
 
   /* Borders */
-  --ys-color-border-subtle: #e5e5ea;
-  --ys-color-border-medium: #d1d1d6;
-  --ys-color-border-strong: #8e8e93;
+  --ys-color-border-subtle: #e6e2da;
+  --ys-color-border-medium: #d5cfc4;
+  --ys-color-border-strong: #9d9489;
   --ys-color-border-brand: #d10040;
 
-  /* Status Colors */
-  --ys-color-status-success: #34c759;
-  --ys-color-status-success-subtle: #e8f9ed;
-  --ys-color-status-warning: #ff9500;
-  --ys-color-status-warning-subtle: #fff4e5;
-  --ys-color-status-danger: #d10040;
-  --ys-color-status-danger-subtle: #ffebef;
-  --ys-color-status-info: #007aff;
-  --ys-color-status-info-subtle: #ebf5ff;
+  /* Semantic status: `-ink` is text-safe on white and on the matching `-subtle` */
+  --ys-color-status-success: #1f8a4c;
+  --ys-color-status-success-ink: #17693a;
+  --ys-color-status-success-subtle: #e5f3ea;
+  --ys-color-status-warning: #d97a00;
+  --ys-color-status-warning-ink: #8a4b00;
+  --ys-color-status-warning-subtle: #fff0d9;
+  --ys-color-status-danger: #c8102e;
+  --ys-color-status-danger-ink: #a10d26;
+  --ys-color-status-danger-subtle: #fdeaed;
+  --ys-color-status-info: #1f5fbf;
+  --ys-color-status-info-ink: #174a95;
+  --ys-color-status-info-subtle: #e7effb;
+  --ys-color-status-neutral-ink: #554d47;
+  --ys-color-status-neutral-subtle: #ecebe6;
 
-  /* Spacing */
+  /* Focus */
+  --ys-focus-ring: #1c1714;
+  --ys-focus-halo: rgba(252, 188, 0, 0.55);
+
+  /* Spacing (4px grid) */
   --ys-space-2: 2px;
   --ys-space-4: 4px;
   --ys-space-6: 6px;
@@ -56,28 +75,54 @@
   --ys-space-40: 40px;
   --ys-space-48: 48px;
   --ys-space-64: 64px;
+  --ys-gutter: clamp(16px, 4vw, 32px);
 
   /* Radii */
-  --ys-radius-xs: 4px;
-  --ys-radius-sm: 8px;
-  --ys-radius-md: 12px;
-  --ys-radius-lg: 16px;
-  --ys-radius-xl: 24px;
+  --ys-radius-xs: 6px;
+  --ys-radius-sm: 10px;
+  --ys-radius-md: 14px;
+  --ys-radius-lg: 18px;
+  --ys-radius-xl: 26px;
   --ys-radius-pill: 9999px;
 
-  /* Elevation Shadows */
-  --ys-shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --ys-shadow-raised: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --ys-shadow-card: 0 2px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --ys-shadow-dropdown: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --ys-shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  /* Elevation: every shadow has an offset and a soft blur, tinted by the warm ink */
+  --ys-shadow-subtle: 0 1px 2px rgba(40, 28, 16, 0.06);
+  --ys-shadow-raised: 0 1px 2px rgba(40, 28, 16, 0.05), 0 2px 8px rgba(40, 28, 16, 0.05);
+  --ys-shadow-card: 0 1px 2px rgba(40, 28, 16, 0.05), 0 4px 14px rgba(40, 28, 16, 0.05);
+  --ys-shadow-dropdown: 0 4px 12px rgba(40, 28, 16, 0.1), 0 12px 32px rgba(40, 28, 16, 0.1);
+  --ys-shadow-modal: 0 12px 28px rgba(40, 28, 16, 0.14), 0 32px 64px rgba(40, 28, 16, 0.14);
+  --ys-shadow-bar: 0 -1px 0 rgba(40, 28, 16, 0.08), 0 -6px 20px rgba(40, 28, 16, 0.06);
 
-  /* Transitions */
-  --ys-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --ys-transition-standard: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Controls */
+  --ys-control-sm: 40px;
+  --ys-control-md: 44px;
+  --ys-control-lg: 52px;
+
+  /* Type */
+  --ys-font-ui:
+    var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ys-font-numeric: var(--font-ubuntu), var(--font-heebo), -apple-system, sans-serif;
+  --ys-text-xs: 0.75rem;
+  --ys-text-sm: 0.8125rem;
+  --ys-text-md: 0.9375rem;
+  --ys-text-lg: 1.0625rem;
+  --ys-text-xl: 1.25rem;
+  --ys-text-2xl: 1.5rem;
+  --ys-text-3xl: 1.875rem;
+
+  /* Motion */
+  --ys-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ys-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ys-transition-fast: 150ms var(--ys-ease-standard);
+  --ys-transition-standard: 220ms var(--ys-ease-out);
+
+  /* Layout */
+  --ys-content-max: 1240px;
+  --ys-reading-max: 720px;
+  --ys-tabbar-height: 64px;
 }
 
-/* Global Reset & Base Setup */
+/* Base */
 *,
 *::before,
 *::after {
@@ -87,24 +132,23 @@
 }
 
 html {
-  font-family:
-    var(--font-heebo),
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--ys-font-ui);
   background-color: var(--ys-color-surface-base);
   color: var(--ys-color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
   direction: rtl;
   text-align: right;
+  accent-color: var(--ys-color-brand-crimson);
+  caret-color: var(--ys-color-brand-crimson);
 }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--ys-color-surface-base);
+  line-height: 1.5;
 }
 
 a {
@@ -112,6 +156,63 @@ a {
   text-decoration: none;
 }
 
-button {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: rgba(252, 188, 0, 0.45);
+  color: var(--ys-color-text-primary);
+}
+
+/* One focus language everywhere: dark ring with a yellow halo, visible on white, ground and yellow. */
+:focus-visible {
+  outline: 2px solid var(--ys-focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--ys-focus-halo);
+}
+
+/* Numerals that carry data: times, durations, counts. */
+.ys-num {
+  font-family: var(--ys-font-numeric);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
+  letter-spacing: -0.01em;
+}
+
+.ys-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  html {
+    scrollbar-color: var(--ys-color-border-medium) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
