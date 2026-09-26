@@ -44,7 +44,11 @@ export function Dialog({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      // Focus the dialog itself (not the close button) so no focus ring flashes on open.
+      dialog.setAttribute('autofocus', '');
+      dialog.showModal();
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
@@ -53,6 +57,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
+      tabIndex={-1}
       className={`ys-dialog${size === 'lg' ? ' ys-dialog--lg' : ''} ${className}`}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}

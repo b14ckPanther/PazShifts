@@ -20,17 +20,22 @@ export function WeekNavigator({
   label?: string;
   children?: ReactNode;
 }) {
-  const format = (date: string) => date.slice(0, 10).split('-').reverse().join('/');
+  // Compact range ("27/09 – 03/10") with the year(s) underneath, so it never wraps mid-range.
+  const dayMonth = (date: string) => date.slice(5, 10).split('-').reverse().join('/');
+  const startYear = start.slice(0, 4);
+  const endYear = end.slice(0, 4);
+  const years = startYear === endYear ? startYear : `${startYear}–${endYear}`;
   return (
     <section className="worker-week" aria-label="בחירת שבוע" dir="rtl">
       <nav className="worker-week-nav" aria-label="ניווט בין שבועות">
         <div className="worker-week-date" aria-live="polite">
           <span>{label}</span>
           <strong dir="ltr">
-            <time dateTime={start}>{format(start)}</time>
-            <span aria-hidden="true"> – </span>
-            <time dateTime={end}>{format(end)}</time>
+            <time dateTime={start}>{dayMonth(start)}</time>
+            <span aria-hidden="true">–</span>
+            <time dateTime={end}>{dayMonth(end)}</time>
           </strong>
+          <small className="ys-num">{years}</small>
         </div>
         <button
           type="button"

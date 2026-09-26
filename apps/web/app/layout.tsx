@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: LAUNCH_INTRO_SCRIPT }} />
         <LaunchIntro />
         {/* Long enough for the full reveal plus a beat on the settled logo. */}
-        <BrandSplash waitForContent showOnMount={false} content={<BrandReveal />} duration={2600} />
+        <BrandSplash waitForContent showOnMount={false} content={<BrandReveal />} duration={1000} />
         {children}
         <Suspense fallback={null}>
           <WorkerDock />

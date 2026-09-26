@@ -326,6 +326,19 @@
   cursor: pointer;
   flex-shrink: 0;
 }
+/* iOS Safari sizes native date/time inputs to their content and ignores the grid width;
+   dropping the native appearance makes them fill their column like every other field. */
+:where(input[type='date'], input[type='time'], input[type='datetime-local'], input[type='month']) {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+input::-webkit-date-and-time-value {
+  text-align: start;
+  min-height: 1.35em;
+}
 input::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.55;
@@ -877,6 +890,12 @@ input::-webkit-calendar-picker-indicator:hover {
   overflow: hidden;
   text-align: start;
 }
+/* The dialog itself takes focus on open (no ring flashes on the close button). */
+.ys-dialog:focus,
+.ys-dialog:focus-visible {
+  outline: none;
+  box-shadow: var(--ys-shadow-modal);
+}
 .ys-dialog--lg {
   width: min(820px, calc(100vw - 32px));
 }
@@ -908,7 +927,10 @@ input::-webkit-calendar-picker-indicator:hover {
   line-height: 1.55;
 }
 .ys-dialog-body {
-  flex: 1;
+  /* Content-sized, shrinking only when the dialog hits its max-height. A zero basis
+     (`flex: 1`) collapses the body to nothing in spec-following WebKit (iOS Safari). */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 4px 20px 20px;

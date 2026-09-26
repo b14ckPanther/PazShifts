@@ -26,12 +26,15 @@ export function StaffDialog({
   useDialogFocusReturn(true);
   useEffect(() => {
     const dialog = ref.current;
+    // Focus the dialog itself (not the close button) so no focus ring flashes on open.
+    dialog?.setAttribute('autofocus', '');
     dialog?.showModal();
     return () => dialog?.close();
   }, []);
   return (
     <dialog
       ref={ref}
+      tabIndex={-1}
       className="ys-dialog staff-dialog"
       dir="rtl"
       aria-labelledby={titleId}
