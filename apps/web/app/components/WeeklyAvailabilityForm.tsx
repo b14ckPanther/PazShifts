@@ -10,7 +10,7 @@ import type {
   SaveAvailabilityEntryInput,
 } from '@yellowshifts/types';
 import { saveWorkerAvailabilityAction } from '../actions/availability';
-import { Card, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
+import { Alert, Button, Badge, StatusBadge } from '@yellowshifts/ui';
 import {
   CheckIcon,
   SendIcon,
@@ -237,11 +237,11 @@ export function WeeklyAvailabilityForm({
     });
   };
 
+  const submitted = isAvailabilitySubmitted(initialData);
+  const notesDisabled = isHistoricalWeek || allDaysPast || isPending;
+
   return (
-    <div
-      className="worker-details"
-      style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-    >
+    <div className="worker-details worker-availability">
       <WeekNavigator
         start={weekStartDate}
         end={weekEnd}
@@ -260,69 +260,42 @@ export function WeeklyAvailabilityForm({
                   : 'השבוע הנבחר'
         }
       >
-        {isAvailabilitySubmitted(initialData) ? (
-          <Badge variant="success">הוגשה זמינות לשבוע זה</Badge>
+        {submitted ? (
+          <StatusBadge status="approved" label="הוגשה זמינות לשבוע זה" />
         ) : (
-          <Badge variant="warning">
-            {initialData ? 'נשמרה זמינות חלקית · יש להשלים ולשלוח' : 'טרם הוגשה זמינות'}
-          </Badge>
+          <StatusBadge
+            status="pending"
+            label={initialData ? 'נשמרה זמינות חלקית · יש להשלים ולשלוח' : 'טרם הוגשה זמינות'}
+          />
         )}
       </WeekNavigator>
 
-      {/* Global Feedback Banner */}
       {feedback && (
         <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: feedback.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-            border: feedback.type === 'success' ? '1px solid #A7F3D0' : '1px solid #FECACA',
-            color: feedback.type === 'success' ? '#065F46' : '#991B1B',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
+          className={`worker-feedback worker-feedback--${feedback.type}`}
+          role={feedback.type === 'success' ? 'status' : 'alert'}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {feedback.type === 'success' ? <SuccessIcon size={18} /> : <WarningIcon size={18} />}
-            <span style={{ fontWeight: 500 }}>{feedback.text}</span>
-          </div>
-          <button
-            onClick={() => setFeedback(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'inherit',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <CloseIcon size={16} />
+          {feedback.type === 'success' ? (
+            <SuccessIcon size={20} aria-hidden="true" />
+          ) : (
+            <WarningIcon size={20} aria-hidden="true" />
+          )}
+          <span>{feedback.text}</span>
+          <button type="button" onClick={() => setFeedback(null)} aria-label="סגירת ההודעה">
+            <CloseIcon size={18} />
           </button>
         </div>
       )}
 
-      {/* Historical Week / Current Closed Week Notice */}
       {isClosedWeek && (
-        <div
-          style={{
-            backgroundColor: '#F9FAFB',
-            border: '1px solid #E5E7EB',
-            borderRadius: '8px',
-            padding: '12px 16px',
-            fontSize: '0.875rem',
-            color: '#4B5563',
-          }}
-        >
+        <Alert variant="info">
           {weekStartDate < activeCurrentWeekStart
             ? 'שבוע זה שייך לעבר. לא ניתן להגיש או לעדכן זמינות עבור שבועות שעברו.'
             : 'השבוע הנוכחי כבר החל ולא ניתן לשנות את הזמינות עבורו. הגשת זמינות פתוחה עבור השבוע הבא ואילך בלבד.'}
-        </div>
+        </Alert>
       )}
 
-      {/* 7 Days List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="worker-availability-days">
         {HEBREW_DAYS.map((day) => {
           const state = dayStates[day.index];
           if (!state) return null;
@@ -333,68 +306,60 @@ export function WeeklyAvailabilityForm({
 
           const overnightFlag =
             state.availabilityType === 'TIME_WINDOW' && isOvernight(state.startTime, state.endTime);
+          const fieldId = `availability-${state.date}`;
 
           return (
             <article
               className="worker-availability-card"
               key={day.index}
               data-disabled={isDayDisabled}
+              data-type={state.availabilityType}
+              aria-labelledby={`${fieldId}-title`}
             >
               <header className="worker-availability-heading">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <CardTitle
-                    style={{
-                      fontSize: '0.9375rem',
-                      fontWeight: 700,
-                      margin: 0,
-                      color: isDayDisabled ? '#6B7280' : '#111827',
-                    }}
-                  >
-                    {day.name} • {formatDateDisplay(state.date)}
-                  </CardTitle>
+                <div className="worker-availability-day">
+                  <h3 id={`${fieldId}-title`}>
+                    {day.name}
+                    <span className="ys-num">{formatDateDisplay(state.date)}</span>
+                  </h3>
                   {isPastDay ? (
-                    <Badge variant="neutral" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                      עבר
-                    </Badge>
+                    <Badge variant="neutral">עבר</Badge>
                   ) : isToday ? (
-                    <Badge
-                      variant="brandYellow"
-                      style={{ fontSize: '0.6875rem', padding: '1px 6px' }}
-                    >
-                      היום
-                    </Badge>
+                    <Badge variant="brandYellow">היום</Badge>
                   ) : isClosedWeek ? (
-                    <Badge variant="neutral" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                      סגור להגשה
-                    </Badge>
+                    <Badge variant="neutral">סגור להגשה</Badge>
                   ) : null}
                 </div>
 
-                {/* Direct 1-Tap Toggles */}
-                <div className="worker-availability-options">
+                <div
+                  className="ys-segmented worker-availability-options"
+                  role="group"
+                  aria-label={`זמינות ל${day.name}`}
+                >
                   <button
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_AVAILABLE')}
                     aria-pressed={state.availabilityType === 'ALL_DAY_AVAILABLE'}
+                    data-option="available"
                   >
                     זמין כל היום
                   </button>
-
                   <button
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'ALL_DAY_UNAVAILABLE')}
                     aria-pressed={state.availabilityType === 'ALL_DAY_UNAVAILABLE'}
+                    data-option="unavailable"
                   >
                     לא זמין
                   </button>
-
                   <button
                     type="button"
                     disabled={isDayDisabled || isPending}
                     onClick={() => handleTypeChange(day.index, 'TIME_WINDOW')}
                     aria-pressed={state.availabilityType === 'TIME_WINDOW'}
+                    data-option="window"
                   >
                     חלון שעות
                   </button>
@@ -403,166 +368,98 @@ export function WeeklyAvailabilityForm({
 
               <div className="worker-availability-body">
                 {isDayDisabled ? (
-                  <div
-                    style={{
-                      fontSize: '0.8125rem',
-                      color: '#6B7280',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      flexWrap: 'wrap',
-                    }}
-                  >
+                  <p className="worker-availability-locked">
                     <span>
                       {isPastDay
                         ? 'יום זה חלף - לא ניתן לעדכן זמינות.'
                         : 'לא ניתן להגיש עבור שבוע זה.'}
                     </span>
                     {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
-                      <span style={{ fontWeight: 600, color: '#15803D' }}>
-                        (נקבע: זמין כל היום)
-                      </span>
+                      <strong>(נקבע: זמין כל היום)</strong>
                     )}
                     {state.availabilityType === 'ALL_DAY_UNAVAILABLE' && (
-                      <span style={{ fontWeight: 600, color: '#B91C1C' }}>(נקבע: לא זמין)</span>
+                      <strong>(נקבע: לא זמין)</strong>
                     )}
                     {state.availabilityType === 'TIME_WINDOW' && (
-                      <span style={{ fontWeight: 600, color: '#92400E' }}>
+                      <strong className="ys-num">
                         (נקבע: {state.startTime} - {state.endTime})
-                      </span>
+                      </strong>
                     )}
-                  </div>
+                  </p>
                 ) : (
                   <>
                     {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
-                      <div className="worker-availability-summary">זמין לכל משמרת ביום הזה.</div>
+                      <p className="worker-availability-summary">זמין לכל משמרת ביום הזה.</p>
                     )}
 
                     {state.availabilityType === 'ALL_DAY_UNAVAILABLE' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '0.8125rem', color: '#DC2626', fontWeight: 600 }}>
+                      <div className="worker-availability-fields">
+                        <p className="worker-availability-summary is-unavailable">
                           לא פנוי למשמרות ביום הזה.
-                        </div>
-                        <div>
+                        </p>
+                        <label className="ys-form-field" htmlFor={`${fieldId}-note`}>
+                          <span className="ys-label">סיבה או הערה למנהל (אופציונלי)</span>
                           <input
+                            id={`${fieldId}-note`}
                             type="text"
                             disabled={isPending}
-                            placeholder="סיבה או הערה למנהל (אופציונלי: מבחן, לימודים...)"
+                            placeholder="מבחן, לימודים..."
                             value={state.notes}
                             onChange={(e) => handleNotesChange(day.index, e.target.value)}
-                            style={{
-                              width: '100%',
-                              backgroundColor: '#F9FAFB',
-                              border: '1px solid #D1D5DB',
-                              borderRadius: '6px',
-                              padding: '6px 10px',
-                              fontSize: '0.8125rem',
-                              color: '#111827',
-                              outline: 'none',
-                            }}
                           />
-                        </div>
+                        </label>
                       </div>
                     )}
 
                     {state.availabilityType === 'TIME_WINDOW' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span
-                              style={{ fontSize: '0.8125rem', color: '#4B5563', fontWeight: 500 }}
-                            >
-                              משעה:
-                            </span>
+                      <div className="worker-availability-fields">
+                        <div className="worker-availability-window">
+                          <label className="ys-form-field" htmlFor={`${fieldId}-start`}>
+                            <span className="ys-label">משעה</span>
                             <input
+                              id={`${fieldId}-start`}
                               type="time"
                               disabled={isPending}
                               value={state.startTime}
                               onChange={(e) =>
                                 handleTimeChange(day.index, 'startTime', e.target.value)
                               }
-                              style={{
-                                backgroundColor: '#FFFFFF',
-                                border: '1px solid #D1D5DB',
-                                borderRadius: '6px',
-                                padding: '6px 8px',
-                                color: '#111827',
-                                fontSize: '0.875rem',
-                                outline: 'none',
-                              }}
                             />
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span
-                              style={{ fontSize: '0.8125rem', color: '#4B5563', fontWeight: 500 }}
-                            >
-                              עד שעה:
-                            </span>
+                          </label>
+                          <label className="ys-form-field" htmlFor={`${fieldId}-end`}>
+                            <span className="ys-label">עד שעה</span>
                             <input
+                              id={`${fieldId}-end`}
                               type="time"
                               disabled={isPending}
                               value={state.endTime}
                               onChange={(e) =>
                                 handleTimeChange(day.index, 'endTime', e.target.value)
                               }
-                              style={{
-                                backgroundColor: '#FFFFFF',
-                                border: '1px solid #D1D5DB',
-                                borderRadius: '6px',
-                                padding: '6px 8px',
-                                color: '#111827',
-                                fontSize: '0.875rem',
-                                outline: 'none',
-                              }}
                             />
-                          </div>
-
-                          {overnightFlag ? (
-                            <Badge
-                              variant="warning"
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                            >
-                              <MoonIcon size={12} />
-                              <span>חלון לילה (חוצה חצות)</span>
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="neutral"
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                            >
-                              <SunIcon size={12} />
-                              <span>חלון יום</span>
-                            </Badge>
-                          )}
+                          </label>
                         </div>
-
-                        <div>
+                        {overnightFlag ? (
+                          <Badge variant="warning">
+                            <MoonIcon size={13} aria-hidden="true" />
+                            חלון לילה (חוצה חצות)
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral">
+                            <SunIcon size={13} aria-hidden="true" />
+                            חלון יום
+                          </Badge>
+                        )}
+                        <label className="ys-form-field" htmlFor={`${fieldId}-note`}>
+                          <span className="ys-label">הערה לשעות אלו (אופציונלי)</span>
                           <input
+                            id={`${fieldId}-note`}
                             type="text"
                             disabled={isPending}
-                            placeholder="הערה לשעות אלו (אופציונלי)..."
                             value={state.notes}
                             onChange={(e) => handleNotesChange(day.index, e.target.value)}
-                            style={{
-                              width: '100%',
-                              backgroundColor: '#F9FAFB',
-                              border: '1px solid #D1D5DB',
-                              borderRadius: '6px',
-                              padding: '6px 10px',
-                              fontSize: '0.8125rem',
-                              color: '#111827',
-                              outline: 'none',
-                            }}
                           />
-                        </div>
+                        </label>
                       </div>
                     )}
                   </>
@@ -573,31 +470,13 @@ export function WeeklyAvailabilityForm({
         })}
       </div>
 
-      {/* General Week Note */}
-      <Card
-        style={{
-          padding: 0,
-          overflow: 'hidden',
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-        }}
-      >
-        <CardContent style={{ padding: '16px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '6px',
-            }}
-          >
-            הערות כלליות לשבוע זה (אופציונלי)
-          </label>
+      <div className="ys-card worker-availability-notes">
+        <label className="ys-form-field" htmlFor="availability-general-notes">
+          <span className="ys-label">הערות כלליות לשבוע זה (אופציונלי)</span>
           <textarea
+            id="availability-general-notes"
             rows={2}
-            disabled={isHistoricalWeek || allDaysPast || isPending}
+            disabled={notesDisabled}
             placeholder={
               isHistoricalWeek || allDaysPast
                 ? 'לא ניתן לערוך הערות לשבוע שעבר'
@@ -605,79 +484,36 @@ export function WeeklyAvailabilityForm({
             }
             value={generalNotes}
             onChange={(e) => setGeneralNotes(e.target.value)}
-            style={{
-              width: '100%',
-              backgroundColor: isHistoricalWeek || allDaysPast ? '#F9FAFB' : '#FFFFFF',
-              border: '1px solid #D1D5DB',
-              borderRadius: '6px',
-              padding: '8px 12px',
-              fontSize: '0.875rem',
-              color: '#111827',
-              resize: 'none',
-              outline: 'none',
-              cursor: isHistoricalWeek || allDaysPast ? 'not-allowed' : 'text',
-            }}
           />
-        </CardContent>
-      </Card>
+        </label>
+      </div>
 
-      {/* Bottom Save Bar */}
       {!isClosedWeek && (
-        <div
-          style={{
-            position: 'sticky',
-            bottom: '16px',
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            borderRadius: '10px',
-            padding: '12px 18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-            zIndex: 10,
-          }}
-        >
-          <div style={{ fontSize: '0.8125rem', color: '#6B7280' }}>
-            {isAvailabilitySubmitted(initialData) ? (
-              <span>
+        <div className="worker-save-bar">
+          <p>
+            {submitted ? (
+              <>
                 עודכן לאחרונה:{' '}
-                {new Date(initialData!.week.updatedAt).toLocaleTimeString('he-IL', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
+                <span className="ys-num">
+                  {new Date(initialData!.week.updatedAt).toLocaleTimeString('he-IL', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </>
             ) : (
-              <span>לא נשמרה זמינות עדיין לשבוע זה</span>
+              'לא נשמרה זמינות עדיין לשבוע זה'
             )}
-          </div>
-
+          </p>
           <Button
             isLoading={isPending}
             type="button"
             variant="primary"
             onClick={handleSave}
             disabled={isPending}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              minWidth: '88px',
-              justifyContent: 'center',
-              whiteSpace: 'nowrap',
-            }}
+            rightIcon={submitted ? <CheckIcon size={18} /> : <SendIcon size={18} />}
           >
-            {isAvailabilitySubmitted(initialData) ? (
-              <>
-                <CheckIcon size={16} />
-                <span>עדכון</span>
-              </>
-            ) : (
-              <>
-                <SendIcon size={16} />
-                <span>שליחה</span>
-              </>
-            )}
+            {submitted ? 'עדכון' : 'שליחה'}
           </Button>
         </div>
       )}

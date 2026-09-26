@@ -73,15 +73,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
   );
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
+    <main className="worker-page">
       <WorkerHeader
         station={activeContext.station}
         user={user}
@@ -93,12 +85,9 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
 
       {/* Main Container */}
       <Container size="md">
-        <div style={{ marginTop: '16px' }}>
+        <div>
           {memberships.length > 1 && (
-            <StationSelector
-              memberships={memberships}
-              activeStationId={activeContext.station.id}
-            />
+            <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
           )}
           <PageHeader
             title="הגשת זמינות שבועית"

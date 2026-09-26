@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@yellowshifts/ui';
-import { CheckIcon, NfcIcon } from '@yellowshifts/icons';
+import { CheckIcon, NfcIcon, WarningIcon } from '@yellowshifts/icons';
 import { processNfcScanAction } from '../../actions/attendance';
 import type { NfcScanResult, ResolvedNfcStation } from '@yellowshifts/types';
 
@@ -197,7 +197,13 @@ export function NfcAttendanceClient({
         className={`attendance-symbol ${pending ? 'scan-processing' : error ? 'attendance-warning' : ''}`}
         aria-hidden="true"
       >
-        {pending || confirmCheckout ? <NfcIcon size={38} /> : error ? '!' : <CheckIcon size={38} />}
+        {pending || confirmCheckout ? (
+          <NfcIcon size={38} />
+        ) : error ? (
+          <WarningIcon size={38} />
+        ) : (
+          <CheckIcon size={42} strokeWidth={2.6} />
+        )}
       </div>
       <div role="status" aria-live="polite">
         <h1 id="attendance-heading">
@@ -259,7 +265,7 @@ export function NfcAttendanceClient({
         </>
       )}
       {!pending && confirmCheckout && (
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div className="attendance-actions">
           <button
             className="mobile-primary"
             onClick={() => {

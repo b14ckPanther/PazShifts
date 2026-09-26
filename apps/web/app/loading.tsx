@@ -1,4 +1,8 @@
-import { RouteLoading } from '@yellowshifts/ui';
+import { BrandReveal, RouteLoading } from '@yellowshifts/ui';
 export default function Loading() {
-  return <RouteLoading />;
+  return (
+    <RouteLoading>
+      <BrandReveal />
+    </RouteLoading>
+  );
 }

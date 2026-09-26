@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
 import './components/worker-cards.css';
-import { BrandSplash } from '@yellowshifts/ui';
+import { BrandReveal, BrandSplash, LaunchIntro, LAUNCH_INTRO_SCRIPT } from '@yellowshifts/ui';
 import { PwaRegistration } from './components/PwaRegistration';
 
 const heebo = Heebo({
@@ -43,10 +43,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${ubuntu.variable}`}>
+    <html
+      lang="he"
+      dir="rtl"
+      // The pre-paint launch-intro script may mark <html> before hydration.
+      suppressHydrationWarning
+      className={`${heebo.variable} ${ubuntu.variable}`}
+    >
       <body className="app-shell" style={{ fontFamily: 'var(--font-heebo), sans-serif' }}>
         <PwaRegistration />
-        <BrandSplash waitForContent />
+        <script dangerouslySetInnerHTML={{ __html: LAUNCH_INTRO_SCRIPT }} />
+        <LaunchIntro />
+        {/* Long enough for the full reveal plus a beat on the settled logo. */}
+        <BrandSplash waitForContent showOnMount={false} content={<BrandReveal />} duration={2600} />
         {children}
         <Suspense fallback={null}>
           <WorkerDock />

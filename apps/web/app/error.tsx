@@ -1,5 +1,6 @@
 'use client';
 
+import { WarningIcon } from '@yellowshifts/icons';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 export default function WebError({
   reset,
@@ -11,7 +12,7 @@ export default function WebError({
     <main className="mobile-flow">
       <section className="attendance-panel">
         <div className="attendance-symbol attendance-warning" aria-hidden="true">
-          !
+          <WarningIcon size={38} />
         </div>
         <h1>לא הצלחנו לטעון</h1>
         <p>בדקו את החיבור ונסו שוב. אם סרקתם תג, חכו לאישור הנוכחות על המסך.</p>

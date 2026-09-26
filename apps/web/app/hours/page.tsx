@@ -39,9 +39,16 @@ export default async function WorkerHoursPage({
     const to = typeof query.to === 'string' && validDate(query.to) ? query.to : addDays(from, 6);
     if (to < from || Date.parse(to) - Date.parse(from) > 92 * 86400000)
       return (
-        <main dir="rtl" style={{ padding: 24 }}>
-          <p>יש לבחור תקופה של עד 93 ימים.</p>
-          <a href={`/hours?stationId=${station.id}`}>חזרה לדוח השבועי</a>
+        <main className="worker-page worker-page-message">
+          <section className="ys-card ys-empty">
+            <p className="ys-empty-title">יש לבחור תקופה של עד 93 ימים.</p>
+            <a
+              className="ys-button ys-button--secondary ys-empty-action"
+              href={`/hours?stationId=${station.id}`}
+            >
+              חזרה לדוח השבועי
+            </a>
+          </section>
         </main>
       );
     const records = await readOwnReportAttendance(
@@ -81,10 +88,17 @@ export default async function WorkerHoursPage({
     );
   } catch {
     return (
-      <main dir="rtl" style={{ padding: 24 }}>
-        <h1>לא הצלחנו לטעון את השעות</h1>
-        <p>לא יוצג דוח חלקי. נסו שוב בעוד רגע.</p>
-        <a href={`/hours?stationId=${station.id}`}>טעינה מחדש</a>
+      <main className="worker-page worker-page-message">
+        <section className="ys-card ys-empty" role="alert">
+          <h1 className="ys-empty-title">לא הצלחנו לטעון את השעות</h1>
+          <p className="ys-empty-text">לא יוצג דוח חלקי. נסו שוב בעוד רגע.</p>
+          <a
+            className="ys-button ys-button--primary ys-empty-action"
+            href={`/hours?stationId=${station.id}`}
+          >
+            טעינה מחדש
+          </a>
+        </section>
       </main>
     );
   }

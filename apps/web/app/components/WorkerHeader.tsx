@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { BrandMark, Container, Badge } from '@yellowshifts/ui';
-import { HomeIcon, UserIcon, BriefcaseIcon, CalendarIcon, ClockIcon } from '@yellowshifts/icons';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { BrandMark } from '@yellowshifts/ui';
+import {
+  HomeIcon,
+  BriefcaseIcon,
+  CalendarIcon,
+  ClockIcon,
+  ChevronDownIcon,
+} from '@yellowshifts/icons';
 import { NavigationLink as Link } from './NavigationLink';
 import { LogoutButton } from './LogoutButton';
 import './worker-header.css';
@@ -28,6 +34,12 @@ interface WorkerHeaderProps {
   subtitle?: string;
 }
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+}
+
+/** Sticky yellow canopy: station identity, desktop tabs and the account menu. */
 export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
   station,
   user,
@@ -38,28 +50,29 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
   pageTitle,
   subtitle,
 }) => {
-  const headerRef = useRef<HTMLElement>(null);
-  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const panelId = useId();
 
   useEffect(() => {
-    if (!headerRef.current) return;
-    const updateHeight = () => {
-      if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
-      }
+    if (!accountOpen) return;
+    const close = (event: MouseEvent | TouchEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) setAccountOpen(false);
     };
-    updateHeight();
-    const ro = new ResizeObserver(updateHeight);
-    ro.observe(headerRef.current);
-    window.addEventListener('resize', updateHeight);
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAccountOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+    document.addEventListener('keydown', escape);
     return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', updateHeight);
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('touchstart', close);
+      document.removeEventListener('keydown', escape);
     };
-  }, []);
+  }, [accountOpen]);
 
   const personName = profile?.fullName?.trim() || user.email?.split('@')[0] || 'עובד';
-
   const roleText = isPlatformAdmin
     ? 'מנהל מערכת ראשי'
     : role === 'ADMIN'
@@ -69,120 +82,102 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
         : 'עובד תחנה';
 
   const canonicalCode = encodeURIComponent(station.code);
-  const resolvedSubtitle =
-    subtitle ||
-    (pageTitle ? `קוד תחנה: ${station.code} • ${pageTitle}` : `קוד תחנה: ${station.code}`);
+  const context = subtitle || pageTitle || `קוד תחנה ${station.code}`;
+  const tabs = [
+    { key: 'home', href: `/stations/${canonicalCode}/home`, label: 'ראשי', Icon: HomeIcon },
+    {
+      key: 'shifts',
+      href: `/stations/${canonicalCode}`,
+      label: 'המשמרות שלי',
+      Icon: BriefcaseIcon,
+    },
+    {
+      key: 'availability',
+      href: `/stations/${canonicalCode}/availability`,
+      label: 'הזמינות שלי',
+      Icon: CalendarIcon,
+    },
+    { key: 'hours', href: `/stations/${canonicalCode}/hours`, label: 'השעות שלי', Icon: ClockIcon },
+  ] as const;
 
   return (
-    <>
-      <header
-        ref={headerRef}
-        className="worker-header-root"
-        style={{
-          backgroundColor: '#fcbc00',
-          background: '#fcbc00',
-        }}
-      >
-        <Container size="lg">
-          <div className="worker-header-inner">
-            <div className="worker-header-main-row">
-              <div className="worker-header-brand-section">
-                <Link
-                  href={`/stations/${canonicalCode}`}
-                  className="worker-header-logo-link"
-                  title="דף הבית של המשמרות שלי"
-                >
-                  <div className="worker-header-logo-badge">
-                    <BrandMark size={28} />
-                  </div>
-                </Link>
-                <div className="worker-header-titles">
-                  <h2 className="worker-header-title">{station.name}</h2>
-                  <p className="worker-header-subtitle">
-                    {resolvedSubtitle.includes(station.code) ? (
-                      resolvedSubtitle
-                    ) : (
-                      <>
-                        קוד תחנה: <span className="worker-header-code-tag">{station.code}</span> •{' '}
-                        {resolvedSubtitle}
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
+    <header className="worker-header-root">
+      <div className="worker-header-inner">
+        <Link
+          href={`/stations/${canonicalCode}`}
+          className="worker-header-brand"
+          aria-label={`${station.name}, המשמרות שלי`}
+        >
+          <span className="worker-header-logo" aria-hidden="true">
+            <BrandMark size={26} />
+          </span>
+          <span className="worker-header-titles">
+            <span className="worker-header-title">{station.name}</span>
+            <span className="worker-header-subtitle">{context}</span>
+          </span>
+        </Link>
 
-              {/* Desktop-only Navigation Tabs (hidden on mobile; mobile dock is used instead) */}
-              <nav className="worker-header-nav-tabs" aria-label="ניווט ראשי למחשב">
-                <Link
-                  href={`/stations/${canonicalCode}/home`}
-                  className={`worker-header-tab-link ${activeTab === 'home' ? 'is-active' : ''}`}
-                >
-                  <HomeIcon size={15} />
-                  <span>ראשי</span>
-                </Link>
-                <Link
-                  href={`/stations/${canonicalCode}`}
-                  className={`worker-header-tab-link ${activeTab === 'shifts' ? 'is-active' : ''}`}
-                >
-                  <BriefcaseIcon size={15} />
-                  <span>המשמרות שלי</span>
-                </Link>
-                <Link
-                  href={`/stations/${canonicalCode}/availability`}
-                  className={`worker-header-tab-link ${activeTab === 'availability' ? 'is-active' : ''}`}
-                >
-                  <CalendarIcon size={15} />
-                  <span>הזמינות שלי</span>
-                </Link>
-                <Link
-                  href={`/stations/${canonicalCode}/hours`}
-                  className={`worker-header-tab-link ${activeTab === 'hours' ? 'is-active' : ''}`}
-                >
-                  <ClockIcon size={15} />
-                  <span>השעות שלי</span>
-                </Link>
-              </nav>
+        <nav className="worker-header-tabs" aria-label="ניווט ראשי">
+          {tabs.map(({ key, href, label, Icon }) => (
+            <Link
+              key={key}
+              href={href}
+              className="worker-header-tab"
+              aria-current={activeTab === key ? 'page' : undefined}
+            >
+              <Icon size={17} aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
 
-              <div className="worker-header-actions-section">
-                {/* Desktop user chip */}
-                <div className="worker-header-user-chip">
-                  <div className="worker-header-user-avatar" aria-hidden="true">
-                    <UserIcon size={14} />
-                  </div>
-                  <div className="worker-header-user-meta">
-                    <span className="worker-header-user-name">{personName}</span>
-                    <span className="worker-header-user-role-label">{roleText}</span>
-                  </div>
-                  <Badge variant="brandYellow" dot>
-                    {roleText}
-                  </Badge>
-                </div>
-
-                <LogoutButton variant="outline" />
+        <div className="worker-header-account" ref={accountRef}>
+          <button
+            type="button"
+            className="worker-header-account-trigger"
+            aria-expanded={accountOpen}
+            aria-controls={panelId}
+            aria-label={`החשבון שלי: ${personName}, ${roleText}`}
+            onClick={() => setAccountOpen((open) => !open)}
+          >
+            <span className="worker-header-avatar" aria-hidden="true">
+              {initials(personName)}
+            </span>
+            <span className="worker-header-account-name" aria-hidden="true">
+              {personName}
+            </span>
+            <ChevronDownIcon
+              size={16}
+              aria-hidden="true"
+              className="worker-header-account-chevron"
+            />
+          </button>
+          <div id={panelId} className="worker-header-account-panel" hidden={!accountOpen}>
+            <div className="worker-header-account-person">
+              <span className="worker-header-avatar worker-header-avatar--lg" aria-hidden="true">
+                {initials(personName)}
+              </span>
+              <div>
+                <strong>{personName}</strong>
+                <span>{roleText}</span>
               </div>
             </div>
-
-            {/* Mobile full-width user bar */}
-            <div className="worker-header-mobile-strip">
-              <div className="worker-header-mobile-user">
-                <div className="worker-header-user-avatar" aria-hidden="true">
-                  <UserIcon size={13} />
-                </div>
-                <span className="worker-header-mobile-greeting">שלום,</span>
-                <span className="worker-header-mobile-name">{personName}</span>
+            <dl className="worker-header-account-meta">
+              <div>
+                <dt>תחנה</dt>
+                <dd>{station.name}</dd>
               </div>
-              <Badge variant="brandYellow" dot>
-                {roleText}
-              </Badge>
-            </div>
+              <div>
+                <dt>קוד תחנה</dt>
+                <dd className="ys-num" dir="ltr">
+                  {station.code}
+                </dd>
+              </div>
+            </dl>
+            <LogoutButton variant="secondary" />
           </div>
-        </Container>
-      </header>
-      <div
-        className="worker-header-spacer"
-        style={{ height: headerHeight ? `${headerHeight}px` : undefined }}
-        aria-hidden="true"
-      />
-    </>
+        </div>
+      </div>
+    </header>
   );
 };

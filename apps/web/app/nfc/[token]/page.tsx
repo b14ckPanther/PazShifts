@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerSupabaseClient, resolveStationByNfcToken } from '@yellowshifts/database';
+import { WarningIcon } from '@yellowshifts/icons';
 import { NfcAttendanceClient } from './NfcAttendanceClient';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,9 @@ export default async function NfcStationPage({
     return (
       <main className="mobile-flow">
         <section className="attendance-panel">
-          <div className="attendance-symbol attendance-warning">!</div>
+          <div className="attendance-symbol attendance-warning" aria-hidden="true">
+            <WarningIcon size={38} />
+          </div>
           <h1>לא ניתן לקרוא את התג</h1>
           <p>סרקו שוב את תג התחנה. אם הבעיה נמשכת, פנו למנהל התחנה.</p>
           <Link className="mobile-secondary" href="/">

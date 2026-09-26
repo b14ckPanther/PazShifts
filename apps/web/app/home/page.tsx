@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { getMobileHome } from '@yellowshifts/database/public';
+import { getMobileHome, isAvailabilitySubmitted } from '@yellowshifts/database/public';
+import { getAvailabilityWeekStart, getWorkerWeeklyAvailability } from '@yellowshifts/database';
 import { Container } from '@yellowshifts/ui';
 import { getServerContext } from '../lib/server-context';
 import { WorkerHeader } from '../components/WorkerHeader';
@@ -19,6 +20,22 @@ export default async function HomePage({
     ? context.memberships.find((m) => m.station.id === stationId)
     : context.memberships[0];
   if (!membership) redirect('/');
+  // Next week's availability state for the "what to do next" row (read-only).
+  const nextWeekStart = (() => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(
+      new Date()
+    );
+    const d = new Date(`${getAvailabilityWeekStart(today)}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 7);
+    return d.toISOString().slice(0, 10);
+  })();
+  const availabilitySubmitted = getWorkerWeeklyAvailability(
+    supabase,
+    membership.membership.id,
+    nextWeekStart
+  )
+    .then((week) => isAvailabilitySubmitted(week))
+    .catch(() => null);
   let data;
   try {
     data = await getMobileHome(
@@ -53,6 +70,11 @@ export default async function HomePage({
           data={data}
           name={context.profile?.fullName || 'לך'}
           station={membership.station.name}
+          nextSteps={{
+            shiftsHref: `/stations/${encodeURIComponent(membership.station.code)}`,
+            availabilityHref: `/stations/${encodeURIComponent(membership.station.code)}/availability`,
+            availabilitySubmitted: await availabilitySubmitted,
+          }}
         />
       </Container>
     </main>

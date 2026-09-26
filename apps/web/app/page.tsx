@@ -11,7 +11,6 @@ import {
   CardFooter,
   Badge,
   Alert,
-  Button,
   Container,
   PageHeader,
 } from '@yellowshifts/ui';
@@ -37,8 +36,8 @@ export default async function WebHomePage({ searchParams }: PageProps) {
 
   if (!isConfigured) {
     return (
-      <main style={{ minHeight: '100vh', padding: '40px 16px', direction: 'rtl' }}>
-        <Container size="md">
+      <main className="worker-page">
+        <Container size="md" className="worker-page-body">
           <Alert variant="warning" title="הגדרות מערכת חסרות">
             לא הוגדרו משתני סביבה מתאימים. אנא ודא קיום קובץ הגדרות סביבה תקין.
           </Alert>
@@ -59,114 +58,70 @@ export default async function WebHomePage({ searchParams }: PageProps) {
   // CASE 1: Authenticated with ZERO active station memberships (including Platform Admin)
   if (memberships.length === 0) {
     return (
-      <main
-        style={{
-          minHeight: '100vh',
-          backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-          color: 'var(--ys-color-text-primary, #111827)',
-          paddingBottom: '64px',
-          direction: 'rtl',
-        }}
-      >
-        <header
-          className="worker-header-root"
-          style={{
-            backgroundColor: '#fcbc00',
-            background: '#fcbc00',
-          }}
-        >
-          <Container size="lg">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div className="worker-header-logo-badge">
-                  <BrandMark size={28} />
-                </div>
-                <h2 style={{ fontSize: '17px', fontWeight: 800, margin: 0, color: '#8f002b' }}>
-                  YellowShifts • פורטל עובדים
-                </h2>
-              </div>
-              <LogoutButton variant="outline" />
-            </div>
-          </Container>
+      <main className="worker-page">
+        <header className="worker-header-root">
+          <div className="worker-header-inner">
+            <span className="worker-header-brand">
+              <span className="worker-header-logo" aria-hidden="true">
+                <BrandMark size={26} />
+              </span>
+              <span className="worker-header-titles">
+                <span className="worker-header-title">YellowShifts</span>
+                <span className="worker-header-subtitle">פורטל עובדים</span>
+              </span>
+            </span>
+            <LogoutButton variant="secondary" />
+          </div>
         </header>
-        <div className="worker-header-spacer" aria-hidden="true" />
-
-        <Container size="md">
-          <div style={{ marginTop: '48px' }}>
-            <Card
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E5E7EB',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              }}
-            >
+        <Container size="sm">
+          <div className="worker-page-body">
+            <Card className="worker-no-station">
               <CardHeader>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}
-                >
-                  <ShieldCheckIcon
-                    size={22}
-                    color={
-                      isPlatformAdmin
-                        ? 'var(--ys-color-brand-yellow)'
-                        : 'var(--ys-color-status-warning)'
-                    }
-                  />
+                <div className="worker-no-station-badge">
+                  <ShieldCheckIcon size={20} aria-hidden="true" />
                   <Badge variant={isPlatformAdmin ? 'brandYellow' : 'warning'} dot>
                     {isPlatformAdmin ? 'מנהל מערכת ראשי' : 'חשבון מאומת • ללא שיוך לתחנה'}
                   </Badge>
                 </div>
-                <CardTitle style={{ color: '#111827' }}>
+                <CardTitle>
                   {isPlatformAdmin ? 'פורטל עובדים • מצב מנהל מערכת ראשי' : 'אין שיוך פעיל לתחנה'}
                 </CardTitle>
-                <CardDescription style={{ color: '#4B5563' }}>
+                <CardDescription>
                   {isPlatformAdmin
                     ? 'הנך מחובר כמנהל מערכת ראשי (Platform Admin). אתר זה מיועד לצפייה במשמרות עובד. לניהול כלל התחנות, העובדים והמשמרות – עבור לפורטל הניהול.'
                     : 'חשבונך אומת במערכת, אך טרם הוקצה לתחנת פז פעילה. פנה למנהל התחנה שלך להקצאת שיוך.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div
-                  style={{
-                    backgroundColor: 'var(--ys-color-surface-muted, #F9FAFB)',
-                    padding: '16px',
-                    borderRadius: 'var(--ys-radius-md)',
-                    border: '1px solid #E5E7EB',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    fontSize: '13px',
-                    color: '#374151',
-                  }}
-                >
+                <dl className="worker-no-station-facts">
                   <div>
-                    <strong>שם:</strong> {profile?.fullName || user.email}
+                    <dt>שם</dt>
+                    <dd>{profile?.fullName || user.email}</dd>
                   </div>
                   <div>
-                    <strong>אימייל:</strong> {user.email}
+                    <dt>אימייל</dt>
+                    <dd dir="ltr">{user.email}</dd>
                   </div>
                   <div>
-                    <strong>הרשאה:</strong>{' '}
-                    {isPlatformAdmin ? 'מנהל מערכת ראשי (Platform Admin)' : 'עובד ללא שיוך'}
+                    <dt>הרשאה</dt>
+                    <dd>
+                      {isPlatformAdmin ? 'מנהל מערכת ראשי (Platform Admin)' : 'עובד ללא שיוך'}
+                    </dd>
                   </div>
-                </div>
+                </dl>
               </CardContent>
               <CardFooter>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
-                >
-                  {isPlatformAdmin &&
-                    (adminOrigin ? (
-                      <a href={adminOrigin} style={{ textDecoration: 'none' }}>
-                        <Button variant="primary">מעבר לפורטל הניהול</Button>
-                      </a>
-                    ) : (
-                      <Alert variant="warning" title="פורטל הניהול אינו מוגדר">
-                        כתובת פורטל הניהול אינה זמינה. יש לפנות למנהל המערכת.
-                      </Alert>
-                    ))}
-                  <LogoutButton variant="secondary" />
-                </div>
+                {isPlatformAdmin &&
+                  (adminOrigin ? (
+                    <a href={adminOrigin} className="ys-button ys-button--primary">
+                      מעבר לפורטל הניהול
+                    </a>
+                  ) : (
+                    <Alert variant="warning" title="פורטל הניהול אינו מוגדר">
+                      כתובת פורטל הניהול אינה זמינה. יש לפנות למנהל המערכת.
+                    </Alert>
+                  ))}
+                <LogoutButton variant="secondary" />
               </CardFooter>
             </Card>
           </div>
@@ -192,15 +147,7 @@ export default async function WebHomePage({ searchParams }: PageProps) {
   const schedule = await getWeeklySchedule(supabase, activeContext.station.id, selectedWeekStart);
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
+    <main className="worker-page">
       <WorkerHeader
         station={activeContext.station}
         user={user}
@@ -211,27 +158,24 @@ export default async function WebHomePage({ searchParams }: PageProps) {
         pageTitle="המשמרות שלי"
       />
 
-      {/* Main Container */}
       <Container size="md">
-        <div style={{ marginTop: '16px' }}>
-          {memberships.length > 1 && (
-            <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
-          )}
-          <PageHeader
-            title="המשמרות שלי"
-            description={`צפייה במשמרות המאושרות ששובצת אליהן בתחנת ${activeContext.station.name}. מוצגות רק משמרות מתוך סידורי עבודה רשמיים שפורסמו.`}
-          />
+        {memberships.length > 1 && (
+          <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
+        )}
+        <PageHeader
+          title="המשמרות שלי"
+          description={`המשמרות ששובצת אליהן בתחנת ${activeContext.station.name}, מתוך סידורי עבודה שפורסמו.`}
+        />
 
-          <WorkerScheduleView
-            timezone={activeContext.station.timezone}
-            initialNow={Date.now()}
-            stationId={activeContext.station.id}
-            stationName={activeContext.station.name}
-            workerUserId={user.id}
-            selectedWeekStart={selectedWeekStart}
-            schedule={schedule}
-          />
-        </div>
+        <WorkerScheduleView
+          timezone={activeContext.station.timezone}
+          initialNow={Date.now()}
+          stationId={activeContext.station.id}
+          stationName={activeContext.station.name}
+          workerUserId={user.id}
+          selectedWeekStart={selectedWeekStart}
+          schedule={schedule}
+        />
       </Container>
     </main>
   );
