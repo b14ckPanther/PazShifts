@@ -5,8 +5,9 @@ import { createRequire } from 'node:module';
 import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 const ts = createRequire(import.meta.url)('typescript');
-function mount({ reduced = false, path = '/', wait = true } = {}) {
-  let visible = false,
+function mount({ reduced = false, path = '/', wait = true, onMount = true, duration } = {}) {
+  const state = [false, 0];
+  let hook = 0,
     pending = false;
   const timers = new Map(),
     events = new Map(),
@@ -57,12 +58,16 @@ function mount({ reduced = false, path = '/', wait = true } = {}) {
       require: (name) => {
         if (name === 'react')
           return {
-            useState: () => [
-              visible,
-              (value) => {
-                visible = value;
-              },
-            ],
+            useState: (initial) => {
+              const i = hook++;
+              state[i] ??= initial;
+              return [
+                state[i],
+                (value) => {
+                  state[i] = typeof value === 'function' ? value(state[i]) : value;
+                },
+              ];
+            },
             useRef: (value) => ({ current: value }),
             useCallback: (fn) => fn,
             useEffect: (fn) => cleanups.push(fn()),
@@ -73,9 +78,10 @@ function mount({ reduced = false, path = '/', wait = true } = {}) {
       },
     }
   );
-  exports.BrandSplash({ waitForContent: wait });
+  exports.BrandSplash({ waitForContent: wait, showOnMount: onMount, duration });
   return {
-    visible: () => visible,
+    visible: () => state[0],
+    openings: () => state[1],
     pending: (value) => {
       pending = value;
     },
@@ -123,4 +129,27 @@ test('unmount cancels readiness polling', () => {
   ui.tick();
   ui.cleanup();
   assert.equal(ui.count(), 0);
+});
+test('apps with a launch intro keep only the navigation splash', () => {
+  const ui = mount({ onMount: false });
+  assert.equal(ui.visible(), false);
+  assert.equal(ui.count(), 0);
+  ui.submit();
+  assert.equal(ui.visible(), true);
+});
+test('each opening restarts the splash content, re-triggering while visible does not', () => {
+  const ui = mount();
+  assert.equal(ui.openings(), 1);
+  ui.submit();
+  assert.equal(ui.openings(), 1);
+  ui.tick();
+  assert.equal(ui.visible(), false);
+  ui.submit();
+  assert.equal(ui.openings(), 2);
+});
+test('apps can lengthen the minimum splash for every navigation', () => {
+  const ui = mount({ duration: 2600 });
+  assert.equal(ui.tick(), 2600);
+  ui.submit();
+  assert.equal(ui.tick(), 2600);
 });

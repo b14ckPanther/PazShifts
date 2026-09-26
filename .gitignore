@@ -52,3 +52,6 @@ Thumbs.db
 
 # Local Vercel project metadata
 .vercel
+
+# Local Impeccable design-review screenshots
+apps/*/.impeccable/review/
