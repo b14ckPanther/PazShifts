@@ -3,18 +3,8 @@ import { StationLocationFields } from './StationLocationFields';
 
 import React, { useState, useEffect, useTransition } from 'react';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import {
-  Button,
-  Input,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Alert,
-} from '@yellowshifts/ui';
-import { StationIcon, PlusIcon, ArrowRightIcon } from '@yellowshifts/icons';
+import { Button, Input, Card, Alert } from '@yellowshifts/ui';
+import { PlusIcon } from '@yellowshifts/icons';
 import { createStationAction } from '../actions/stations';
 
 export const CreateStationForm: React.FC = () => {
@@ -106,229 +96,133 @@ export const CreateStationForm: React.FC = () => {
   };
 
   return (
-    <Card
-      style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E5E7EB',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      }}
-    >
+    <Card className="station-form-card">
       <form
         method="POST"
         action="#"
+        className="station-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
           handleManualSubmit();
         }}
       >
-        <CardHeader>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <StationIcon size={22} color="var(--ys-color-brand-yellow)" />
-            <CardTitle style={{ color: '#111827' }}>הקמת תחנה חדשה</CardTitle>
+        {error && (
+          <Alert variant="danger" title="שגיאה ביצירת התחנה">
+            {error}
+          </Alert>
+        )}
+
+        <fieldset className="ys-fieldset">
+          <legend>זיהוי התחנה</legend>
+          <div className="ys-form-grid">
+            <Input
+              id="station-code"
+              name="code"
+              type="text"
+              label="קוד תחנה"
+              isRequired
+              helperText="אותיות באנגלית ומספרים בלבד. משמש כמזהה ייחודי."
+              placeholder="לדוגמה: PAZ-TLV-01"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              required
+              dir="ltr"
+              autoCapitalize="characters"
+              className="station-code-field"
+            />
+            <Input
+              id="station-name"
+              name="name"
+              type="text"
+              label="שם תחנה"
+              isRequired
+              placeholder="לדוגמה: תחנת פז כורדני"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
-          <CardDescription style={{ color: '#4B5563' }}>
-            הזן את פרטי התחנה כדי להקימה במערכת.
-          </CardDescription>
-        </CardHeader>
+        </fieldset>
 
-        <CardContent>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {error && (
-              <Alert variant="danger" title="שגיאה ביצירת התחנה">
-                {error}
-              </Alert>
-            )}
+        <fieldset className="ys-fieldset">
+          <legend>פרטי קשר</legend>
+          <div className="ys-form-grid">
+            <Input
+              id="station-address"
+              name="address"
+              type="text"
+              label="כתובת"
+              placeholder="רחוב, מספר ועיר"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <Input
+              id="station-phone"
+              name="phone"
+              type="tel"
+              label="טלפון"
+              placeholder="03-1234567"
+              dir="ltr"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+        </fieldset>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="station-code"
-                  style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}
-                >
-                  קוד תחנה <span style={{ color: 'var(--ys-color-brand-crimson)' }}>*</span>
-                </label>
-                <Input
-                  id="station-code"
-                  name="code"
-                  type="text"
-                  placeholder="לדוגמה: PAZ-TLV-01"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  required
-                  style={{ textTransform: 'uppercase' }}
-                />
-                <span style={{ fontSize: '11px', color: '#6B7280' }}>
-                  אותיות באנגלית ומספרים בלבד. משמש כמזהה ייחודי.
-                </span>
-              </div>
+        <StationLocationFields />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="station-name"
-                  style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}
-                >
-                  שם תחנה <span style={{ color: 'var(--ys-color-brand-crimson)' }}>*</span>
-                </label>
-                <Input
-                  id="station-name"
-                  name="name"
-                  type="text"
-                  placeholder="לדוגמה: תחנת פז כורדני"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="station-address"
-                  style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}
-                >
-                  כתובת
-                </label>
-                <Input
-                  id="station-address"
-                  name="address"
-                  type="text"
-                  placeholder="רחוב, מספר ועיר"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="station-phone"
-                  style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}
-                >
-                  טלפון
-                </label>
-                <Input
-                  id="station-phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="03-1234567"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="station-tz"
-                  style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}
-                >
-                  אזור זמן
-                </label>
-                <select
-                  id="station-tz"
-                  name="timezone"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  style={{
-                    height: '42px',
-                    padding: '0 12px',
-                    borderRadius: 'var(--ys-radius-sm)',
-                    border: '1px solid #D1D5DB',
-                    backgroundColor: '#FFFFFF',
-                    color: '#111827',
-                    fontSize: '14px',
-                    outline: 'none',
-                    direction: 'ltr',
-                  }}
-                >
-                  <option value="Asia/Jerusalem">Asia/Jerusalem (ישראל UTC+2/3)</option>
-                  <option value="UTC">UTC</option>
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  paddingTop: '24px',
-                }}
+        <fieldset className="ys-fieldset">
+          <legend>סטטוס ואזור זמן</legend>
+          <div className="ys-form-grid">
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="station-tz">
+                אזור זמן
+              </label>
+              <select
+                id="station-tz"
+                name="timezone"
+                dir="ltr"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
               >
-                <input
-                  id="station-active"
-                  name="isActive"
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <label
-                  htmlFor="station-active"
-                  style={{ fontSize: '14px', fontWeight: 500, color: '#111827', cursor: 'pointer' }}
-                >
-                  תחנה פעילה (מאפשרת כניסת עובדים ומנהלים)
-                </label>
-              </div>
+                <option value="Asia/Jerusalem">Asia/Jerusalem (ישראל UTC+2/3)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+            <div className="station-switch-row">
+              <input
+                id="station-active"
+                name="isActive"
+                type="checkbox"
+                role="switch"
+                className="ys-switch"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />
+              <label htmlFor="station-active">
+                <strong>תחנה פעילה</strong>
+                <span>מאפשרת כניסת עובדים ומנהלים</span>
+              </label>
             </div>
           </div>
-          <StationLocationFields />
-        </CardContent>
+        </fieldset>
 
-        <CardFooter>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              gap: '12px',
-            }}
+        <div className="ys-form-actions">
+          <Button
+            variant="primary"
+            type="button"
+            onClick={handleManualSubmit}
+            disabled={isPending}
+            isLoading={isPending}
+            rightIcon={<PlusIcon size={18} aria-hidden="true" />}
           >
-            <Link href="/" style={{ textDecoration: 'none' }}>
-              <Button variant="ghost" size="md" type="button">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <ArrowRightIcon size={16} />
-                  ביטול וחזרה
-                </span>
-              </Button>
-            </Link>
-
-            <Button
-              variant="primary"
-              size="md"
-              type="button"
-              onClick={handleManualSubmit}
-              disabled={isPending}
-              isLoading={isPending}
-              style={{ minWidth: '160px' }}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <PlusIcon size={16} />
-                צור תחנה
-              </span>
-            </Button>
-          </div>
-        </CardFooter>
+            צור תחנה
+          </Button>
+          <Link href="/" className="ys-button ys-button--ghost">
+            <span>ביטול וחזרה</span>
+          </Link>
+        </div>
       </form>
     </Card>
   );

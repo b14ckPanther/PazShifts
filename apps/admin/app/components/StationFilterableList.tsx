@@ -2,16 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-  Badge,
-  Button,
-  Input,
-} from '@yellowshifts/ui';
+import { Badge, EmptyState, Input, StatusBadge } from '@yellowshifts/ui';
 import {
   StationIcon,
   SearchIcon,
@@ -31,12 +22,14 @@ interface StationFilterableListProps {
   memberCounts: Record<string, { total: number; admins: number }>;
 }
 
+type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
+
 export const StationFilterableList: React.FC<StationFilterableListProps> = ({
   stations,
   memberCounts,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
   const filteredStations = useMemo(() => {
     return stations.filter((station) => {
@@ -57,282 +50,148 @@ export const StationFilterableList: React.FC<StationFilterableListProps> = ({
 
   if (stations.length === 0) {
     return (
-      <Card>
-        <CardContent>
-          <div
-            style={{
-              padding: '48px 24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-            }}
-          >
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--ys-color-brand-yellow-subtle, #FEF3C7)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--ys-color-text-primary, #111827)',
-              }}
-            >
-              <StationIcon size={28} />
-            </div>
-            <div>
-              <h3
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 600,
-                  color: 'var(--ys-color-text-primary, #111827)',
-                  margin: 0,
-                }}
-              >
-                טרם הוקמו תחנות במערכת
-              </h3>
-              <p
-                style={{
-                  fontSize: '14px',
-                  color: 'var(--ys-color-text-secondary, #6B7280)',
-                  margin: '6px 0 0 0',
-                }}
-              >
-                הקם את התחנה הראשונה כדי להתחיל לנהל צוותים ומשמרות.
-              </p>
-            </div>
-            <Link href="/stations/new" style={{ textDecoration: 'none' }}>
-              <Button variant="primary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <PlusIcon size={16} />
-                  הקמת תחנה חדשה
-                </span>
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyState
+        className="admin-empty-panel"
+        icon={<StationIcon size={26} />}
+        title="טרם הוקמו תחנות במערכת"
+        description="הקם את התחנה הראשונה כדי להתחיל לנהל צוותים ומשמרות."
+        action={
+          <Link href="/stations/new" className="ys-button ys-button--primary">
+            <PlusIcon size={18} aria-hidden="true" />
+            <span>הקמת תחנה חדשה</span>
+          </Link>
+        }
+      />
     );
   }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Search and Filters Bar */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-          backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-          padding: '16px',
-          borderRadius: 'var(--ys-radius-md)',
-          border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-        }}
-      >
-        <div style={{ flex: '1', minWidth: '240px', position: 'relative' }}>
-          <Input
-            id="station-search"
-            type="text"
-            placeholder="חיפוש לפי שם, קוד או כתובת תחנה..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+  const activeCount = stations.filter((s) => s.isActive).length;
+  const filters: { value: StatusFilter; label: string; count: number }[] = [
+    { value: 'ALL', label: 'הכל', count: stations.length },
+    { value: 'ACTIVE', label: 'פעילות', count: activeCount },
+    { value: 'INACTIVE', label: 'מושבתות', count: stations.length - activeCount },
+  ];
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Button
-            variant={statusFilter === 'ALL' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setStatusFilter('ALL')}
-          >
-            הכל ({stations.length})
-          </Button>
-          <Button
-            variant={statusFilter === 'ACTIVE' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setStatusFilter('ACTIVE')}
-          >
-            פעילות ({stations.filter((s) => s.isActive).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'INACTIVE' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setStatusFilter('INACTIVE')}
-          >
-            מושבתות ({stations.filter((s) => !s.isActive).length})
-          </Button>
+  return (
+    <section className="admin-section" aria-labelledby="station-list-title">
+      <div className="admin-section-header">
+        <h2 id="station-list-title" className="admin-section-title">
+          התחנות ברשת
+        </h2>
+        <span className="admin-section-description" role="status">
+          מוצגות <span className="ys-num">{filteredStations.length}</span> מתוך{' '}
+          <span className="ys-num">{stations.length}</span>
+        </span>
+      </div>
+
+      {/* Search and Filters Bar */}
+      <div className="admin-toolbar station-list-toolbar">
+        <Input
+          id="station-search"
+          type="search"
+          label="חיפוש תחנה"
+          placeholder="שם, קוד או כתובת"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          rightIcon={<SearchIcon size={18} aria-hidden="true" />}
+          className="station-list-search"
+        />
+
+        <div className="ys-segmented station-list-filter" role="group" aria-label="סינון לפי סטטוס">
+          {filters.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              aria-pressed={statusFilter === filter.value}
+              onClick={() => setStatusFilter(filter.value)}
+            >
+              {filter.label} <span className="ys-num">({filter.count})</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Stations Grid */}
       {filteredStations.length === 0 ? (
-        <Card>
-          <CardContent>
-            <div
-              style={{
-                padding: '32px',
-                textAlign: 'center',
-                color: 'var(--ys-color-text-secondary, #6B7280)',
-              }}
-            >
-              <SearchIcon size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
-              <div>לא נמצאו תחנות התואמות את החיפוש או הסינון.</div>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          className="admin-empty-panel"
+          icon={<SearchIcon size={24} />}
+          title="לא נמצאו תחנות התואמות את החיפוש או הסינון."
+        />
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '16px',
-          }}
-        >
+        <ul className="station-card-grid">
           {filteredStations.map((station) => {
             const counts = memberCounts[station.id] ?? { total: 0, admins: 0 };
+            const stationHref = `/stations/${encodeURIComponent(station.code)}`;
 
             return (
-              <Card key={station.id}>
-                <CardHeader>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      gap: '12px',
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          marginBottom: '6px',
-                        }}
-                      >
-                        <Badge variant="brandYellow">{station.code}</Badge>
-                        <Badge variant={station.isActive ? 'success' : 'neutral'} dot>
-                          {station.isActive ? 'פעילה' : 'מושבתת'}
-                        </Badge>
-                      </div>
-                      <CardTitle style={{ fontSize: '17px' }}>{station.name}</CardTitle>
-                    </div>
+              <li key={station.id} className="station-card">
+                <div className="station-card-head">
+                  <div className="station-card-identity">
+                    <h3 className="station-card-name">{station.name}</h3>
+                    <Badge variant="brandYellow" dir="ltr">
+                      {station.code}
+                    </Badge>
                   </div>
-                </CardHeader>
+                  <StatusBadge
+                    status={station.isActive ? 'success' : 'offline'}
+                    label={station.isActive ? 'פעילה' : 'מושבתת'}
+                  />
+                </div>
 
-                <CardContent>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      fontSize: '13px',
-                      color: 'var(--ys-color-text-secondary, #4B5563)',
-                    }}
+                <ul className="station-card-facts">
+                  {station.address && (
+                    <li>
+                      <MapPinIcon size={16} aria-hidden="true" />
+                      <span>{station.address}</span>
+                    </li>
+                  )}
+                  {station.phone && (
+                    <li>
+                      <PhoneIcon size={16} aria-hidden="true" />
+                      <span dir="ltr">{station.phone}</span>
+                    </li>
+                  )}
+                  <li>
+                    <ClockIcon size={16} aria-hidden="true" />
+                    <span dir="ltr">{station.timezone}</span>
+                  </li>
+                </ul>
+
+                <div className="station-card-counts">
+                  <span>
+                    <ShieldCheckIcon size={16} aria-hidden="true" />
+                    <strong className="ys-num">{counts.admins}</strong> מנהלי תחנה
+                  </span>
+                  <span>
+                    <UsersIcon size={16} aria-hidden="true" />
+                    <strong className="ys-num">{counts.total}</strong> אנשי צוות
+                  </span>
+                </div>
+
+                <div className="station-card-actions">
+                  <Link href={stationHref} className="ys-button ys-button--secondary ys-button--sm">
+                    <span>ניהול וצוות</span>
+                  </Link>
+                  <Link
+                    href={`${stationHref}/edit`}
+                    className="ys-button ys-button--ghost ys-button--sm ys-button--icon"
+                    aria-label={`עריכת תחנה ${station.name}`}
+                    title="עריכת תחנה"
                   >
-                    {station.address && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <MapPinIcon size={14} color="var(--ys-color-text-muted, #9CA3AF)" />
-                        <span>{station.address}</span>
-                      </div>
-                    )}
-                    {station.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <PhoneIcon size={14} color="var(--ys-color-text-muted, #9CA3AF)" />
-                        <span dir="ltr">{station.phone}</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <ClockIcon size={14} color="var(--ys-color-text-muted, #9CA3AF)" />
-                      <span>{station.timezone}</span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        marginTop: '8px',
-                        paddingTop: '8px',
-                        borderTop: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color:
-                            counts.admins > 0 ? '#B45309' : 'var(--ys-color-text-muted, #9CA3AF)',
-                        }}
-                      >
-                        <ShieldCheckIcon size={15} />
-                        <strong>{counts.admins}</strong> מנהלי תחנה
-                      </span>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: 'var(--ys-color-text-secondary, #4B5563)',
-                        }}
-                      >
-                        <UsersIcon size={15} />
-                        <strong>{counts.total}</strong> אנשי צוות
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      gap: '8px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Link
-                        href={`/stations/${encodeURIComponent(station.code)}`}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <Button variant="secondary" size="sm">
-                          ניהול וצוות
-                        </Button>
-                      </Link>
-
-                      <Link
-                        href={`/stations/${encodeURIComponent(station.code)}/edit`}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <Button variant="ghost" size="sm" title="עריכת תחנה">
-                          <EditIcon size={14} />
-                        </Button>
-                      </Link>
-                    </div>
-
-                    <StationStatusToggle
-                      stationId={station.id}
-                      isActive={station.isActive}
-                      stationName={station.name}
-                    />
-                  </div>
-                </CardFooter>
-              </Card>
+                    <EditIcon size={16} aria-hidden="true" />
+                  </Link>
+                  <StationStatusToggle
+                    stationId={station.id}
+                    isActive={station.isActive}
+                    stationName={station.name}
+                  />
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
-    </div>
+    </section>
   );
 };

@@ -2,8 +2,8 @@ import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { getStationExceptionsForDate } from '@yellowshifts/database';
-import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
-import { ArrowRightIcon, ClockIcon, CalendarIcon } from '@yellowshifts/icons';
+import { Container, PageHeader } from '@yellowshifts/ui';
+import { ArrowRightIcon, ClockIcon, WarningIcon } from '@yellowshifts/icons';
 import { StationHeader } from '../../../components/StationHeader';
 import { StationExceptionsClient } from './StationExceptionsClient';
 
@@ -28,7 +28,8 @@ export default async function StationExceptionsPage({ params }: StationException
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
+      (m.station.id === station.id ||
+        m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -48,89 +49,44 @@ export default async function StationExceptionsPage({ params }: StationException
 
   const exceptionsResult = await getStationExceptionsForDate(supabase, station.id, today);
 
+  const base = `/stations/${encodeURIComponent(station.code)}`;
+
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
-      {/* Top Header */}
+    <main className="admin-page">
       <StationHeader station={station} context={context} subtitle="חריגות נוכחות" />
 
-      <Container size="lg">
-        {/* Navigation & Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
-            margin: '32px 0 24px 0',
-          }}
-        >
-          <div>
-            <Link
-              href={`/stations/${encodeURIComponent(station.code)}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--ys-color-text-secondary, #6B7280)',
-                fontSize: '13px',
-                textDecoration: 'none',
-                marginBottom: '8px',
-              }}
-            >
-              <ArrowRightIcon size={14} />
-              חזרה לפרטי התחנה
-            </Link>
+      <Container size="xl">
+        <div className="admin-page-body">
+          <Link href={base} className="admin-back-link">
+            <ArrowRightIcon size={16} />
+            חזרה לסקירת התחנה
+          </Link>
+
+          <div className="station-hero-section">
             <PageHeader
-              title={`חריגות נוכחות — ${station.name}`}
+              className="att-page-header"
+              title="חריגות נוכחות היום"
               description="סקירה תפעולית של חריגות נוכחות ביום הנוכחי: איחורים, יציאות מוקדמות, אי-הגעות, כניסות לא מתוכננות ומשמרות שלא נסגרו."
-              badge={
-                <Badge
-                  variant={exceptionsResult.exceptions.length > 0 ? 'brandCrimson' : 'neutral'}
-                  dot
-                >
-                  {exceptionsResult.exceptions.length} חריגות
-                </Badge>
-              }
             />
+            <nav className="station-nav-pills" aria-label="מסכי נוכחות">
+              <Link href={`${base}/attendance`}>
+                <ClockIcon size={16} />
+                נוכחות בזמן אמת
+              </Link>
+              <Link href={`${base}/exceptions`} aria-current="page">
+                <WarningIcon size={16} />
+                חריגות נוכחות
+              </Link>
+            </nav>
           </div>
 
-          <div className="station-nav-pills">
-            <Link href={`/stations/${encodeURIComponent(station.code)}/attendance`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <ClockIcon size={16} />
-                  נוכחות עובדים
-                </span>
-              </Button>
-            </Link>
-
-            <Link href={`/stations/${encodeURIComponent(station.code)}/schedules`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <CalendarIcon size={16} />
-                  סידור עבודה שבועי
-                </span>
-              </Button>
-            </Link>
-          </div>
+          <StationExceptionsClient
+            station={station}
+            exceptionsResult={exceptionsResult}
+            isPlatformAdmin={isPlatformAdmin}
+            isStationAdmin={isStationAdmin}
+          />
         </div>
-
-        {/* Exceptions Client */}
-        <StationExceptionsClient
-          station={station}
-          exceptionsResult={exceptionsResult}
-          isPlatformAdmin={isPlatformAdmin}
-          isStationAdmin={isStationAdmin}
-        />
       </Container>
     </main>
   );

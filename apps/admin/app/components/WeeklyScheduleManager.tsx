@@ -16,7 +16,7 @@ import {
   deleteScheduledShiftAction,
   revertScheduleToDraftAction,
 } from '../actions/schedules';
-import { Card, CardContent, Button, Badge } from '@yellowshifts/ui';
+import { Button, Badge, StatusBadge, EmptyState, Dialog } from '@yellowshifts/ui';
 import {
   CalendarIcon,
   PlusIcon,
@@ -26,11 +26,12 @@ import {
   WarningIcon,
   SuccessIcon,
   CloseIcon,
-  CheckIcon,
   CopyIcon,
   RotateCcwIcon,
+  TrashIcon,
+  CircleCheckIcon,
 } from '@yellowshifts/icons';
-import { WeeklyScheduleGrid } from './WeeklyScheduleGrid';
+import { WeeklyScheduleGrid, countText, shiftHasManager } from './WeeklyScheduleGrid';
 import { QuickStaffAssignmentDrawer } from './QuickStaffAssignmentDrawer';
 import { DuplicateShiftModal } from './DuplicateShiftModal';
 import { CopyPreviousWeekModal } from './CopyPreviousWeekModal';
@@ -54,6 +55,10 @@ function addDays(dateStr: string, days: number): string {
   const d = new Date(`${dateStr.slice(0, 10)}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+function timeOf(value: string): string {
+  return value.includes('T') ? (value.split('T')[1]?.slice(0, 5) ?? '') : value.slice(11, 16);
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -96,6 +101,7 @@ export function WeeklyScheduleManager({
   const [activeShiftIdForDrawer, setActiveShiftIdForDrawer] = useState<string | null>(null);
   const [showCopyWeekModal, setShowCopyWeekModal] = useState(false);
   const [showPublishValidationModal, setShowPublishValidationModal] = useState(false);
+  const [deletingShiftId, setDeletingShiftId] = useState<string | null>(null);
 
   // Optimistic assignment handlers
   const handleOptimisticAssign = (
@@ -192,10 +198,7 @@ export function WeeklyScheduleManager({
     });
   };
 
-  const handleRollbackRemove = (
-    shiftId: string,
-    removedAssignment: ShiftAssignmentWithProfile
-  ) => {
+  const handleRollbackRemove = (shiftId: string, removedAssignment: ShiftAssignmentWithProfile) => {
     setLocalSchedule((prev) => {
       if (!prev) return prev;
       return {
@@ -261,11 +264,11 @@ export function WeeklyScheduleManager({
     });
   };
 
+  // Confirmed from the delete dialog (replaces the browser confirm()).
   const handleDeleteShift = (shiftId: string) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק משמרת זו מהסידור?')) return;
-
     startTransition(async () => {
       const res = await deleteScheduledShiftAction(stationId, shiftId);
+      setDeletingShiftId(null);
       if (res.success) {
         setFeedback({ type: 'success', text: 'המשמרת נמחקה מהסידור בהצלחה' });
         if (activeShiftIdForDrawer === shiftId) {
@@ -278,14 +281,30 @@ export function WeeklyScheduleManager({
     });
   };
 
+  const deletingShift = deletingShiftId
+    ? (localSchedule?.shifts.find((s) => s.id === deletingShiftId) ?? null)
+    : null;
+  const deletingTime = deletingShift
+    ? `${timeOf(deletingShift.startAt)}–${timeOf(deletingShift.endAt)}`
+    : '';
+
   const handleCopyWeekSuccess = (result: CopyWeekResult) => {
     setShowCopyWeekModal(false);
-    let msg = `הועתקו בהצלחה ${result.copiedShifts} משמרות משבוע קודם.`;
+    let msg =
+      result.copiedShifts === 1
+        ? 'הועתקה בהצלחה משמרת אחת משבוע קודם.'
+        : `הועתקו בהצלחה ${result.copiedShifts} משמרות משבוע קודם.`;
     if (result.copiedAssignments > 0) {
-      msg += ` שובצו ${result.copiedAssignments} עובדים פעילים.`;
+      msg +=
+        result.copiedAssignments === 1
+          ? ' שובץ עובד פעיל אחד.'
+          : ` שובצו ${result.copiedAssignments} עובדים פעילים.`;
     }
     if (result.skippedInactiveWorkers > 0) {
-      msg += ` דולגו ${result.skippedInactiveWorkers} שיבוצים של עובדים שאינם פעילים בתחנה.`;
+      msg +=
+        result.skippedInactiveWorkers === 1
+          ? ' דולג שיבוץ אחד של עובד שאינו פעיל בתחנה.'
+          : ` דולגו ${result.skippedInactiveWorkers} שיבוצים של עובדים שאינם פעילים בתחנה.`;
     }
     setFeedback({ type: 'success', text: msg });
     router.refresh();
@@ -300,282 +319,180 @@ export function WeeklyScheduleManager({
     router.refresh();
   };
 
-  return (
-    <div
-      className="schedule-manager"
-      style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-    >
-      {/* Week Navigator & Status / Actions Bar */}
-      <Card
-        className="schedule-toolbar"
-        style={{
-          padding: 0,
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        }}
+  const createActions = canEdit && (
+    <>
+      <Button
+        variant="primary"
+        onClick={handleCreateSchedule}
+        disabled={isPending}
+        rightIcon={<PlusIcon size={18} />}
       >
-        <CardContent style={{ padding: '20px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '16px',
-            }}
-          >
-            <nav className="admin-week-nav" aria-label="בחירת שבוע">
-              <div className="admin-week-date">
-                <small>השבוע הנבחר</small>
-                <strong dir="ltr">
-                  {formatDateDisplay(selectedWeekStart)} – {formatDateDisplay(weekEnd)}
-                </strong>
-              </div>
-              <button
-                type="button"
-                className="admin-week-previous"
-                onClick={() => navigateWeek(-7)}
-                disabled={isPending}
-              >
-                <ChevronRightIcon size={18} />
-                <span>שבוע קודם</span>
-              </button>
-              <button
-                type="button"
-                className="admin-week-next"
-                onClick={() => navigateWeek(7)}
-                disabled={isPending}
-              >
-                <span>שבוע הבא</span>
-                <ChevronLeftIcon size={18} />
-              </button>
-              {!isViewingCurrentWeek && (
-                <button
-                  type="button"
-                  className="admin-week-today"
-                  onClick={jumpToCurrentWeek}
-                  disabled={isPending}
-                >
-                  השבוע הנוכחי
-                </button>
+        צור סידור שבועי חדש
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => setShowCopyWeekModal(true)}
+        disabled={isPending}
+        rightIcon={<CopyIcon size={17} />}
+      >
+        העתק משבוע קודם
+      </Button>
+    </>
+  );
+
+  // One week-level staffing summary instead of a warning on every shift card.
+  const weekShifts = localSchedule?.shifts ?? schedule?.shifts ?? [];
+  const shiftsWithoutManager = weekShifts.filter((s) => !shiftHasManager(s)).length;
+
+  const hasActions = canEdit && (!schedule || schedule.status !== 'ARCHIVED');
+
+  return (
+    <div className="schedule-manager">
+      {/* Week header: range and status, week navigation, then the action row */}
+      <section className="schedule-week-bar" aria-labelledby="schedule-week-range">
+        <div className="schedule-week-top">
+          <div className="schedule-week-heading">
+            <h2 id="schedule-week-range" className="schedule-week-range">
+              <span className="ys-visually-hidden">השבוע הנבחר: </span>
+              <bdi dir="ltr">
+                {formatDateDisplay(selectedWeekStart)} – {formatDateDisplay(weekEnd)}
+              </bdi>
+            </h2>
+            <div className="schedule-week-status">
+              <span>סטטוס:</span>
+              {!schedule && <Badge variant="neutral">טרם הוקם סידור</Badge>}
+              {schedule?.status === 'DRAFT' && (
+                <StatusBadge status="draft" label="טיוטה (ניתן לעריכה)" />
               )}
-            </nav>
-
-            {/* Schedule Status & Primary Actions */}
-            <div className="schedule-status-actions">
-              {schedule ? (
-                <>
-                  <div className="schedule-action-group schedule-status-badge-group">
-                    <span style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>סטטוס:</span>
-                    {schedule.status === 'DRAFT' && (
-                      <Badge variant="warning">טיוטה (ניתן לעריכה)</Badge>
-                    )}
-                    {schedule.status === 'PUBLISHED' && (
-                      <Badge
-                        variant="success"
-                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <CheckIcon size={12} />
-                        <span>פורסם (רשמי)</span>
-                      </Badge>
-                    )}
-                    {schedule.status === 'ARCHIVED' && (
-                      <Badge variant="neutral">בארכיון (היסטורי)</Badge>
-                    )}
-                  </div>
-
-                  {canEdit && (
-                    <div className="schedule-action-buttons">
-                      {schedule.status === 'DRAFT' && (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setShowCopyWeekModal(true)}
-                            disabled={isPending}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                            title="העתק משמרות משבוע קודם"
-                          >
-                            <CopyIcon size={15} />
-                            <span>העתק משבוע קודם</span>
-                          </Button>
-
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => setShowPublishValidationModal(true)}
-                            disabled={isPending}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                          >
-                            <SendIcon size={15} />
-                            <span>פרסם סידור עבודה</span>
-                          </Button>
-                        </>
-                      )}
-
-                      {schedule.status === 'PUBLISHED' && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="btn-revert-draft"
-                          onClick={handleRevertToDraft}
-                          disabled={isPending}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '7px',
-                            backgroundColor: '#FFFBEB',
-                            borderColor: '#D97706',
-                            color: '#92400E',
-                            fontWeight: 600,
-                          }}
-                          title="החזר את הסידור למצב טיוטה כדי לערוך משמרות ושיבוצים"
-                        >
-                          <RotateCcwIcon size={14} style={{ color: '#D97706', flexShrink: 0 }} />
-                          <span>החזר סידור לטיוטה לצורך עריכה</span>
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Badge variant="neutral">טרם הוקם סידור</Badge>
-                  {canEdit && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setShowCopyWeekModal(true)}
-                        disabled={isPending}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <CopyIcon size={15} />
-                        <span>העתק משבוע קודם</span>
-                      </Button>
-
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={handleCreateSchedule}
-                        disabled={isPending}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <PlusIcon size={16} />
-                        <span>צור סידור שבועי חדש</span>
-                      </Button>
-                    </>
-                  )}
-                </div>
+              {schedule?.status === 'PUBLISHED' && (
+                <StatusBadge status="published" label="פורסם (רשמי)" />
+              )}
+              {schedule?.status === 'ARCHIVED' && (
+                <Badge variant="neutral">בארכיון (היסטורי)</Badge>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Global Feedback Banner */}
-      {feedback && (
-        <div
-          style={{
-            padding: '14px 18px',
-            borderRadius: '8px',
-            backgroundColor: feedback.type === 'success' ? '#064E3B' : '#7F1D1D',
-            color: '#FFFFFF',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {feedback.type === 'success' ? <SuccessIcon size={20} /> : <WarningIcon size={20} />}
-            <span>{feedback.text}</span>
-          </div>
-          <button
-            onClick={() => setFeedback(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <CloseIcon size={18} />
-          </button>
-        </div>
-      )}
-
-      {/* Main Weekly Content Area */}
-      {!schedule ? (
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardContent style={{ textAlign: 'center', padding: '72px 24px' }}>
-            <CalendarIcon size={60} style={{ color: '#9CA3AF', margin: '0 auto 18px' }} />
-            <h3
-              style={{
-                fontSize: '1.375rem',
-                fontWeight: 700,
-                color: '#111827',
-                marginBottom: '10px',
-              }}
-            >
-              אין סידור עבודה מוקם עבור שבוע זה
-            </h3>
-            <p
-              style={{
-                fontSize: '0.9375rem',
-                color: '#6B7280',
-                maxWidth: '480px',
-                margin: '0 auto 28px',
-                lineHeight: '1.6',
-              }}
-            >
-              שבוע מ-<strong>{formatDateDisplay(selectedWeekStart)}</strong> עד{' '}
-              <strong>{formatDateDisplay(weekEnd)}</strong>. ניתן ליצור סידור טיוטה ריק חדש, או
-              להעתיק ישירות את מבנה המשמרות והעובדים מהשבוע שקדם לו.
-            </p>
-            {canEdit && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                }}
+            {schedule && weekShifts.length > 0 && (
+              <p
+                className={`schedule-week-staffing${shiftsWithoutManager > 0 ? ' is-attention' : ''}`}
               >
+                {shiftsWithoutManager > 0 ? (
+                  <WarningIcon size={16} aria-hidden="true" />
+                ) : (
+                  <CircleCheckIcon size={16} aria-hidden="true" />
+                )}
+                {shiftsWithoutManager === 0
+                  ? 'לכל המשמרות השבוע משובץ מנהל משמרת'
+                  : `${countText(shiftsWithoutManager, 'משמרת אחת', 'משמרות')} ללא מנהל משמרת השבוע`}
+              </p>
+            )}
+          </div>
+
+          <nav className="schedule-week-nav" aria-label="בחירת שבוע">
+            <Button
+              variant="secondary"
+              onClick={() => navigateWeek(-7)}
+              disabled={isPending}
+              rightIcon={<ChevronRightIcon size={18} />}
+            >
+              שבוע קודם
+            </Button>
+            {!isViewingCurrentWeek && (
+              <Button
+                variant="ghost"
+                className="schedule-week-today"
+                onClick={jumpToCurrentWeek}
+                disabled={isPending}
+              >
+                השבוע הנוכחי
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              onClick={() => navigateWeek(7)}
+              disabled={isPending}
+              leftIcon={<ChevronLeftIcon size={18} />}
+            >
+              שבוע הבא
+            </Button>
+          </nav>
+        </div>
+
+        {hasActions && (
+          <div className="schedule-actions">
+            {!schedule && createActions}
+            {schedule?.status === 'DRAFT' && (
+              <>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowPublishValidationModal(true)}
+                  disabled={isPending}
+                  rightIcon={<SendIcon size={17} />}
+                >
+                  פרסם סידור עבודה
+                </Button>
                 <Button
                   variant="secondary"
                   onClick={() => setShowCopyWeekModal(true)}
                   disabled={isPending}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  rightIcon={<CopyIcon size={17} />}
                 >
-                  <CopyIcon size={18} />
-                  <span>העתק משבוע קודם</span>
+                  העתק משבוע קודם
                 </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleCreateSchedule}
-                  disabled={isPending}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <PlusIcon size={18} />
-                  <span>צור סידור עבודה ריק</span>
-                </Button>
-              </div>
+              </>
             )}
-          </CardContent>
-        </Card>
+            {schedule?.status === 'PUBLISHED' && (
+              <Button
+                variant="secondary"
+                onClick={handleRevertToDraft}
+                disabled={isPending}
+                rightIcon={<RotateCcwIcon size={17} />}
+              >
+                החזר סידור לטיוטה לצורך עריכה
+              </Button>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Result of the last action */}
+      {feedback && (
+        <div
+          className={`admin-feedback admin-feedback--${feedback.type}`}
+          role={feedback.type === 'success' ? 'status' : 'alert'}
+        >
+          {feedback.type === 'success' ? (
+            <SuccessIcon size={20} aria-hidden="true" />
+          ) : (
+            <WarningIcon size={20} aria-hidden="true" />
+          )}
+          <span>{feedback.text}</span>
+          <Button
+            variant="ghost"
+            iconOnly
+            className="schedule-feedback-close"
+            aria-label="סגירת ההודעה"
+            onClick={() => setFeedback(null)}
+          >
+            <CloseIcon size={18} />
+          </Button>
+        </div>
+      )}
+
+      {/* Main weekly content */}
+      {!schedule ? (
+        <EmptyState
+          className="schedule-empty"
+          icon={<CalendarIcon size={26} />}
+          title="אין סידור עבודה מוקם עבור שבוע זה"
+          description={
+            <>
+              שבוע מ-<bdi dir="ltr">{formatDateDisplay(selectedWeekStart)}</bdi> עד{' '}
+              <bdi dir="ltr">{formatDateDisplay(weekEnd)}</bdi>. ניתן ליצור סידור טיוטה ריק חדש, או
+              להעתיק ישירות את מבנה המשמרות והעובדים מהשבוע שקדם לו.
+            </>
+          }
+        />
       ) : (
-        /* Weekly Grid Component */
         <WeeklyScheduleGrid
           stationId={stationId}
           weekStartDate={selectedWeekStart}
@@ -590,9 +507,53 @@ export function WeeklyScheduleManager({
           }
           onOpenDuplicateShift={(shift: ScheduledShiftWithDetails) => setDuplicatingShift(shift)}
           onOpenEditShift={(shift: ScheduledShiftWithDetails) => setEditingShift(shift)}
-          onDeleteShift={handleDeleteShift}
+          onDeleteShift={(shiftId: string) => setDeletingShiftId(shiftId)}
         />
       )}
+
+      {/* Delete shift confirmation */}
+      <Dialog
+        open={deletingShiftId !== null}
+        onClose={() => setDeletingShiftId(null)}
+        dismissible={!isPending}
+        title="מחיקת משמרת"
+        description="האם אתה בטוח שברצונך למחוק משמרת זו מהסידור?"
+        footer={
+          <>
+            <Button
+              variant="destructive"
+              isLoading={isPending}
+              rightIcon={<TrashIcon size={17} />}
+              onClick={() => deletingShiftId && handleDeleteShift(deletingShiftId)}
+            >
+              מחק משמרת
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={isPending}
+              onClick={() => setDeletingShiftId(null)}
+            >
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        {deletingShift && (
+          <p className="schedule-dialog-context">
+            <strong>{deletingShift.templateName || 'משמרת מותאמת אישית'}</strong>
+            <bdi dir="ltr" className="ys-num">
+              {formatDateDisplay(deletingShift.shiftDate)} · {deletingTime}
+            </bdi>
+            {deletingShift.assignments.length > 0 && (
+              <span>
+                {deletingShift.assignments.length === 1
+                  ? 'עובד אחד משובץ'
+                  : `${deletingShift.assignments.length} עובדים משובצים`}
+              </span>
+            )}
+          </p>
+        )}
+      </Dialog>
 
       {/* Quick Staff Assignment Drawer */}
       {drawerShift && (

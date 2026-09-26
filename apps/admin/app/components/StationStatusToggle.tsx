@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useTransition } from 'react';
-import { Button, Spinner } from '@yellowshifts/ui';
+import React, { useState, useTransition } from 'react';
+import { Alert, Button, Dialog } from '@yellowshifts/ui';
 import { PowerIcon } from '@yellowshifts/icons';
 import { toggleStationStatusAction } from '../actions/stations';
 
@@ -9,53 +9,86 @@ interface StationStatusToggleProps {
   stationId: string;
   isActive: boolean;
   stationName: string;
+  size?: 'sm' | 'md';
 }
 
 export const StationStatusToggle: React.FC<StationStatusToggleProps> = ({
   stationId,
   isActive,
   stationName,
+  size = 'sm',
 }) => {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const actionText = isActive ? 'להשבית' : 'להפעיל מחדש';
+
+  const openConfirm = () => {
+    setError(null);
+    setConfirmOpen(true);
+  };
+
+  const closeConfirm = () => {
+    if (isPending) return;
+    setConfirmOpen(false);
+    setError(null);
+  };
 
   const handleToggle = () => {
-    const actionText = isActive ? 'להשבית' : 'להפעיל מחדש';
-    const confirmed = window.confirm(
-      `האם אתה בטוח שברצונך ${actionText} את תחנת "${stationName}"?`
-    );
-
-    if (!confirmed) return;
-
+    setError(null);
     startTransition(async () => {
-      await toggleStationStatusAction(stationId, isActive);
+      const result = await toggleStationStatusAction(stationId, isActive);
+      if (result && result.success === false) {
+        setError(result.error || 'שגיאה בשינוי סטטוס תחנה.');
+        return;
+      }
+      setConfirmOpen(false);
     });
   };
 
   return (
-    <Button
-      variant={isActive ? 'ghost' : 'secondary'}
-      size="sm"
-      onClick={handleToggle}
-      disabled={isPending}
-      title={isActive ? 'השבתת תחנה' : 'הפעלת תחנה'}
-      style={{
-        color: isActive ? 'var(--ys-color-status-danger)' : 'var(--ys-color-status-success)',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-      }}
-    >
-      {isPending ? (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-          <Spinner size="sm" color="currentColor" />
-          מעדכן...
-        </span>
-      ) : (
-        <>
-          <PowerIcon size={14} />
-          {isActive ? 'השבת תחנה' : 'הפעל תחנה'}
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        variant={isActive ? 'destructiveOutline' : 'secondary'}
+        size={size === 'sm' ? 'sm' : 'md'}
+        onClick={openConfirm}
+        disabled={isPending}
+        isLoading={isPending}
+        title={isActive ? 'השבתת תחנה' : 'הפעלת תחנה'}
+        rightIcon={<PowerIcon size={16} aria-hidden="true" />}
+      >
+        {isActive ? 'השבת תחנה' : 'הפעל תחנה'}
+      </Button>
+
+      <Dialog
+        open={confirmOpen}
+        onClose={closeConfirm}
+        dismissible={!isPending}
+        title={isActive ? 'השבתת תחנה' : 'הפעלת תחנה'}
+        description={`האם אתה בטוח שברצונך ${actionText} את תחנת "${stationName}"?`}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant={isActive ? 'destructive' : 'primary'}
+              onClick={handleToggle}
+              isLoading={isPending}
+            >
+              {isActive ? 'השבת תחנה' : 'הפעל תחנה'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={closeConfirm} disabled={isPending}>
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        {error && (
+          <Alert variant="danger" title="שינוי הסטטוס נכשל">
+            {error}
+          </Alert>
+        )}
+      </Dialog>
+    </>
   );
 };

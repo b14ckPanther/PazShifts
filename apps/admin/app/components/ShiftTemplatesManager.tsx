@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useId, useState, useTransition } from 'react';
 import type { ShiftTemplate } from '@yellowshifts/types';
 import {
   createShiftTemplateAction,
@@ -8,8 +8,9 @@ import {
   toggleShiftTemplateStatusAction,
   deleteShiftTemplateAction,
 } from '../actions/schedules';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '@yellowshifts/ui';
+import { Alert, Badge, Button, Card, Dialog, EmptyState, PageHeader } from '@yellowshifts/ui';
 import {
+  CircleCheckIcon,
   ClockIcon,
   PlusIcon,
   EditIcon,
@@ -21,6 +22,128 @@ import {
   SuccessIcon,
   CloseIcon,
 } from '@yellowshifts/icons';
+import '../styles/admin-templates.css';
+
+interface TemplateFormFieldsProps {
+  idPrefix: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  displayOrder: string;
+  isOvernight: boolean;
+  namePlaceholder?: string;
+  onNameChange: (value: string) => void;
+  onStartTimeChange: (value: string) => void;
+  onEndTimeChange: (value: string) => void;
+  onDisplayOrderChange: (value: string) => void;
+}
+
+/** Shared fields for the create and edit dialogs (same inputs, same order as before). */
+function TemplateFormFields({
+  idPrefix,
+  name,
+  startTime,
+  endTime,
+  displayOrder,
+  isOvernight,
+  namePlaceholder,
+  onNameChange,
+  onStartTimeChange,
+  onEndTimeChange,
+  onDisplayOrderChange,
+}: TemplateFormFieldsProps) {
+  return (
+    <>
+      <div className="ys-form-field">
+        <label className="ys-label" htmlFor={`${idPrefix}-name`}>
+          שם התבנית
+          <span className="ys-label-required" aria-hidden="true">
+            *
+          </span>
+        </label>
+        <input
+          id={`${idPrefix}-name`}
+          type="text"
+          value={name}
+          onChange={(e) => onNameChange(e.target.value)}
+          placeholder={namePlaceholder}
+          required
+        />
+      </div>
+
+      <div className="tpl-time-grid">
+        <div className="ys-form-field">
+          <label className="ys-label" htmlFor={`${idPrefix}-start`}>
+            שעת התחלה
+            <span className="ys-label-required" aria-hidden="true">
+              *
+            </span>
+          </label>
+          <input
+            id={`${idPrefix}-start`}
+            className="ys-num"
+            type="time"
+            dir="ltr"
+            value={startTime}
+            onChange={(e) => onStartTimeChange(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="ys-form-field">
+          <label className="ys-label" htmlFor={`${idPrefix}-end`}>
+            שעת סיום
+            <span className="ys-label-required" aria-hidden="true">
+              *
+            </span>
+          </label>
+          <input
+            id={`${idPrefix}-end`}
+            className="ys-num"
+            type="time"
+            dir="ltr"
+            value={endTime}
+            onChange={(e) => onEndTimeChange(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      {/* Live overnight detector */}
+      <p
+        className={`tpl-daypart-hint ${isOvernight ? 'tpl-daypart-hint--night' : 'tpl-daypart-hint--day'}`}
+        aria-live="polite"
+      >
+        {isOvernight ? (
+          <>
+            <MoonIcon size={16} aria-hidden="true" />
+            <span>משמרת לילה: שעת הסיום ביום שלמחרת (חוצה חצות)</span>
+          </>
+        ) : (
+          <>
+            <SunIcon size={16} aria-hidden="true" />
+            <span>משמרת יום: מתחילה ומסתיימת באותו התאריך</span>
+          </>
+        )}
+      </p>
+
+      <div className="ys-form-field tpl-order-field">
+        <label className="ys-label" htmlFor={`${idPrefix}-order`}>
+          סדר תצוגה
+        </label>
+        <input
+          id={`${idPrefix}-order`}
+          className="ys-num"
+          type="number"
+          dir="ltr"
+          inputMode="numeric"
+          value={displayOrder}
+          onChange={(e) => onDisplayOrderChange(e.target.value)}
+        />
+      </div>
+    </>
+  );
+}
 
 interface ShiftTemplatesManagerProps {
   stationId: string;
@@ -187,866 +310,279 @@ export function ShiftTemplatesManager({
     });
   };
 
+  const formIdBase = useId();
+  const createFormId = `${formIdBase}-create`;
+  const editFormId = `${formIdBase}-edit`;
+
+  const fieldHandlers = {
+    onNameChange: setName,
+    onStartTimeChange: setStartTime,
+    onEndTimeChange: setEndTime,
+    onDisplayOrderChange: setDisplayOrder,
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Top Banner & Action */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-            תבניות משמרות — {stationName}
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: '#4B5563', margin: '4px 0 0 0' }}>
-            מבנה משמרות קבוע ועצמאי עבור פעילות 24/7 בתחנה
-          </p>
-        </div>
+    <div className="tpl-manager">
+      <PageHeader
+        title="תבניות משמרות"
+        description={`הגדרת מבנה משמרות קבוע, שעות פעילות ומשמרות לילה 24/7 עבור תחנת ${stationName}`}
+        actions={
+          canManage ? (
+            <Button variant="primary" rightIcon={<PlusIcon size={18} />} onClick={openCreateModal}>
+              הקמת תבנית חדשה
+            </Button>
+          ) : undefined
+        }
+      />
 
-        {canManage && (
-          <Button
-            variant="primary"
-            onClick={openCreateModal}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <PlusIcon size={18} />
-            <span>הקמת תבנית חדשה</span>
-          </Button>
-        )}
-      </div>
+      {/* Historical integrity note */}
+      <Alert variant="info" role="note" icon={<ClockIcon size={20} />} className="tpl-note">
+        <strong>שלמות היסטורית:</strong> שינוי, השבתה או עדכון של תבנית משמרת אינם משנים משמרות
+        היסטוריות שכבר נוצרו בסידורי עבודה שבועיים קודמים.
+      </Alert>
 
-      {/* Historical Integrity Callout */}
-      <div
-        style={{
-          backgroundColor: '#FEFCE8',
-          border: '1px solid #FEF08A',
-          borderRadius: '8px',
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          fontSize: '0.875rem',
-          color: '#854D0E',
-        }}
-      >
-        <ClockIcon size={18} style={{ color: '#D97706', flexShrink: 0 }} />
-        <span>
-          <strong>שלמות היסטורית:</strong> שינוי, השבתה או עדכון של תבנית משמרת אינם משנים משמרות
-          היסטוריות שכבר נוצרו בסידורי עבודה שבועיים קודמים.
-        </span>
-      </div>
-
-      {/* Global Feedback Banner */}
+      {/* Action feedback */}
       {feedbackMessage && (
         <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: feedbackMessage.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-            color: feedbackMessage.type === 'success' ? '#065F46' : '#991B1B',
-            border: feedbackMessage.type === 'success' ? '1px solid #A7F3D0' : '1px solid #FECACA',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
+          className={`admin-feedback admin-feedback--${feedbackMessage.type}`}
+          role={feedbackMessage.type === 'success' ? 'status' : 'alert'}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {feedbackMessage.type === 'success' ? (
-              <SuccessIcon size={18} />
-            ) : (
-              <WarningIcon size={18} />
-            )}
-            <span>{feedbackMessage.text}</span>
-          </div>
-          <button
+          {feedbackMessage.type === 'success' ? (
+            <SuccessIcon size={18} aria-hidden="true" />
+          ) : (
+            <WarningIcon size={18} aria-hidden="true" />
+          )}
+          <span>{feedbackMessage.text}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            iconOnly
+            aria-label="סגירת ההודעה"
             onClick={() => setFeedbackMessage(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#6B7280',
-              cursor: 'pointer',
-              padding: 0,
-            }}
           >
             <CloseIcon size={16} />
-          </button>
+          </Button>
         </div>
       )}
 
-      {/* Templates List */}
+      {/* Templates list */}
       {templates.length === 0 ? (
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardContent style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <ClockIcon size={48} style={{ color: '#9CA3AF', margin: '0 auto 16px' }} />
-            <h3
-              style={{
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                color: '#111827',
-                marginBottom: '8px',
-              }}
-            >
-              טרם הוגדרו תבניות משמרת לתחנה זו
-            </h3>
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: '#6B7280',
-                maxWidth: '420px',
-                margin: '0 auto 20px',
-              }}
-            >
-              תבניות משמרת מאפשרות לקבוע שעות פעילות קבועות (בוקר, ערב, לילה, תדלוק שיא) עבור סידורי
-              העבודה.
-            </p>
-            {canManage && (
-              <Button variant="primary" onClick={openCreateModal}>
-                הקמת תבנית ראשונה
-              </Button>
-            )}
-          </CardContent>
+        <Card className="tpl-empty">
+          <EmptyState
+            icon={<ClockIcon size={26} />}
+            title="טרם הוגדרו תבניות משמרת לתחנה זו"
+            description="תבניות משמרת מאפשרות לקבוע שעות פעילות קבועות (בוקר, ערב, לילה, תדלוק שיא) עבור סידורי העבודה."
+            action={
+              canManage ? (
+                <Button
+                  variant="primary"
+                  rightIcon={<PlusIcon size={18} />}
+                  onClick={openCreateModal}
+                >
+                  הקמת תבנית ראשונה
+                </Button>
+              ) : undefined
+            }
+          />
         </Card>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: '16px',
-          }}
-        >
+        <ul className="tpl-grid" aria-label="תבניות משמרת">
           {templates.map((tpl) => {
             const overnight = checkIsOvernight(tpl.startTime, tpl.endTime);
 
             return (
-              <Card
-                key={tpl.id}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: tpl.isActive ? '1px solid #E5E7EB' : '1px solid #F3F4F6',
-                  opacity: tpl.isActive ? 1 : 0.65,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                }}
-              >
-                <CardHeader style={{ paddingBottom: '8px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <CardTitle style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
-                      {tpl.name}
-                    </CardTitle>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {overnight ? (
-                        <Badge
-                          variant="warning"
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <MoonIcon size={12} />
-                          <span>לילה / חוצה חצות</span>
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="neutral"
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <SunIcon size={12} />
-                          <span>יום</span>
-                        </Badge>
-                      )}
-                      <Badge variant={tpl.isActive ? 'success' : 'neutral'}>
-                        {tpl.isActive ? 'פעילה' : 'מושבתת'}
+              <li key={tpl.id} className={`tpl-card${tpl.isActive ? '' : ' is-inactive'}`}>
+                <div className="tpl-card-head">
+                  <h3 className="tpl-card-name">{tpl.name}</h3>
+                  <div className="tpl-card-badges">
+                    {overnight ? (
+                      <Badge variant="info">
+                        <MoonIcon size={12} aria-hidden="true" />
+                        <span>לילה / חוצה חצות</span>
                       </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* Time Display */}
-                    <div
-                      style={{
-                        backgroundColor: '#F9FAFB',
-                        border: '1px solid #E5E7EB',
-                        padding: '12px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>שעות משמרת:</span>
-                      <span
-                        style={{
-                          fontSize: '1.125rem',
-                          fontWeight: 700,
-                          color: 'var(--ys-color-brand-yellow)',
-                        }}
-                      >
-                        <bdi dir="ltr">{`${tpl.startTime} — ${tpl.endTime}`}</bdi>
-                        {overnight && (
-                          <span
-                            style={{ fontSize: '0.75rem', color: '#9CA3AF', marginRight: '6px' }}
-                          >
-                            (ביום למחרת)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: '0.75rem',
-                        color: '#6B7280',
-                      }}
-                    >
-                      <span>סדר תצוגה: #{tpl.displayOrder}</span>
-                      <span>מזהה: {tpl.id.slice(0, 8)}</span>
-                    </div>
-
-                    {/* Action buttons */}
-                    {canManage && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          marginTop: '8px',
-                          borderTop: '1px solid #2A2A32',
-                          paddingTop: '12px',
-                        }}
-                      >
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openEditModal(tpl)}
-                          disabled={isPending}
-                          style={{
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <EditIcon size={14} />
-                          <span>עריכה</span>
-                        </Button>
-
-                        <Button
-                          variant={tpl.isActive ? 'secondary' : 'primary'}
-                          size="sm"
-                          onClick={() => handleToggleStatus(tpl)}
-                          disabled={isPending}
-                          title={tpl.isActive ? 'השבת תבנית' : 'הפעל תבנית'}
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <PowerIcon size={14} />
-                          <span>{tpl.isActive ? 'השבתה' : 'הפעלה'}</span>
-                        </Button>
-
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setDeletingTemplate(tpl)}
-                          disabled={isPending}
-                          title="מחיקת תבנית"
-                          style={{ padding: '6px 10px' }}
-                        >
-                          <TrashIcon size={14} />
-                        </Button>
-                      </div>
+                    ) : (
+                      <Badge variant="neutral">
+                        <SunIcon size={12} aria-hidden="true" />
+                        <span>יום</span>
+                      </Badge>
+                    )}
+                    {tpl.isActive ? (
+                      <Badge variant="success">
+                        <CircleCheckIcon size={12} aria-hidden="true" />
+                        <span>פעילה</span>
+                      </Badge>
+                    ) : (
+                      <Badge variant="neutral">
+                        <PowerIcon size={12} aria-hidden="true" />
+                        <span>מושבתת</span>
+                      </Badge>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <p className="tpl-card-time">
+                  <span className="ys-visually-hidden">שעות משמרת:</span>
+                  <ClockIcon size={18} aria-hidden="true" className="tpl-card-time-icon" />
+                  <bdi dir="ltr" className="ys-num tpl-card-time-range">
+                    {`${tpl.startTime} – ${tpl.endTime}`}
+                  </bdi>
+                  {overnight && <span className="tpl-card-next-day">(ביום למחרת)</span>}
+                </p>
+
+                <dl className="tpl-card-meta">
+                  <div>
+                    <dt>סדר תצוגה</dt>
+                    <dd className="ys-num">#{tpl.displayOrder}</dd>
+                  </div>
+                  <div>
+                    <dt>מזהה</dt>
+                    <dd className="ys-num" dir="ltr">
+                      {tpl.id.slice(0, 8)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {canManage && (
+                  <div className="tpl-card-actions">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      rightIcon={<EditIcon size={16} />}
+                      onClick={() => openEditModal(tpl)}
+                      disabled={isPending}
+                    >
+                      עריכה
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant={tpl.isActive ? 'tertiary' : 'outline'}
+                      size="sm"
+                      rightIcon={<PowerIcon size={16} />}
+                      onClick={() => handleToggleStatus(tpl)}
+                      disabled={isPending}
+                      title={tpl.isActive ? 'השבת תבנית' : 'הפעל תבנית'}
+                    >
+                      {tpl.isActive ? 'השבתה' : 'הפעלה'}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="destructiveOutline"
+                      size="sm"
+                      iconOnly
+                      className="tpl-card-delete"
+                      onClick={() => setDeletingTemplate(tpl)}
+                      disabled={isPending}
+                      title="מחיקת תבנית"
+                      aria-label={`מחיקת התבנית ${tpl.name}`}
+                    >
+                      <TrashIcon size={16} />
+                    </Button>
+                  </div>
+                )}
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
-      {/* Modal: Create Shift Template */}
-      {isCreateModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '16px',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              width: '100%',
-              maxWidth: '480px',
-              padding: '24px',
-              direction: 'rtl',
-              boxShadow:
-                '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px',
-              }}
+      {/* Dialog: create shift template */}
+      <Dialog
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        dismissible={!isPending}
+        title="הקמת תבנית משמרת חדשה"
+        footer={
+          <>
+            <Button type="submit" form={createFormId} variant="primary" isLoading={isPending}>
+              הקם תבנית
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        <form id={createFormId} onSubmit={handleCreateSubmit} className="tpl-form">
+          {formError && <Alert variant="danger">{formError}</Alert>}
+          <TemplateFormFields
+            idPrefix={createFormId}
+            name={name}
+            startTime={startTime}
+            endTime={endTime}
+            displayOrder={displayOrder}
+            isOvernight={isOvernight}
+            namePlaceholder="לדוגמה: בוקר, ערב, לילה, תדלוק שיא"
+            {...fieldHandlers}
+          />
+        </form>
+      </Dialog>
+
+      {/* Dialog: edit shift template */}
+      <Dialog
+        open={editingTemplate !== null}
+        onClose={() => setEditingTemplate(null)}
+        dismissible={!isPending}
+        title={`עריכת תבנית משמרת: ${editingTemplate?.name ?? ''}`}
+        footer={
+          <>
+            <Button type="submit" form={editFormId} variant="primary" isLoading={isPending}>
+              שמור שינויים
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setEditingTemplate(null)}>
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        <form id={editFormId} onSubmit={handleEditSubmit} className="tpl-form">
+          {formError && <Alert variant="danger">{formError}</Alert>}
+          <TemplateFormFields
+            idPrefix={editFormId}
+            name={name}
+            startTime={startTime}
+            endTime={endTime}
+            displayOrder={displayOrder}
+            isOvernight={isOvernight}
+            {...fieldHandlers}
+          />
+        </form>
+      </Dialog>
+
+      {/* Dialog: delete confirmation */}
+      <Dialog
+        open={deletingTemplate !== null}
+        onClose={() => setDeletingTemplate(null)}
+        dismissible={!isPending}
+        title="אישור מחיקת תבנית משמרת"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="destructive"
+              rightIcon={<TrashIcon size={16} />}
+              onClick={handleDeleteConfirm}
+              isLoading={isPending}
             >
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-                הקמת תבנית משמרת חדשה
-              </h3>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-
-            {formError && (
-              <div
-                style={{
-                  backgroundColor: '#FEF2F2',
-                  color: '#991B1B',
-                  border: '1px solid #FECACA',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  marginBottom: '16px',
-                }}
-              >
-                {formError}
-              </div>
-            )}
-
-            <form
-              onSubmit={handleCreateSubmit}
-              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  שם התבנית *
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="לדוגמה: בוקר, ערב, לילה, תדלוק שיא"
-                  required
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    color: '#111827',
-                    fontSize: '0.9375rem',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    שעת התחלה *
-                  </label>
-                  <input
-                    type="time"
-                    dir="ltr"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      direction: 'ltr',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    שעת סיום *
-                  </label>
-                  <input
-                    type="time"
-                    dir="ltr"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      direction: 'ltr',
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Live Overnight Detector */}
-              {isOvernight ? (
-                <div
-                  style={{
-                    backgroundColor: '#FEFCE8',
-                    border: '1px solid #FEF08A',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.875rem',
-                    color: '#854D0E',
-                  }}
-                >
-                  <MoonIcon size={16} />
-                  <span>משמרת לילה: שעת הסיום ביום שלמחרת (חוצה חצות)</span>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    backgroundColor: '#F0FDF4',
-                    border: '1px solid #BBF7D0',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.875rem',
-                    color: '#166534',
-                  }}
-                >
-                  <SunIcon size={16} />
-                  <span>משמרת יום: מתחילה ומסתיימת באותו התאריך</span>
-                </div>
-              )}
-
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  סדר תצוגה
-                </label>
-                <input
-                  type="number"
-                  value={displayOrder}
-                  onChange={(e) => setDisplayOrder(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    color: '#111827',
-                    fontSize: '0.9375rem',
-                    direction: 'ltr',
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                  marginTop: '12px',
-                }}
-              >
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setIsCreateModalOpen(false)}
-                >
-                  ביטול
-                </Button>
-                <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
-                  הקם תבנית
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Edit Shift Template */}
-      {editingTemplate && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '16px',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              width: '100%',
-              maxWidth: '480px',
-              padding: '24px',
-              direction: 'rtl',
-              boxShadow:
-                '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px',
-              }}
-            >
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-                עריכת תבנית משמרת: {editingTemplate.name}
-              </h3>
-              <button
-                onClick={() => setEditingTemplate(null)}
-                style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-
-            {formError && (
-              <div
-                style={{
-                  backgroundColor: '#FEF2F2',
-                  color: '#991B1B',
-                  border: '1px solid #FECACA',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  marginBottom: '16px',
-                }}
-              >
-                {formError}
-              </div>
-            )}
-
-            <form
-              onSubmit={handleEditSubmit}
-              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  שם התבנית *
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    color: '#111827',
-                    fontSize: '0.9375rem',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    שעת התחלה *
-                  </label>
-                  <input
-                    type="time"
-                    dir="ltr"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      direction: 'ltr',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    שעת סיום *
-                  </label>
-                  <input
-                    type="time"
-                    dir="ltr"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      direction: 'ltr',
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Live Overnight Detector */}
-              {isOvernight ? (
-                <div
-                  style={{
-                    backgroundColor: '#FEFCE8',
-                    border: '1px solid #FEF08A',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.875rem',
-                    color: '#854D0E',
-                  }}
-                >
-                  <MoonIcon size={16} />
-                  <span>משמרת לילה: שעת הסיום ביום שלמחרת (חוצה חצות)</span>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    backgroundColor: '#F0FDF4',
-                    border: '1px solid #BBF7D0',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '0.875rem',
-                    color: '#166534',
-                  }}
-                >
-                  <SunIcon size={16} />
-                  <span>משמרת יום: מתחילה ומסתיימת באותו התאריך</span>
-                </div>
-              )}
-
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  סדר תצוגה
-                </label>
-                <input
-                  type="number"
-                  value={displayOrder}
-                  onChange={(e) => setDisplayOrder(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '6px',
-                    padding: '10px 12px',
-                    color: '#111827',
-                    fontSize: '0.9375rem',
-                    direction: 'ltr',
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                  marginTop: '12px',
-                }}
-              >
-                <Button type="button" variant="secondary" onClick={() => setEditingTemplate(null)}>
-                  ביטול
-                </Button>
-                <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
-                  שמור שינויים
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Delete Confirmation */}
-      {deletingTemplate && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '16px',
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              border: '1px solid #FECACA',
-              width: '100%',
-              maxWidth: '440px',
-              padding: '24px',
-              direction: 'rtl',
-              boxShadow:
-                '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                margin: '0 0 12px 0',
-                color: '#DC2626',
-              }}
-            >
-              אישור מחיקת תבנית משמרת
-            </h3>
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: '#4B5563',
-                marginBottom: '16px',
-                lineHeight: 1.5,
-              }}
-            >
-              האם אתה בטוח שברצונך למחוק את התבנית{' '}
-              <strong style={{ color: '#111827' }}>&quot;{deletingTemplate.name}&quot;</strong>?
-              <br />
-              משמרות היסטוריות שכבר שובצו על בסיס תבנית זו לא יושפעו ולא יימחקו.
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <Button type="button" variant="secondary" onClick={() => setDeletingTemplate(null)}>
-                ביטול
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDeleteConfirm}
-                disabled={isPending}
-                isLoading={isPending}
-              >
-                אשר מחיקה
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              אשר מחיקה
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setDeletingTemplate(null)}>
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        <p className="tpl-delete-text">
+          האם אתה בטוח שברצונך למחוק את התבנית <strong>&quot;{deletingTemplate?.name}&quot;</strong>
+          ?
+        </p>
+        <p className="tpl-delete-text">
+          משמרות היסטוריות שכבר שובצו על בסיס תבנית זו לא יושפעו ולא יימחקו.
+        </p>
+      </Dialog>
     </div>
   );
 }

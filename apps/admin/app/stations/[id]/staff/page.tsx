@@ -2,15 +2,7 @@ import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { getStationMembers, listAssignableUsers } from '@yellowshifts/database';
-import {
-  Container,
-  PageHeader,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Badge,
-} from '@yellowshifts/ui';
+import { Container, PageHeader, Badge } from '@yellowshifts/ui';
 import {
   UsersIcon,
   ArrowRightIcon,
@@ -44,7 +36,8 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
+      (m.station.id === station.id ||
+        m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -69,203 +62,58 @@ export default async function StationStaffPage({ params }: StationStaffPageProps
   );
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
-      {/* Top Header */}
+    <main className="admin-page staff-page" dir="rtl">
       <StationHeader station={station} context={context} subtitle="ניהול צוות ועובדים" />
 
-      <Container size="lg">
-        {/* Navigation & Header */}
-        <div style={{ margin: '32px 0 24px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <Link
-              href={`/stations/${encodeURIComponent(station.code)}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--ys-color-text-secondary, #6B7280)',
-                fontSize: '13px',
-                textDecoration: 'none',
-              }}
-            >
-              <ArrowRightIcon size={14} />
-              חזרה לפרטי התחנה
-            </Link>
+      <Container size="xl">
+        <div className="admin-page-body">
+          <Link href={`/stations/${encodeURIComponent(station.code)}`} className="admin-back-link">
+            <ArrowRightIcon size={16} aria-hidden="true" />
+            חזרה לסקירת התחנה
+          </Link>
+
+          <div className="station-hero-section">
+            <PageHeader
+              title="צוות התחנה"
+              description={
+                isPlatformAdmin
+                  ? `ניהול צוות תחנת ${station.name} ומינוי מנהלים.`
+                  : `ניהול העובדים ומנהלי המשמרת של ${station.name}, במקום אחד.`
+              }
+              badge={<Badge variant="brandYellow">{station.code}</Badge>}
+              actions={
+                <AssignMemberForm
+                  stationId={station.id}
+                  assignableUsers={assignableUsers.filter(
+                    (user) =>
+                      user.id !== context.user.id &&
+                      !stationMembers.some((member) => member.membership.userId === user.id)
+                  )}
+                  isPlatformAdmin={isPlatformAdmin}
+                />
+              }
+            />
           </div>
 
-          <PageHeader
-            title={`ניהול צוות ועובדים — ${station.name}`}
-            description={
-              isPlatformAdmin
-                ? 'ניהול צוות התחנה ומינוי מנהלים.'
-                : 'ניהול העובדים ומנהלי המשמרת שלך, במקום אחד.'
-            }
-            badge={<Badge variant="brandYellow">{station.code}</Badge>}
-          />
-        </div>
+          <ul className="staff-summary" aria-label="סיכום הצוות">
+            <li>
+              <UsersIcon size={16} aria-hidden="true" />
+              <span className="ys-num">{stationMembers.length}</span> אנשי צוות
+            </li>
+            <li>
+              <UserIcon size={16} aria-hidden="true" />
+              <span className="ys-num">{workers.length}</span> עובדים
+            </li>
+            <li>
+              <BriefcaseIcon size={16} aria-hidden="true" />
+              <span className="ys-num">{shiftManagers.length}</span> מנהלי משמרת
+            </li>
+            <li>
+              <ShieldCheckIcon size={16} aria-hidden="true" />
+              <span className="ys-num">{adminMembers.length}</span> מנהלי תחנה
+            </li>
+          </ul>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Staff Metrics Bar */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px',
-            }}
-          >
-            <Card>
-              <CardHeader style={{ paddingBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <UsersIcon size={16} color="var(--ys-color-brand-yellow)" />
-                  <CardTitle
-                    style={{ fontSize: '13px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    סך הכל אנשי צוות
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 700,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  {stationMembers.length}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    marginTop: '2px',
-                  }}
-                >
-                  רשומים בתחנה
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader style={{ paddingBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheckIcon size={16} color="var(--ys-color-brand-yellow)" />
-                  <CardTitle
-                    style={{ fontSize: '13px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מנהלי תחנה פעילים
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 700,
-                    color: 'var(--ys-color-brand-yellow)',
-                  }}
-                >
-                  {adminMembers.length}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    marginTop: '2px',
-                  }}
-                >
-                  בעלי הרשאת ניהול (ADMIN)
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader style={{ paddingBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BriefcaseIcon size={16} color="var(--ys-color-brand-crimson)" />
-                  <CardTitle
-                    style={{ fontSize: '13px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מנהלי משמרת פעילים
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 700,
-                    color: 'var(--ys-color-brand-crimson)',
-                  }}
-                >
-                  {shiftManagers.length}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    marginTop: '2px',
-                  }}
-                >
-                  אחראי משמרת
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader style={{ paddingBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <UserIcon size={16} color="var(--ys-color-text-muted, #9CA3AF)" />
-                  <CardTitle
-                    style={{ fontSize: '13px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    עובדים פעילים
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 700,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  {workers.length}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                    marginTop: '2px',
-                  }}
-                >
-                  עובדי תחנה ומתדלקים
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* User Assignment Drawer/Form */}
-          <AssignMemberForm
-            stationId={station.id}
-            assignableUsers={assignableUsers.filter(
-              (user) =>
-                user.id !== context.user.id &&
-                !stationMembers.some((member) => member.membership.userId === user.id)
-            )}
-            isPlatformAdmin={isPlatformAdmin}
-          />
-
-          {/* Filterable Staff List */}
           <StaffFilterableList
             stationId={station.id}
             members={stationMembers}

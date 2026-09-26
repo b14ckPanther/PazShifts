@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useId, useState, useTransition } from 'react';
 import type { ScheduledShiftWithDetails } from '@yellowshifts/types';
 import { updateScheduledShiftTimesAction } from '../actions/schedules';
-import { Button } from '@yellowshifts/ui';
-import { CloseIcon, EditIcon, MoonIcon, SunIcon } from '@yellowshifts/icons';
+import { Button, Dialog } from '@yellowshifts/ui';
+import { MoonIcon, SunIcon, WarningIcon } from '@yellowshifts/icons';
 
 interface EditShiftModalProps {
   stationId: string;
@@ -26,6 +26,7 @@ export function EditShiftModal({ stationId, shift, onClose, onSuccess }: EditShi
   const [notes, setNotes] = useState(shift.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const fieldId = useId();
 
   const isOvernight = (() => {
     if (!startTime || !endTime) return false;
@@ -61,225 +62,93 @@ export function EditShiftModal({ stationId, shift, onClose, onSuccess }: EditShi
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 110,
-        padding: '16px',
-      }}
-      onClick={onClose}
+    <Dialog
+      open
+      onClose={onClose}
+      dismissible={!isPending}
+      title="עריכת זמני משמרת"
+      description={
+        <>
+          {shift.templateName ? `${shift.templateName} · ` : ''}תאריך:{' '}
+          <bdi dir="ltr" className="ys-num">
+            {shift.shiftDate}
+          </bdi>
+        </>
+      }
+      footer={
+        <>
+          <Button type="submit" form={`${fieldId}-form`} variant="primary" isLoading={isPending}>
+            שמור שינויים
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+            ביטול
+          </Button>
+        </>
+      }
     >
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '12px',
-          border: '1px solid #E5E7EB',
-          width: '100%',
-          maxWidth: '460px',
-          padding: '24px',
-          direction: 'rtl',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '16px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <EditIcon size={20} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-              עריכת זמני משמרת
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#6B7280',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <CloseIcon size={20} />
-          </button>
-        </div>
-
-        <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '16px' }}>
-          {shift.templateName ? `${shift.templateName} • ` : ''}תאריך: {shift.shiftDate}
-        </div>
-
+      <form id={`${fieldId}-form`} className="schedule-dialog-form" onSubmit={handleSubmit}>
         {error && (
-          <div
-            style={{
-              backgroundColor: '#FEF2F2',
-              color: '#991B1B',
-              border: '1px solid #FECACA',
-              padding: '10px 14px',
-              borderRadius: '6px',
-              fontSize: '0.8125rem',
-              marginBottom: '16px',
-            }}
-          >
-            {error}
-          </div>
+          <p className="admin-feedback admin-feedback--error" role="alert">
+            <WarningIcon size={18} aria-hidden="true" />
+            <span>{error}</span>
+          </p>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  marginBottom: '6px',
-                }}
-              >
-                שעת התחלה *
-              </label>
-              <input
-                type="time"
-                dir="ltr"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  padding: '10px 12px',
-                  color: '#111827',
-                  fontSize: '0.9375rem',
-                  direction: 'ltr',
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  marginBottom: '6px',
-                }}
-              >
-                שעת סיום *
-              </label>
-              <input
-                type="time"
-                dir="ltr"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  padding: '10px 12px',
-                  color: '#111827',
-                  fontSize: '0.9375rem',
-                  direction: 'ltr',
-                }}
-              />
-            </div>
-          </div>
-
-          {isOvernight ? (
-            <div
-              style={{
-                backgroundColor: '#FEFCE8',
-                border: '1px solid #FEF08A',
-                borderRadius: '6px',
-                padding: '10px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.8125rem',
-                color: '#854D0E',
-              }}
-            >
-              <MoonIcon size={16} />
-              <span>משמרת לילה: מסתיימת ביום שלמחרת</span>
-            </div>
-          ) : (
-            <div
-              style={{
-                backgroundColor: '#F0FDF4',
-                border: '1px solid #BBF7D0',
-                borderRadius: '6px',
-                padding: '10px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.8125rem',
-                color: '#166534',
-              }}
-            >
-              <SunIcon size={16} />
-              <span>משמרת יום: מתחילה ומסתיימת באותו היום</span>
-            </div>
-          )}
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#374151',
-                marginBottom: '6px',
-              }}
-            >
-              הערות למשמרת
+        <div className="schedule-time-pair">
+          <div className="ys-form-field">
+            <label className="ys-label" htmlFor={`${fieldId}-start`}>
+              שעת התחלה <span className="ys-label-required">*</span>
             </label>
             <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="לדוגמה: אחראי פתיחה / חפיפת עובד"
-              style={{
-                width: '100%',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D1D5DB',
-                borderRadius: '6px',
-                padding: '10px 12px',
-                color: '#111827',
-                fontSize: '0.875rem',
-              }}
+              id={`${fieldId}-start`}
+              type="time"
+              dir="ltr"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              required
             />
           </div>
-
-          <div
-            style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}
-          >
-            <Button type="button" variant="secondary" onClick={onClose}>
-              ביטול
-            </Button>
-            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
-              שמור שינויים
-            </Button>
+          <div className="ys-form-field">
+            <label className="ys-label" htmlFor={`${fieldId}-end`}>
+              שעת סיום <span className="ys-label-required">*</span>
+            </label>
+            <input
+              id={`${fieldId}-end`}
+              type="time"
+              dir="ltr"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              required
+            />
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <p className={`schedule-shift-kind-note${isOvernight ? ' is-night' : ''}`}>
+          {isOvernight ? (
+            <MoonIcon size={16} aria-hidden="true" />
+          ) : (
+            <SunIcon size={16} aria-hidden="true" />
+          )}
+          <span>
+            {isOvernight
+              ? 'משמרת לילה: מסתיימת ביום שלמחרת'
+              : 'משמרת יום: מתחילה ומסתיימת באותו היום'}
+          </span>
+        </p>
+
+        <div className="ys-form-field">
+          <label className="ys-label" htmlFor={`${fieldId}-notes`}>
+            הערות למשמרת
+          </label>
+          <input
+            id={`${fieldId}-notes`}
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="לדוגמה: אחראי פתיחה / חפיפת עובד"
+          />
+        </div>
+      </form>
+    </Dialog>
   );
 }

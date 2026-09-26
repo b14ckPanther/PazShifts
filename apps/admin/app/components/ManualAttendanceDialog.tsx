@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { Button } from '@yellowshifts/ui';
 import type { AttendanceRecordWithDetails, StationMemberWithProfile } from '@yellowshifts/types';
 import { StaffDialog } from './StaffDialog';
@@ -37,6 +37,7 @@ export function ManualAttendanceDialog({
 }) {
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
+  const clockOutHintId = useId();
   return (
     <StaffDialog
       title={record ? 'עריכת זמני נוכחות' : 'דיווח נוכחות ידני'}
@@ -89,30 +90,33 @@ export function ManualAttendanceDialog({
           </label>
         )}
         <p className="manual-timezone">השעות לפי אזור הזמן של התחנה: {timezone}</p>
-        <label>
-          כניסה
-          <input
-            name="clockIn"
-            type="datetime-local"
-            step="1"
-            dir="ltr"
-            required
-            disabled={pending}
-            defaultValue={localTime(record?.clock_in_at || new Date().toISOString(), timezone)}
-          />
-        </label>
-        <label>
-          יציאה
-          <input
-            name="clockOut"
-            type="datetime-local"
-            step="1"
-            dir="ltr"
-            disabled={pending}
-            defaultValue={record?.clock_out_at ? localTime(record.clock_out_at, timezone) : ''}
-          />
-          <small>השאר ריק למשמרת שעדיין פעילה.</small>
-        </label>
+        <div className="ys-form-grid manual-attendance-times">
+          <label>
+            כניסה
+            <input
+              name="clockIn"
+              type="datetime-local"
+              step="1"
+              dir="ltr"
+              required
+              disabled={pending}
+              defaultValue={localTime(record?.clock_in_at || new Date().toISOString(), timezone)}
+            />
+          </label>
+          <label>
+            יציאה
+            <input
+              name="clockOut"
+              type="datetime-local"
+              step="1"
+              dir="ltr"
+              disabled={pending}
+              aria-describedby={clockOutHintId}
+              defaultValue={record?.clock_out_at ? localTime(record.clock_out_at, timezone) : ''}
+            />
+            <small id={clockOutHintId}>השאר ריק למשמרת שעדיין פעילה.</small>
+          </label>
+        </div>
         <label>
           סיבת הדיווח או התיקון
           <textarea
@@ -125,12 +129,12 @@ export function ManualAttendanceDialog({
           />
         </label>
         {error && (
-          <p className="mobile-error" role="alert">
-            {error}
+          <p className="admin-feedback admin-feedback--error" role="alert">
+            <span>{error}</span>
           </p>
         )}
         <p className="manual-timezone">השינוי נשמר עם שמך, הסיבה והזמנים הקודמים לצורכי ביקורת.</p>
-        <div className="staff-dialog-actions">
+        <div className="ys-form-actions manual-attendance-actions">
           <Button type="submit" isLoading={pending}>
             שמירת דיווח
           </Button>

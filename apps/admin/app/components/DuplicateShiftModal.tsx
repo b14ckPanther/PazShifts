@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useId, useState, useTransition } from 'react';
 import type { ScheduledShiftWithDetails } from '@yellowshifts/types';
 import { duplicateShiftAction } from '../actions/schedules';
-import { Button } from '@yellowshifts/ui';
-import { CloseIcon, CopyIcon, ClockIcon } from '@yellowshifts/icons';
+import { Button, Dialog } from '@yellowshifts/ui';
+import { ClockIcon, InfoIcon, WarningIcon } from '@yellowshifts/icons';
 
 interface DuplicateShiftModalProps {
   stationId: string;
@@ -51,6 +51,7 @@ export function DuplicateShiftModal({
   const [notes, setNotes] = useState(shift.notes ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const fieldId = useId();
 
   const handleDuplicate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,191 +82,77 @@ export function DuplicateShiftModal({
     : shift.endAt.slice(11, 16);
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 110,
-        padding: '16px',
-      }}
-      onClick={onClose}
+    <Dialog
+      open
+      onClose={onClose}
+      dismissible={!isPending}
+      title="שכפול משמרת"
+      footer={
+        <>
+          <Button type="submit" form={`${fieldId}-form`} variant="primary" isLoading={isPending}>
+            שכפל משמרת
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+            ביטול
+          </Button>
+        </>
+      }
     >
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '12px',
-          border: '1px solid #E5E7EB',
-          width: '100%',
-          maxWidth: '460px',
-          padding: '24px',
-          direction: 'rtl',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '16px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CopyIcon size={20} style={{ color: 'var(--ys-color-brand-yellow)' }} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-              שכפול משמרת
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#6B7280',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            <CloseIcon size={20} />
-          </button>
-        </div>
-
-        {/* Source Shift Summary */}
-        <div
-          style={{
-            backgroundColor: '#F9FAFB',
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '16px',
-            fontSize: '0.875rem',
-            border: '1px solid #E5E7EB',
-          }}
-        >
-          <div style={{ fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
-            {shift.templateName || 'משמרת מותאמת אישית'}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#D97706',
-              fontWeight: 600,
-            }}
-          >
-            <ClockIcon size={14} />
-            <bdi dir="ltr">{`${sTime} — ${eTime}`}</bdi>
-          </div>
-        </div>
+      <form id={`${fieldId}-form`} className="schedule-dialog-form" onSubmit={handleDuplicate}>
+        {/* Source shift summary */}
+        <p className="schedule-dialog-context">
+          <strong>{shift.templateName || 'משמרת מותאמת אישית'}</strong>
+          <ClockIcon size={15} aria-hidden="true" />
+          <bdi dir="ltr" className="ys-num">{`${sTime}–${eTime}`}</bdi>
+        </p>
 
         {error && (
-          <div
-            style={{
-              backgroundColor: '#FEF2F2',
-              color: '#991B1B',
-              border: '1px solid #FECACA',
-              padding: '10px 14px',
-              borderRadius: '6px',
-              fontSize: '0.8125rem',
-              marginBottom: '16px',
-            }}
-          >
-            {error}
-          </div>
+          <p className="admin-feedback admin-feedback--error" role="alert">
+            <WarningIcon size={18} aria-hidden="true" />
+            <span>{error}</span>
+          </p>
         )}
 
-        <form
-          onSubmit={handleDuplicate}
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-        >
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#374151',
-                marginBottom: '6px',
-              }}
-            >
-              בחר יום יעד לשכפול המשמרת *
-            </label>
-            <select
-              value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D1D5DB',
-                borderRadius: '6px',
-                padding: '10px 12px',
-                color: '#111827',
-                fontSize: '0.9375rem',
-              }}
-            >
-              {HEBREW_DAYS.map((d) => {
-                const dayDate = addDays(weekStartDate, d.index);
-                const isSame = dayDate === shift.shiftDate;
-                return (
-                  <option key={dayDate} value={dayDate}>
-                    {d.name} • {formatDateDisplay(dayDate)} {isSame ? '(באותו היום)' : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#374151',
-                marginBottom: '6px',
-              }}
-            >
-              הערות למשמרת המשוכפלת
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="הערות אופציונליות..."
-              style={{
-                width: '100%',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D1D5DB',
-                borderRadius: '6px',
-                padding: '10px 12px',
-                color: '#111827',
-                fontSize: '0.875rem',
-              }}
-            />
-          </div>
-
-          <p style={{ fontSize: '0.75rem', color: '#6B7280', margin: 0, lineHeight: 1.4 }}>
-            הערה: שכפול יוצר משמרת חדשה לחלוטין ללא שיבוצי עובדים, כדי לאפשר שיבוץ נפרד.
-          </p>
-
-          <div
-            style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}
+        <div className="ys-form-field">
+          <label className="ys-label" htmlFor={`${fieldId}-target`}>
+            בחר יום יעד לשכפול המשמרת <span className="ys-label-required">*</span>
+          </label>
+          <select
+            id={`${fieldId}-target`}
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+            required
           >
-            <Button type="button" variant="secondary" onClick={onClose}>
-              ביטול
-            </Button>
-            <Button type="submit" variant="primary" disabled={isPending} isLoading={isPending}>
-              שכפל משמרת
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+            {HEBREW_DAYS.map((d) => {
+              const dayDate = addDays(weekStartDate, d.index);
+              const isSame = dayDate === shift.shiftDate;
+              return (
+                <option key={dayDate} value={dayDate}>
+                  {d.name} • {formatDateDisplay(dayDate)} {isSame ? '(באותו היום)' : ''}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="ys-form-field">
+          <label className="ys-label" htmlFor={`${fieldId}-notes`}>
+            הערות למשמרת המשוכפלת
+          </label>
+          <input
+            id={`${fieldId}-notes`}
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="הערות אופציונליות..."
+          />
+        </div>
+
+        <p className="schedule-dialog-note">
+          <InfoIcon size={16} aria-hidden="true" />
+          <span>הערה: שכפול יוצר משמרת חדשה לחלוטין ללא שיבוצי עובדים, כדי לאפשר שיבוץ נפרד.</span>
+        </p>
+      </form>
+    </Dialog>
   );
 }

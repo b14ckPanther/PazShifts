@@ -20,6 +20,12 @@ const roles = [
   { value: 'ADMIN', title: 'מנהל תחנה', description: 'ניהול תפעול התחנה והצוות' },
 ] as const;
 
+const statuses = [
+  { value: 'ACTIVE', title: 'פעיל', description: 'גישה לפעילות התחנה בהתאם לתפקיד' },
+  { value: 'INACTIVE', title: 'לא פעיל', description: 'סיום הגישה לתחנה, ללא מחיקת היסטוריה' },
+  { value: 'SUSPENDED', title: 'מושעה', description: 'עצירת הגישה באופן זמני' },
+] as const;
+
 export function RoleModal({ stationId, member, isOpen, onClose, isPlatformAdmin = false }: Props) {
   const [role, setRole] = useState<StationRole>(member.membership.role);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +52,7 @@ export function RoleModal({ stationId, member, isOpen, onClose, isPlatformAdmin 
         }}
       >
         <fieldset className="staff-role-options" disabled={pending}>
-          <legend className="staff-sr-only">תפקיד בתחנה</legend>
+          <legend className="ys-visually-hidden">תפקיד בתחנה</legend>
           {roles
             .filter((item) => isPlatformAdmin || item.value !== 'ADMIN')
             .map((item) => (
@@ -67,15 +73,15 @@ export function RoleModal({ stationId, member, isOpen, onClose, isPlatformAdmin 
         </fieldset>
         {error && <Alert variant="danger">{error}</Alert>}
         <footer className="staff-dialog-footer">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
-            ביטול
-          </Button>
           <Button
             type="submit"
             disabled={pending || role === member.membership.role}
             isLoading={pending}
           >
             שמירת תפקיד
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
+            ביטול
           </Button>
         </footer>
       </form>
@@ -114,18 +120,8 @@ export function StatusModal({ stationId, member, isOpen, onClose }: Props) {
         }}
       >
         <fieldset className="staff-role-options" disabled={pending}>
-          <legend className="staff-sr-only">מצב הגישה</legend>
-          {(
-            [
-              { value: 'ACTIVE', title: 'פעיל', description: 'גישה לפעילות התחנה בהתאם לתפקיד' },
-              {
-                value: 'INACTIVE',
-                title: 'לא פעיל',
-                description: 'סיום הגישה לתחנה, ללא מחיקת היסטוריה',
-              },
-              { value: 'SUSPENDED', title: 'מושעה', description: 'עצירת הגישה באופן זמני' },
-            ] as const
-          ).map((item) => (
+          <legend className="ys-visually-hidden">מצב הגישה</legend>
+          {statuses.map((item) => (
             <label className="staff-role-option" key={item.value}>
               <input
                 type="radio"
@@ -142,15 +138,15 @@ export function StatusModal({ stationId, member, isOpen, onClose }: Props) {
         </fieldset>
         {error && <Alert variant="danger">{error}</Alert>}
         <footer className="staff-dialog-footer">
-          <Button type="button" variant="secondary" disabled={pending} onClick={onClose}>
-            ביטול
-          </Button>
           <Button
             type="submit"
             disabled={pending || status === member.membership.status}
             isLoading={pending}
           >
             שמירת שינוי
+          </Button>
+          <Button type="button" variant="secondary" disabled={pending} onClick={onClose}>
+            ביטול
           </Button>
         </footer>
       </form>

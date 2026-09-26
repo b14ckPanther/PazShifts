@@ -44,8 +44,9 @@ export function EditWorkerProfileModal({
         }}
       >
         <fieldset disabled={pending}>
-          <label>
-            שם מלא
+          <legend className="ys-visually-hidden">פרטי איש הצוות</legend>
+          <label className="ys-form-field">
+            <span className="ys-label">שם מלא</span>
             <input
               name="fullName"
               defaultValue={member.profile.fullName}
@@ -55,8 +56,8 @@ export function EditWorkerProfileModal({
               autoComplete="off"
             />
           </label>
-          <label>
-            אימייל
+          <label className="ys-form-field">
+            <span className="ys-label">אימייל</span>
             <input
               name="email"
               type="email"
@@ -66,8 +67,8 @@ export function EditWorkerProfileModal({
               autoComplete="off"
             />
           </label>
-          <label>
-            טלפון לכניסה
+          <label className="ys-form-field">
+            <span className="ys-label">טלפון לכניסה</span>
             <input
               name="phone"
               type="tel"
@@ -77,16 +78,16 @@ export function EditWorkerProfileModal({
               autoComplete="off"
             />
           </label>
-          <label>
-            קוד עובד בתחנה
+          <label className="ys-form-field">
+            <span className="ys-label">קוד עובד בתחנה</span>
             <input
               name="employeeCode"
               defaultValue={member.membership.employeeCode || ''}
               maxLength={64}
             />
           </label>
-          <label>
-            סיסמה חדשה (אופציונלי)
+          <label className="ys-form-field staff-profile-form-wide">
+            <span className="ys-label">סיסמה חדשה (אופציונלי)</span>
             <input
               name="password"
               type="password"
@@ -98,11 +99,11 @@ export function EditWorkerProfileModal({
         </fieldset>
         {error && <Alert variant="danger">{error}</Alert>}
         <footer className="staff-dialog-footer">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
-            ביטול
-          </Button>
           <Button type="submit" isLoading={pending}>
             שמירת פרטים
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
+            ביטול
           </Button>
         </footer>
       </form>

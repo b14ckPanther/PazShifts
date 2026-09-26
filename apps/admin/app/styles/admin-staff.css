@@ -1,0 +1,515 @@
+/*
+ * Staff directory, member profile, the add/assign form and the shared staff dialogs.
+ * Owned by the staff screens. Builds on admin-shell.css and the @yellowshifts/ui classes.
+ */
+
+/* ---------- Directory panel ---------- */
+.staff-panel {
+  display: grid;
+  min-width: 0;
+  border-radius: var(--ys-radius-lg);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid var(--ys-color-border-subtle);
+  box-shadow: var(--ys-shadow-card);
+}
+.staff-filters {
+  padding: 16px;
+  border-bottom: 1px solid var(--ys-color-border-subtle);
+}
+.admin-toolbar > .staff-search {
+  flex: 3 1 260px;
+}
+.staff-filters .ys-input,
+.staff-filters select {
+  font-size: 16px;
+}
+.staff-result-count {
+  margin: 0;
+  padding: 12px 16px 4px;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+
+/* ---------- Rows ---------- */
+.staff-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.staff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  min-width: 0;
+  padding: 14px 16px;
+}
+.staff-row + .staff-row {
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.staff-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.staff-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ys-color-surface-sunken);
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.staff-row-admin .staff-avatar {
+  background: var(--ys-color-text-primary);
+  color: var(--ys-color-text-inverse);
+}
+.staff-person {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.staff-person-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.staff-person-name > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.staff-person-name > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.staff-person-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.staff-person-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---------- Row actions ---------- */
+.staff-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.staff-more {
+  min-width: 0;
+}
+.staff-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ys-control-sm);
+  padding: 0 12px;
+  border-radius: var(--ys-radius-sm);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+  cursor: pointer;
+  list-style: none;
+  transition:
+    background-color var(--ys-transition-fast),
+    color var(--ys-transition-fast);
+}
+.staff-more > summary::-webkit-details-marker {
+  display: none;
+}
+.staff-more > summary:hover {
+  background: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-primary);
+}
+.staff-more > summary:focus-visible {
+  outline: 2px solid var(--ys-focus-ring);
+  outline-offset: 2px;
+}
+.staff-more-chevron {
+  transition: transform var(--ys-transition-fast);
+}
+.staff-more[open] > summary {
+  color: var(--ys-color-text-primary);
+  background: var(--ys-color-surface-muted);
+}
+.staff-more[open] .staff-more-chevron {
+  transform: rotate(180deg);
+}
+.staff-more-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+.staff-more-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 24px;
+  background: var(--ys-color-border-subtle);
+}
+
+.staff-protected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-brand-yellow-ink);
+}
+.staff-protected small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--ys-text-xs);
+  font-weight: 500;
+  color: var(--ys-color-text-muted);
+}
+
+.staff-empty {
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+
+/* ---------- Summary fact line (under the page header) ---------- */
+.staff-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  margin: -8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.staff-summary > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.staff-summary .ys-num {
+  font-family: var(--ys-font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+}
+.staff-summary svg {
+  color: var(--ys-color-text-muted);
+}
+
+/* ---------- Add / assign form (in the shared Dialog) ---------- */
+.staff-add-body {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.staff-add-mode > button {
+  min-height: 44px;
+}
+.staff-add-form {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.staff-add-form .ys-fieldset {
+  padding: 0;
+  margin: 0;
+}
+
+/* ---------- Selectable option cards (role / status), radio inputs kept ---------- */
+.staff-role-options {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 16px 0;
+  padding: 0;
+  border: 0;
+}
+.staff-role-options--inline {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  margin: 0;
+}
+.staff-role-options--inline > legend {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.staff-role-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 1px solid var(--ys-color-border-medium);
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-raised);
+  cursor: pointer;
+  transition:
+    border-color var(--ys-transition-fast),
+    background-color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast);
+}
+.staff-role-option:hover {
+  border-color: var(--ys-color-border-strong);
+}
+.staff-role-option:has(input:checked) {
+  border-color: var(--ys-color-text-primary);
+  background: var(--ys-color-brand-yellow-subtle);
+  box-shadow: inset 0 0 0 1px var(--ys-color-text-primary);
+}
+.staff-role-option:has(input:focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px var(--ys-color-text-primary),
+    0 0 0 4px var(--ys-focus-halo);
+}
+.staff-role-options:disabled .staff-role-option {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.staff-role-option input {
+  margin-top: 2px;
+}
+.staff-role-option strong {
+  display: block;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+}
+.staff-role-option small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--ys-text-sm);
+  line-height: 1.5;
+  color: var(--ys-color-text-secondary);
+}
+
+/* ---------- Member profile ---------- */
+.staff-profile {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+  min-width: 0;
+}
+@media (min-width: 900px) {
+  .staff-profile {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  }
+}
+.staff-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  margin: 0;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.staff-fact {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ys-color-border-subtle);
+}
+.staff-fact dt {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.staff-fact dd {
+  margin: 0;
+  font-size: var(--ys-text-md);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+  overflow-wrap: anywhere;
+}
+.staff-fact-code {
+  font-size: var(--ys-text-xs);
+  font-weight: 500;
+  color: var(--ys-color-text-secondary);
+  word-break: break-all;
+}
+
+.staff-action-panel {
+  display: grid;
+  gap: 16px;
+}
+.staff-action-group {
+  display: grid;
+  gap: 8px;
+}
+.staff-action-group + .staff-action-group {
+  padding-top: 16px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.staff-action-group-title {
+  font-size: var(--ys-text-sm);
+  font-weight: 700;
+  color: var(--ys-color-text-secondary);
+}
+.staff-action-group-text {
+  font-size: var(--ys-text-sm);
+  line-height: 1.5;
+  color: var(--ys-color-text-secondary);
+}
+.staff-action-group--danger .staff-action-group-title {
+  color: var(--ys-color-status-danger-ink);
+}
+.staff-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Dialog (StaffDialog on .ys-dialog; also used by attendance dialogs) ---------- */
+.staff-dialog-body {
+  --ys-dialog-pad-bottom: 0px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding-bottom: 0;
+}
+:where(.staff-dialog-body > form) {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.staff-dialog-description {
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.staff-dialog-description strong {
+  color: var(--ys-color-text-primary);
+}
+.staff-preservation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-status-info-subtle);
+  color: var(--ys-color-status-info-ink);
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+}
+.staff-preservation-note > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Action row, primary first (inline start = right in RTL), pinned to the sheet bottom */
+.staff-dialog-footer,
+.staff-dialog-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+  margin: 8px -20px 0;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-muted);
+}
+.staff-dialog-footer > .ys-button,
+.staff-dialog-actions > .ys-button {
+  min-width: 112px;
+}
+
+.staff-profile-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.staff-profile-form-wide {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Touch targets and phones ---------- */
+@media (pointer: coarse) {
+  .staff-actions .ys-button,
+  .staff-action-panel .ys-button {
+    --btn-h: var(--ys-control-md);
+  }
+  .staff-more > summary {
+    min-height: var(--ys-control-md);
+  }
+  .staff-person-name > a {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .staff-filters {
+    padding: 12px;
+  }
+  .staff-row {
+    padding: 12px;
+  }
+  .staff-identity {
+    flex-basis: 100%;
+    align-items: flex-start;
+  }
+  .staff-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: var(--ys-text-sm);
+  }
+  .staff-actions,
+  .staff-protected {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 10px;
+    border-top: 1px solid var(--ys-color-border-subtle);
+  }
+  .staff-more {
+    flex: 1 1 auto;
+  }
+  .staff-protected small {
+    display: inline;
+    margin-inline-start: 6px;
+  }
+  .staff-dialog-footer > .ys-button,
+  .staff-dialog-actions > .ys-button {
+    flex: 1 1 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-more > summary,
+  .staff-more-chevron,
+  .staff-role-option {
+    transition: none;
+  }
+}

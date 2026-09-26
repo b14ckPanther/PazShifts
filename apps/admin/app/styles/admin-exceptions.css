@@ -1,0 +1,153 @@
+/* Attendance exceptions: tolerances line, filter toolbar and the exceptions table.
+   The deviation badge (.att-deviation) lives in admin-attendance.css. */
+
+.station-exceptions {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.station-exceptions > * {
+  min-width: 0;
+}
+
+/* ---------- Tolerances ---------- */
+.exceptions-tolerances {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding-block: 8px;
+  padding-inline: 16px 8px;
+  border-radius: var(--ys-radius-md);
+  border: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-raised);
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.exceptions-tolerances-title {
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+}
+.exceptions-tolerances-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+}
+.exceptions-tolerances-list > div {
+  display: inline-flex;
+  gap: 4px;
+}
+.exceptions-tolerances-list dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.exceptions-tolerances-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-inline-start: auto;
+  padding-inline: 12px;
+  border-radius: var(--ys-radius-pill);
+  font-weight: 700;
+  color: var(--ys-color-brand-crimson-ink);
+  transition: background-color var(--ys-transition-fast);
+}
+.exceptions-tolerances-edit:hover {
+  background: var(--ys-color-brand-crimson-subtle);
+}
+
+/* ---------- Toolbar ---------- */
+.admin-toolbar.exceptions-toolbar {
+  justify-content: space-between;
+}
+.exceptions-heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-toolbar > .ys-form-field.exceptions-filter {
+  flex: 0 1 260px;
+}
+
+/* ---------- Table ---------- */
+.exceptions-table .ys-table td {
+  vertical-align: top;
+}
+.exceptions-person-name {
+  display: block;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+  overflow-wrap: anywhere;
+}
+.exceptions-person-code {
+  display: block;
+  font-size: var(--ys-text-xs);
+  color: var(--ys-color-text-muted);
+}
+.exceptions-cell {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+.exceptions-range {
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+  white-space: nowrap;
+}
+.exceptions-muted {
+  color: var(--ys-color-text-muted);
+}
+.exceptions-missing {
+  font-weight: 700;
+  color: var(--ys-color-status-danger-ink);
+}
+.exceptions-detail {
+  display: grid;
+  gap: 2px;
+  color: var(--ys-color-text-primary);
+}
+.exceptions-action {
+  text-align: end;
+  white-space: nowrap;
+}
+.exceptions-table .ys-button {
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .exceptions-table .ys-table td {
+    align-items: center;
+  }
+  .exceptions-table .ys-table td.exceptions-person {
+    display: grid;
+    gap: 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ys-color-border-subtle);
+  }
+  .exceptions-cell,
+  .exceptions-detail {
+    justify-items: end;
+    text-align: end;
+  }
+  .exceptions-table .ys-table td.exceptions-action {
+    display: block;
+  }
+  .exceptions-table .ys-table td.exceptions-action:empty {
+    display: none;
+  }
+  .exceptions-action > .ys-button {
+    width: 100%;
+  }
+}
+@media (max-width: 640px) {
+  .admin-toolbar > .ys-form-field.exceptions-filter {
+    flex: 1 1 100%;
+  }
+  .exceptions-tolerances-edit {
+    margin-inline-start: 0;
+  }
+}

@@ -1,27 +1,29 @@
+/* Station location fieldset (create, edit, overview settings). */
+.station-location-fields {
+  min-width: 0;
+}
+.station-location-help {
+  margin: 0;
+  max-width: 64ch;
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
 .station-location-settings {
   min-width: 0;
-  margin-bottom: 24px;
 }
 .station-location-actions {
   display: grid;
   gap: 12px;
-  margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--ys-color-border-subtle);
 }
-.station-location-actions > button {
+.station-location-actions > .ys-button {
   justify-self: start;
-  min-height: 44px;
 }
-.station-location-actions > p {
-  margin: 0;
-  color: #475569;
-  font-size: 13px;
-  line-height: 1.6;
-}
-@media (max-width: 600px) {
-  .station-location-actions > button {
-    width: 100%;
+@media (max-width: 520px) {
+  .station-location-actions > .ys-button {
+    justify-self: stretch;
     white-space: normal;
   }
 }

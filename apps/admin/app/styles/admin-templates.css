@@ -1,0 +1,189 @@
+/*
+ * Shift templates screen (/stations/[id]/templates): ShiftTemplatesManager.
+ * Builds on admin-shell.css and the shared ys-* component classes.
+ */
+.tpl-manager {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.tpl-manager > * {
+  min-width: 0;
+}
+.tpl-manager .ys-page-header {
+  padding-bottom: 4px;
+}
+
+.tpl-note {
+  font-size: var(--ys-text-sm);
+}
+
+/* ---------- Card grid ---------- */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tpl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--ys-radius-lg);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid var(--ys-color-border-subtle);
+  box-shadow: var(--ys-shadow-card);
+}
+.tpl-card.is-inactive {
+  background: var(--ys-color-surface-muted);
+  box-shadow: none;
+}
+
+.tpl-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.tpl-card-name {
+  min-width: 0;
+  font-size: var(--ys-text-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--ys-color-text-primary);
+  overflow-wrap: anywhere;
+}
+.tpl-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tpl-card-time {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--ys-color-text-primary);
+}
+.tpl-card-time-icon {
+  flex-shrink: 0;
+  color: var(--ys-color-text-muted);
+}
+.tpl-card-time-range {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+.tpl-card.is-inactive .tpl-card-time-range {
+  color: var(--ys-color-text-secondary);
+}
+.tpl-card-next-day {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+}
+
+.tpl-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: var(--ys-text-xs);
+  color: var(--ys-color-text-secondary);
+}
+.tpl-card-meta > div {
+  display: flex;
+  gap: 4px;
+}
+.tpl-card-meta dt::after {
+  content: ':';
+}
+.tpl-card-meta dd {
+  margin: 0;
+  color: var(--ys-color-text-primary);
+}
+
+/* Actions: routine actions at the inline start, destructive delete set apart at the inline end */
+.tpl-card-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.tpl-card-delete {
+  margin-inline-start: auto;
+}
+
+/* ---------- Empty state ---------- */
+.tpl-empty {
+  padding: 0;
+}
+
+/* ---------- Create / edit dialog form ---------- */
+.tpl-form {
+  display: grid;
+  gap: 16px;
+}
+.tpl-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.tpl-order-field {
+  max-width: 200px;
+}
+.tpl-daypart-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--ys-radius-sm);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  line-height: 1.45;
+}
+.tpl-daypart-hint > svg {
+  flex-shrink: 0;
+}
+.tpl-daypart-hint--night {
+  background: var(--ys-color-status-info-subtle);
+  color: var(--ys-color-status-info-ink);
+}
+.tpl-daypart-hint--day {
+  background: var(--ys-color-status-neutral-subtle);
+  color: var(--ys-color-status-neutral-ink);
+}
+
+.tpl-delete-text {
+  font-size: var(--ys-text-md);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.tpl-delete-text + .tpl-delete-text {
+  margin-top: 8px;
+}
+.tpl-delete-text strong {
+  color: var(--ys-color-text-primary);
+}
+
+@media (max-width: 480px) {
+  .tpl-time-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tpl-order-field {
+    max-width: none;
+  }
+  .tpl-card {
+    padding: 14px;
+  }
+}

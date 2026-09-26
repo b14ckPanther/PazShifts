@@ -1,0 +1,665 @@
+/*
+ * Attendance: status strip, toolbar, tabs, live worker cards, history table,
+ * clock-station settings, the manual report form and the deviation badge
+ * (the badge is also used by the exceptions screen; this file is global).
+ */
+
+.station-attendance {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.station-attendance > * {
+  min-width: 0;
+}
+
+/* ---------- Deviation: icon + text, ink tokens that pass contrast ---------- */
+.att-deviation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 10px;
+  border-radius: var(--ys-radius-xs);
+  border: 1px solid transparent;
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.att-deviation > svg {
+  flex-shrink: 0;
+}
+.att-deviation--danger {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+  border-color: rgba(200, 16, 46, 0.3);
+}
+.att-deviation--warning {
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
+}
+.att-deviation--info {
+  background: var(--ys-color-status-info-subtle);
+  color: var(--ys-color-status-info-ink);
+}
+.att-deviation--success {
+  background: var(--ys-color-status-success-subtle);
+  color: var(--ys-color-status-success-ink);
+}
+
+/* ---------- Toolbar ---------- */
+.attendance-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  min-width: 0;
+}
+.attendance-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-muted);
+}
+.attendance-sync--error {
+  color: var(--ys-color-status-danger-ink);
+  font-weight: 600;
+}
+
+/* ---------- Fact line: live state in one sentence under the page header ---------- */
+.att-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  margin: 0;
+  font-size: var(--ys-text-md);
+  color: var(--ys-color-text-secondary);
+}
+.att-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.att-fact .ys-num {
+  font-size: var(--ys-text-lg);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.att-fact--live .ys-num {
+  color: var(--ys-color-brand-crimson);
+}
+.att-fact-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ys-color-brand-crimson);
+}
+.att-fact--attention,
+.att-fact--attention .ys-num {
+  color: var(--ys-color-status-warning-ink);
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  .att-page-header .ys-page-header-text > p {
+    display: none;
+  }
+}
+
+/* ---------- Tabs (ARIA tabs dressed as a segmented switch) ---------- */
+.attendance-tabs {
+  max-width: 640px;
+}
+.attendance-tabs > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.25;
+}
+.attendance-tabs > button > svg {
+  flex-shrink: 0;
+}
+.attendance-tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 6px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
+}
+.attendance-tabs > button[aria-selected='true'] .attendance-tab-count {
+  background: var(--ys-color-text-primary);
+  color: var(--ys-color-text-inverse);
+}
+
+.attendance-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border-radius: var(--ys-radius-md);
+}
+.attendance-panel[hidden] {
+  display: none;
+}
+
+/* ---------- Live worker cards ---------- */
+.attendance-live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attendance-live-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--ys-radius-lg);
+  border: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-raised);
+  box-shadow: var(--ys-shadow-card);
+}
+.attendance-live-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.attendance-live-person {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.attendance-live-name {
+  font-size: var(--ys-text-lg);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.attendance-live-role {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.attendance-live-timer {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-base);
+}
+.attendance-live-timer-label {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+}
+.attendance-live-timer-value {
+  justify-self: start;
+  font-size: 2.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ys-color-text-primary);
+}
+.attendance-live-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+}
+.attendance-live-facts > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.attendance-live-facts dt {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.attendance-live-facts dd {
+  margin: 0;
+  font-size: var(--ys-text-md);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.attendance-deviation-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.attendance-deviation-detail {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+
+/* ---------- Record actions ---------- */
+.attendance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.attendance-actions-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.att-label-short {
+  display: none;
+}
+.attendance-actions--row .att-label-long {
+  display: none;
+}
+.attendance-actions--row .att-label-short {
+  display: inline;
+}
+/* Card: end shift + edit paired, delete set apart on its own line */
+.attendance-actions--card {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.attendance-actions--card > .attendance-actions-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+}
+.attendance-actions--card > .attendance-action-delete {
+  justify-self: center;
+}
+.attendance-actions--row {
+  justify-content: flex-end;
+}
+.attendance-actions--row > .attendance-action-delete {
+  margin-inline-start: 4px;
+}
+.ys-button.attendance-action-delete {
+  color: var(--ys-color-status-danger-ink);
+}
+.ys-button.attendance-action-delete:hover:not(:disabled) {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+}
+
+/* ---------- History table ---------- */
+.attendance-history .ys-table td {
+  vertical-align: top;
+}
+.attendance-history-person > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.attendance-history-name {
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
+}
+.attendance-history-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.attendance-history-shift {
+  font-size: var(--ys-text-xs);
+  color: var(--ys-color-text-muted);
+}
+.attendance-history-time {
+  display: grid;
+  gap: 2px;
+  font-size: var(--ys-text-md);
+  font-weight: 600;
+}
+.attendance-history-date {
+  font-size: var(--ys-text-xs);
+  font-weight: 500;
+  color: var(--ys-color-text-muted);
+}
+.attendance-history-duration {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.attendance-history-deviation {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+.attendance-correction {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--ys-radius-xs);
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
+  font-size: var(--ys-text-xs);
+  line-height: 1.5;
+}
+.attendance-correction > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+@media (max-width: 720px) {
+  .attendance-history .ys-table td {
+    align-items: center;
+  }
+  .attendance-history .ys-table td.attendance-history-person {
+    display: block;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ys-color-border-subtle);
+  }
+  .attendance-history-time {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .attendance-history-deviation {
+    justify-items: end;
+    text-align: end;
+  }
+  .attendance-history .ys-table td.attendance-history-actions {
+    display: block;
+    padding-top: 10px;
+    border-top: 1px solid var(--ys-color-border-subtle);
+  }
+  .attendance-actions--row {
+    justify-content: space-between;
+  }
+}
+
+/* ---------- Clock station ---------- */
+.ys-card-header.attendance-clock-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.attendance-clock-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-secondary);
+}
+.ys-card-content.attendance-clock-body {
+  display: grid;
+  gap: 20px;
+}
+.attendance-clock-note {
+  padding: 14px 16px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-base);
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-primary);
+}
+.attendance-clock-note p {
+  margin-top: 6px;
+  color: var(--ys-color-text-secondary);
+}
+.attendance-clock-fields {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+}
+.attendance-clock-fields > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.attendance-clock-fields dt {
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.attendance-clock-fields dd {
+  margin: 0;
+  min-width: 0;
+}
+.attendance-clock-value {
+  display: block;
+  padding: 10px 14px;
+  border-radius: var(--ys-radius-sm);
+  border: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-base);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-primary);
+  text-align: start;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+.attendance-clock-url {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.attendance-clock-url > .attendance-clock-value,
+.attendance-clock-url > .attendance-clock-missing {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.attendance-clock-missing {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-status-warning-ink);
+}
+.attendance-clock-rotate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.attendance-clock-rotate > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.attendance-clock-rotate-title {
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+}
+.attendance-clock-rotate-text {
+  margin-top: 2px;
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.attendance-dialog-text {
+  font-size: var(--ys-text-md);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.attendance-dialog-error {
+  margin-top: 12px;
+}
+
+/* ---------- Manual report / confirm forms (inside StaffDialog) ---------- */
+.manual-attendance-form {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.manual-attendance-form label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-primary);
+}
+.manual-attendance-form input,
+.manual-attendance-form select,
+.manual-attendance-form textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.manual-attendance-form small,
+.manual-timezone {
+  margin: 0;
+  font-size: var(--ys-text-xs);
+  font-weight: 400;
+  color: var(--ys-color-text-muted);
+}
+.manual-worker-name {
+  margin: 0;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+}
+.manual-attendance-text {
+  margin: 0;
+  font-size: var(--ys-text-md);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.ys-form-grid.manual-attendance-times {
+  gap: 16px 12px;
+}
+
+@media (max-width: 640px) {
+  .attendance-live-card {
+    padding: 14px;
+  }
+  .attendance-live-timer-value {
+    font-size: 2rem;
+  }
+  .attendance-tabs > button {
+    flex-direction: column;
+    gap: 2px;
+    padding-inline: 6px;
+    font-size: var(--ys-text-xs);
+  }
+  .attendance-tabs > button > svg {
+    display: none;
+  }
+}
+/* Tabs sized to their content beside a phone */
+@media (min-width: 641px) {
+  .attendance-tabs {
+    width: fit-content;
+    max-width: 100%;
+  }
+  .attendance-tabs > button {
+    flex: 0 0 auto;
+    padding-inline: 14px;
+  }
+}
+
+/* Desktop: live workers become one dense row each across the capped width */
+@media (min-width: 1024px) {
+  .attendance-live-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-radius: var(--ys-radius-lg);
+    border: 1px solid var(--ys-color-border-subtle);
+    background: var(--ys-color-surface-raised);
+    box-shadow: var(--ys-shadow-card);
+    overflow: hidden;
+  }
+  .attendance-live-grid > li + li {
+    border-top: 1px solid var(--ys-color-border-subtle);
+  }
+  .attendance-live-card {
+    grid-template-columns:
+      minmax(170px, 1.4fr) minmax(100px, auto) minmax(130px, 1fr)
+      minmax(130px, 1.1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .attendance-live-head {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px 10px;
+  }
+  .attendance-live-name {
+    font-size: var(--ys-text-md);
+  }
+  .attendance-live-timer {
+    padding: 0;
+    background: transparent;
+  }
+  .attendance-live-timer-value {
+    font-size: 1.5rem;
+  }
+  .attendance-live-facts {
+    gap: 4px 16px;
+  }
+  .attendance-live-facts dd {
+    font-size: var(--ys-text-sm);
+  }
+  .attendance-deviation-row {
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+  }
+  .attendance-deviation-detail {
+    font-size: var(--ys-text-xs);
+  }
+  .attendance-live-card .attendance-actions--card {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .attendance-live-card .attendance-actions--card > .attendance-actions-main {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+  .attendance-live-card .att-label-long {
+    display: none;
+  }
+  .attendance-live-card .att-label-short {
+    display: inline;
+  }
+}
+
+@media (pointer: coarse) {
+  .attendance-tabs > button {
+    min-height: 48px;
+  }
+}
+
+/* The shared button rule (.ys-button > .ys-button-content > span) is more specific than the
+   plain label classes, so the visibility rules restate it. */
+.ys-button > .ys-button-content > .att-label-short {
+  display: none;
+}
+.attendance-actions--row .ys-button > .ys-button-content > .att-label-long {
+  display: none;
+}
+.attendance-actions--row .ys-button > .ys-button-content > .att-label-short {
+  display: inline;
+}
+@media (min-width: 1024px) {
+  .attendance-live-card .ys-button > .ys-button-content > .att-label-long {
+    display: none;
+  }
+  .attendance-live-card .ys-button > .ys-button-content > .att-label-short {
+    display: inline;
+  }
+}

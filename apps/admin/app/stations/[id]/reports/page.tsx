@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { redirect, notFound } from 'next/navigation';
 import { getHourPolicies, getStationById } from '@yellowshifts/database';
 import { getServerContext } from '@/app/lib/server-context';
@@ -10,6 +11,9 @@ import {
   weekStart,
 } from '@/app/lib/hours-report';
 import { readReportAttendance, readReportPeople } from '@/app/lib/report-query';
+import { Container, EmptyState } from '@yellowshifts/ui';
+import { CalendarIcon, WarningIcon } from '@yellowshifts/icons';
+import { StationHeader } from '@/app/components/StationHeader';
 import { HoursReportClient } from './HoursReportClient';
 
 interface ReportsPageProps {
@@ -37,17 +41,33 @@ export default async function ReportsPage({ params, searchParams }: ReportsPageP
   if (!station) notFound();
   const today = localDate(new Date(), station.timezone);
   const query = await searchParams;
+  const shell = (children: ReactNode) => (
+    <main className="admin-page">
+      <StationHeader station={station} context={context} pageTitle="דוח שעות" />
+      <Container size="xl">
+        <div className="admin-page-body">{children}</div>
+      </Container>
+    </main>
+  );
   try {
     const policies = await getHourPolicies(supabase, id);
     const from =
       typeof query.from === 'string' && validDate(query.from) ? query.from : weekStart(today, 0);
     const to = typeof query.to === 'string' && validDate(query.to) ? query.to : addDays(from, 6);
     if (to < from || Date.parse(to) - Date.parse(from) > 92 * 86400000)
-      return (
-        <main dir="rtl" style={{ padding: 24 }}>
-          יש לבחור טווח של עד 93 ימים, עם תאריך סיום אחרי תאריך ההתחלה.{' '}
-          <a href={`/stations/${id}/reports`}>חזרה לדוח השבועי</a>
-        </main>
+      return shell(
+        <EmptyState
+          className="admin-empty-panel"
+          role="alert"
+          icon={<CalendarIcon size={26} />}
+          title="טווח התאריכים אינו תקין"
+          description="יש לבחור טווח של עד 93 ימים, עם תאריך סיום אחרי תאריך ההתחלה."
+          action={
+            <a href={`/stations/${id}/reports`} className="ys-button ys-button--primary">
+              חזרה לדוח השבועי
+            </a>
+          }
+        />
       );
     const [records, people] = await Promise.all([
       readReportAttendance(
@@ -62,7 +82,7 @@ export default async function ReportsPage({ params, searchParams }: ReportsPageP
       if (!people.some((p) => p.id === record.station_membership_id))
         people.push({ id: record.station_membership_id, name: 'עובד היסטורי', code: '' });
     people.sort((a, b) => a.name.localeCompare(b.name, 'he'));
-    return (
+    return shell(
       <HoursReportClient
         stationId={id}
         today={today}
@@ -80,12 +100,19 @@ export default async function ReportsPage({ params, searchParams }: ReportsPageP
       />
     );
   } catch {
-    return (
-      <main dir="rtl" style={{ padding: 24 }}>
-        <h1>דוח השעות לא נטען</h1>
-        <p>לא יוצג דוח חלקי. נסו לרענן או לבחור תקופה קצרה יותר.</p>
-        <a href={`/stations/${id}/reports`}>טעינת השבוע הנוכחי מחדש</a>
-      </main>
+    return shell(
+      <EmptyState
+        className="admin-empty-panel"
+        role="alert"
+        icon={<WarningIcon size={26} />}
+        title="דוח השעות לא נטען"
+        description="לא יוצג דוח חלקי. נסו לרענן או לבחור תקופה קצרה יותר."
+        action={
+          <a href={`/stations/${id}/reports`} className="ys-button ys-button--primary">
+            טעינת השבוע הנוכחי מחדש
+          </a>
+        }
+      />
     );
   }
 }

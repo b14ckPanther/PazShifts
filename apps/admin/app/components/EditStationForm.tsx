@@ -3,20 +3,8 @@
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
-import {
-  Button,
-  Input,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Alert,
-  Badge,
-  Spinner,
-} from '@yellowshifts/ui';
-import { EditIcon, CheckIcon, ArrowRightIcon } from '@yellowshifts/icons';
+import { Button, Input, Card, Alert } from '@yellowshifts/ui';
+import { CheckIcon } from '@yellowshifts/icons';
 import type { Station } from '@yellowshifts/types';
 import { updateStationAction } from '../actions/stations';
 
@@ -73,255 +61,114 @@ export const EditStationForm: React.FC<EditStationFormProps> = ({ station }) => 
   };
 
   return (
-    <Card
-      style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E5E7EB',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      }}
-    >
-      <form onSubmit={handleSubmit} method="POST">
-        <CardHeader>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-              marginBottom: '4px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <EditIcon size={20} color="var(--ys-color-brand-yellow)" />
-              <CardTitle>עריכת פרטי תחנת {station.name}</CardTitle>
-            </div>
-            <Badge variant="brandYellow">{station.code}</Badge>
+    <Card className="station-form-card">
+      <form onSubmit={handleSubmit} method="POST" className="station-form">
+        {error && (
+          <Alert variant="danger" title="שגיאה בעדכון התחנה">
+            {error}
+          </Alert>
+        )}
+
+        <fieldset className="ys-fieldset">
+          <legend>זיהוי התחנה</legend>
+          <div className="ys-form-grid">
+            <Input
+              id="edit-station-code"
+              type="text"
+              label="קוד תחנה (לקריאה בלבד)"
+              helperText="קוד התחנה משמש כמזהה ייחודי ואינו ניתן לשינוי."
+              value={station.code}
+              dir="ltr"
+              disabled
+            />
+            <Input
+              id="edit-station-name"
+              name="name"
+              type="text"
+              label="שם תחנה"
+              isRequired
+              value={name}
+              required
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
-          <CardDescription>
-            עדכון פרטי התחנה, כתובת, טלפון, אזור זמן או סטטוס פעילות.
-          </CardDescription>
-        </CardHeader>
+        </fieldset>
 
-        <CardContent>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {error && (
-              <Alert variant="danger" title="שגיאה בעדכון התחנה">
-                {error}
-              </Alert>
-            )}
+        <fieldset className="ys-fieldset">
+          <legend>פרטי קשר</legend>
+          <div className="ys-form-grid">
+            <Input
+              id="edit-station-address"
+              name="address"
+              type="text"
+              label="כתובת"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <Input
+              id="edit-station-phone"
+              name="phone"
+              type="tel"
+              label="טלפון"
+              dir="ltr"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+        </fieldset>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="edit-station-code"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'var(--ys-color-text-secondary, #6B7280)',
-                  }}
-                >
-                  קוד תחנה (לקריאה בלבד)
-                </label>
-                <Input
-                  id="edit-station-code"
-                  type="text"
-                  value={station.code}
-                  disabled
-                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="edit-station-name"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  שם תחנה <span style={{ color: 'var(--ys-color-brand-crimson)' }}>*</span>
-                </label>
-                <Input
-                  id="edit-station-name"
-                  name="name"
-                  type="text"
-                  value={name}
-                  required
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="edit-station-address"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  כתובת
-                </label>
-                <Input
-                  id="edit-station-address"
-                  name="address"
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="edit-station-phone"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  טלפון
-                </label>
-                <Input
-                  id="edit-station-phone"
-                  name="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label
-                  htmlFor="edit-station-tz"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                  }}
-                >
-                  אזור זמן
-                </label>
-                <select
-                  id="edit-station-tz"
-                  name="timezone"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  style={{
-                    height: '42px',
-                    padding: '0 12px',
-                    borderRadius: 'var(--ys-radius-sm)',
-                    border: '1px solid var(--ys-color-border-subtle, #E5E7EB)',
-                    backgroundColor: 'var(--ys-color-surface-raised, #FFFFFF)',
-                    color: 'var(--ys-color-text-primary, #111827)',
-                    fontSize: '14px',
-                    outline: 'none',
-                    direction: 'ltr',
-                  }}
-                >
-                  <option value="Asia/Jerusalem">Asia/Jerusalem (ישראל UTC+2/3)</option>
-                  <option value="UTC">UTC</option>
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  paddingTop: '24px',
-                }}
+        <fieldset className="ys-fieldset">
+          <legend>סטטוס ואזור זמן</legend>
+          <div className="ys-form-grid">
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="edit-station-tz">
+                אזור זמן
+              </label>
+              <select
+                id="edit-station-tz"
+                name="timezone"
+                dir="ltr"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
               >
-                <input
-                  id="edit-station-active"
-                  name="isActive"
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <label
-                  htmlFor="edit-station-active"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: 'var(--ys-color-text-primary, #111827)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  תחנה פעילה (מאפשרת גישת עובדים ומנהלים)
-                </label>
-              </div>
+                <option value="Asia/Jerusalem">Asia/Jerusalem (ישראל UTC+2/3)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+            <div className="station-switch-row">
+              <input
+                id="edit-station-active"
+                name="isActive"
+                type="checkbox"
+                role="switch"
+                className="ys-switch"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />
+              <label htmlFor="edit-station-active">
+                <strong>תחנה פעילה</strong>
+                <span>מאפשרת גישת עובדים ומנהלים</span>
+              </label>
             </div>
           </div>
-        </CardContent>
+        </fieldset>
 
-        <CardFooter>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              gap: '12px',
-            }}
+        <div className="ys-form-actions">
+          <Button
+            variant="primary"
+            type="submit"
+            isLoading={isPending}
+            rightIcon={<CheckIcon size={18} aria-hidden="true" />}
           >
-            <Link
-              href={`/stations/${encodeURIComponent(station.code)}`}
-              style={{ textDecoration: 'none' }}
-            >
-              <Button variant="ghost" size="md" type="button">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <ArrowRightIcon size={16} />
-                  ביטול וחזרה
-                </span>
-              </Button>
-            </Link>
-
-            <Button
-              variant="primary"
-              size="md"
-              type="submit"
-              disabled={isPending}
-              style={{ minWidth: '160px' }}
-            >
-              {isPending ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <Spinner size="sm" color="var(--ys-color-text-inverse, #FFFFFF)" />
-                  שומר שינויים...
-                </span>
-              ) : (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckIcon size={16} />
-                  שמור שינויים
-                </span>
-              )}
-            </Button>
-          </div>
-        </CardFooter>
+            {isPending ? 'שומר שינויים...' : 'שמור שינויים'}
+          </Button>
+          <Link
+            href={`/stations/${encodeURIComponent(station.code)}`}
+            className="ys-button ys-button--ghost"
+          >
+            <span>ביטול וחזרה</span>
+          </Link>
+        </div>
       </form>
     </Card>
   );

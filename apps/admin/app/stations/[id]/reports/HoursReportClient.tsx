@@ -14,7 +14,7 @@ import {
   type HoursReport,
 } from '@/app/lib/hours-report';
 import './reports.css';
-import { PersonHours } from './PersonHours';
+import { PersonHours, WORKER_COLUMNS } from './PersonHours';
 
 function download(text: string, name: string) {
   const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
@@ -67,15 +67,24 @@ export function HoursReportClient({
     }
   }
   return (
-    <main className="hours-report" dir="rtl" aria-busy={pending}>
-      <Link href={`/stations/${stationId}`}>← חזרה לתחנה</Link>
-      <header>
-        <p className="report-eyebrow">{report.station}</p>
-        <h1>דוח שעות עבודה</h1>
-        <p>סיכום הצוות, פירוט יומי וייצוא להנהלת חשבונות</p>
-      </header>
-      <Link href={`/stations/${stationId}/reports/settings`}>הגדרת כללי שעות ותוספות →</Link>
-      <section className="report-panel" aria-label="בחירת תקופה ועובד">
+    <div className="hours-report" aria-busy={pending}>
+      <div className="ys-page-header report-header">
+        <div className="ys-page-header-text">
+          <div className="ys-page-header-title">
+            <h1>דוח שעות עבודה</h1>
+          </div>
+          <p>סיכום הצוות, פירוט יומי וייצוא להנהלת חשבונות</p>
+        </div>
+      </div>
+
+      <nav className="station-nav-pills" aria-label="דוחות ושעות">
+        <Link href={`/stations/${stationId}/reports`} aria-current="page">
+          דוח שעות
+        </Link>
+        <Link href={`/stations/${stationId}/reports/settings`}>הגדרת כללי שעות ותוספות</Link>
+      </nav>
+
+      <section className="report-panel report-controls" aria-label="בחירת תקופה ועובד">
         <form
           key={`${report.from}-${report.to}`}
           onSubmit={(event) => {
@@ -83,103 +92,157 @@ export function HoursReportClient({
             const data = new FormData(event.currentTarget);
             navigate(String(data.get('from')), String(data.get('to')));
           }}
-          className="report-filters"
+          className="admin-toolbar report-filters"
         >
-          <label>
-            מתאריך
-            <input required type="date" name="from" defaultValue={report.from} />
-          </label>
-          <label>
-            עד תאריך
-            <input required type="date" name="to" defaultValue={report.to} />
-          </label>
-          <button type="submit" disabled={pending}>
+          <div className="ys-form-field">
+            <label className="ys-label" htmlFor="report-from">
+              מתאריך
+            </label>
+            <input id="report-from" required type="date" name="from" defaultValue={report.from} />
+          </div>
+          <div className="ys-form-field">
+            <label className="ys-label" htmlFor="report-to">
+              עד תאריך
+            </label>
+            <input id="report-to" required type="date" name="to" defaultValue={report.to} />
+          </div>
+          <button
+            type="submit"
+            className="ys-button ys-button--primary"
+            disabled={pending}
+            aria-busy={pending || undefined}
+          >
             {pending ? 'טוענים…' : 'הצגת דוח'}
           </button>
         </form>
-        <div className="report-week-buttons">
-          <button
-            disabled={pending}
-            onClick={() => navigate(addDays(report.from, -7), addDays(report.to, -7))}
-          >
-            שבוע קודם
-          </button>
-          <button
-            disabled={pending}
-            onClick={() => navigate(weekStart(today, 0), addDays(weekStart(today, 0), 6))}
-          >
-            השבוע הנוכחי
-          </button>
-          <button
-            disabled={pending}
-            onClick={() => navigate(addDays(report.from, 7), addDays(report.to, 7))}
-          >
-            שבוע הבא
-          </button>
+        <div className="admin-toolbar report-toolbar-row">
+          <div className="report-week-buttons" role="group" aria-label="מעבר מהיר בין שבועות">
+            <button
+              type="button"
+              className="ys-button ys-button--secondary"
+              disabled={pending}
+              onClick={() => navigate(addDays(report.from, -7), addDays(report.to, -7))}
+            >
+              שבוע קודם
+            </button>
+            <button
+              type="button"
+              className="ys-button ys-button--secondary"
+              disabled={pending}
+              onClick={() => navigate(weekStart(today, 0), addDays(weekStart(today, 0), 6))}
+            >
+              השבוע הנוכחי
+            </button>
+            <button
+              type="button"
+              className="ys-button ys-button--secondary"
+              disabled={pending}
+              onClick={() => navigate(addDays(report.from, 7), addDays(report.to, 7))}
+            >
+              שבוע הבא
+            </button>
+          </div>
+          <div className="ys-form-field report-person">
+            <label className="ys-label" htmlFor="report-person">
+              עובד / כל הצוות
+            </label>
+            <select
+              id="report-person"
+              value={personId}
+              onChange={(event) => setPersonId(event.target.value)}
+            >
+              <option value="">כל הצוות ({report.people.length})</option>
+              {report.people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {p.code ? ` · ${p.code}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <label className="report-person">
-          עובד / כל הצוות
-          <select value={personId} onChange={(event) => setPersonId(event.target.value)}>
-            <option value="">כל הצוות ({report.people.length})</option>
-            {report.people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-                {p.code ? ` · ${p.code}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
       </section>
-      <div className="report-stats">
-        <section>
-          <span>שעות סגורות בתקופה</span>
-          <strong dir="ltr">{duration(total)}</strong>
-          <small>{(total / 3600).toFixed(2)} שעות עשרוניות</small>
-        </section>
-        <section>
-          <span>עובדים בדוח</span>
-          <strong>{filtered.people.length}</strong>
-          <small>כולל עובדים ללא שעות</small>
-        </section>
-        <section>
-          <span>רשומות לבדיקה</span>
-          <strong>{flagged}</strong>
-          <small>פתוחות / מסומנות / חופפות</small>
-        </section>
-      </div>
-      <RateBreakdown entries={filtered.entries} />
-      <section className="report-panel">
-        <h2>ייצוא {personId ? 'העובד שנבחר' : 'כל הצוות'}</h2>
-        <p className="report-period">
-          <bdi>
-            {report.from} — {report.to}
-          </bdi>
-          <bdi>{report.timezone}</bdi>
-        </p>
+
+      <section className="report-summary" aria-label="סיכום התקופה">
+        <dl className="report-facts">
+          <div className="report-fact is-primary">
+            <dt>שעות סגורות בתקופה</dt>
+            <dd>
+              <bdi className="ys-num" dir="ltr">
+                {duration(total)}
+              </bdi>
+              <small>
+                (<span className="ys-num">{(total / 3600).toFixed(2)}</span> שעות עשרוניות)
+              </small>
+            </dd>
+          </div>
+          <div className="report-fact">
+            <dt>עובדים בדוח</dt>
+            <dd>
+              <span className="ys-num">{filtered.people.length}</span>
+              <small>כולל עובדים ללא שעות</small>
+            </dd>
+          </div>
+          <div className={flagged ? 'report-fact is-attention' : 'report-fact'}>
+            <dt>רשומות לבדיקה</dt>
+            <dd>
+              <span className="ys-num">{flagged}</span>
+              <small>פתוחות / מסומנות / חופפות</small>
+            </dd>
+          </div>
+        </dl>
+        <RateBreakdown entries={filtered.entries} compact />
+      </section>
+      <section className="report-panel report-export">
+        <div className="report-export-head">
+          <h2>ייצוא {personId ? 'העובד שנבחר' : 'כל הצוות'}</h2>
+          <p className="report-period">
+            <bdi className="ys-num">
+              {report.from} — {report.to}
+            </bdi>
+            <bdi>{report.timezone}</bdi>
+          </p>
+        </div>
         <div className="report-exports">
-          <button disabled={busy || pending} onClick={pdf}>
+          <button
+            type="button"
+            className="ys-button ys-button--primary"
+            disabled={busy || pending}
+            aria-busy={busy || undefined}
+            onClick={pdf}
+          >
             {busy ? 'מכינים PDF…' : 'הורדת PDF'}
           </button>
           <button
+            type="button"
+            className="ys-button ys-button--secondary"
             disabled={pending}
             onClick={() => download(summaryCsv(filtered), `${exportName('daily')}.csv`)}
           >
             CSV סיכום יומי
           </button>
           <button
+            type="button"
+            className="ys-button ys-button--secondary"
             disabled={pending}
             onClick={() => download(weeklyCsv(filtered), `${exportName('weekly')}.csv`)}
           >
             CSV סיכום שבועי
           </button>
           <button
+            type="button"
+            className="ys-button ys-button--secondary"
             disabled={pending}
             onClick={() => download(reportCsv(filtered), `${exportName('detail')}.csv`)}
           >
             CSV פירוט נוכחות
           </button>
         </div>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className="admin-feedback admin-feedback--error">
+            <span>{error}</span>
+          </p>
+        )}
         <details className="report-explanation">
           <summary>מה נכלל בדוח?</summary>
           <p className="report-note">
@@ -188,25 +251,40 @@ export function HoursReportClient({
             של התחנה. תיקונים ידניים כלולים ומסומנים.
           </p>
         </details>
-        <small className="report-updated">
-          <span>
+        <div className="report-updated">
+          <small>
             הדוח נכון ל-
             {new Date(report.generatedAt).toLocaleString('he-IL', {
               timeZone: report.timezone,
             })}
             .
-          </span>
+          </small>
           <button
-            className="report-refresh"
+            type="button"
+            className="ys-button ys-button--tertiary ys-button--sm"
             disabled={pending}
             onClick={() => startTransition(() => router.refresh())}
           >
             רענון נתונים
           </button>
-        </small>
+        </div>
       </section>
       <section aria-label="פירוט שעות עובדים" className="report-workers">
-        {!filtered.people.length && <p>אין עובדים להצגה בתקופה זו.</p>}
+        {filtered.people.length > 0 && (
+          <div className="report-worker-head" aria-hidden="true">
+            <span>עובד</span>
+            {WORKER_COLUMNS.map((column) => (
+              <span key={column}>{column}</span>
+            ))}
+            <span>סה״כ</span>
+            <span />
+          </div>
+        )}
+        {!filtered.people.length && (
+          <div className="ys-empty admin-empty-panel">
+            <p className="ys-empty-title">אין עובדים להצגה בתקופה זו.</p>
+          </div>
+        )}
         {filtered.people.map((person) => {
           const entries = filtered.entries.filter((e) => e.personId === person.id);
           return (
@@ -219,6 +297,6 @@ export function HoursReportClient({
           );
         })}
       </section>
-    </main>
+    </div>
   );
 }

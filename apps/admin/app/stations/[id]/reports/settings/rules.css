@@ -1,77 +1,155 @@
-.rules-grid {
+/* Hour and pay-rate rules: sectioned form on the report panel system (reports.css). */
+.hour-rules-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  margin-top: 18px;
+  min-width: 0;
+}
+.rules-explanation .ys-alert-content {
+  display: grid;
+  gap: 6px;
+  line-height: 1.6;
+}
+.rules-help {
+  max-width: 72ch;
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+.rules-fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 0;
+}
+.rules-fieldset > legend {
+  margin-bottom: 4px;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  color: var(--ys-color-text-primary);
 }
 .rules-days {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 10px;
-  margin: 16px 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 104px), 1fr));
+  gap: 12px;
 }
-.hour-rules summary {
-  font-weight: 700;
-  cursor: pointer;
-  min-height: 44px;
+.rules-check {
   display: flex;
   align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 44px;
+  font-size: var(--ys-text-md);
+  font-weight: 500;
+  cursor: pointer;
+}
+.rules-check input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ys-color-brand-crimson);
+}
+.rules-ack {
+  padding: 10px 14px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
 }
 .hour-rules textarea {
   width: 100%;
-  font: inherit;
-  padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  box-sizing: border-box;
+  resize: vertical;
 }
-.hour-rules p {
-  font-size: 14px;
+
+/* Collapsible sections as disclosure panels */
+.rules-disclosure {
+  gap: 0;
+  padding: 0;
 }
-.hour-rules input[type='checkbox'] {
-  width: 20px;
-  min-height: 20px;
-  accent-color: #cf0044;
-}
-.hour-rules .rules-check {
+.rules-disclosure > summary {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 56px;
+  padding: 10px 16px;
+  border-radius: var(--ys-radius-lg);
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color var(--ys-transition-fast);
 }
-.rules-save {
-  background: #cf0044 !important;
-  color: white !important;
-  width: 100%;
+.rules-disclosure > summary::-webkit-details-marker {
+  display: none;
 }
-.rules-explanation {
-  border-color: #f4d66b;
-  background: #fffbeb;
+.rules-disclosure > summary:hover {
+  background: var(--ys-color-surface-muted);
 }
-.rules-version {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 8px;
+.rules-disclosure > summary::after {
+  content: '';
+  margin-inline-start: auto;
+  width: 8px;
+  height: 8px;
+  border-inline-start: 2px solid var(--ys-color-text-muted);
+  border-block-end: 2px solid var(--ys-color-text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--ys-transition-standard);
 }
-.rules-message {
-  min-height: 22px;
+.rules-disclosure[open] > summary {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  border-bottom: 1px solid var(--ys-color-border-subtle);
 }
-.hour-rules fieldset {
-  border: 0;
-  padding: 0;
-  margin: 20px 0;
+.rules-disclosure[open] > summary::after {
+  transform: translateY(2px) rotate(-135deg);
 }
-@media (max-width: 500px) {
-  .rules-grid {
-    grid-template-columns: 1fr;
+.rules-disclosure-body {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+@media (min-width: 720px) {
+  .rules-disclosure > summary {
+    padding-inline: 20px;
+  }
+  .rules-disclosure-body {
+    padding: 20px;
   }
 }
 
-.hour-rules details > summary::after {
-  content: '+';
-  margin-inline-start: auto;
-  font-size: 20px;
+.rules-versions {
+  gap: 0;
 }
-.hour-rules details[open] > summary::after {
-  content: '−';
+.rules-version + .rules-version {
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.rules-version > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-height: 44px;
+  padding-block: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rules-version > p {
+  margin-bottom: 8px;
+  font-size: var(--ys-text-sm);
+  line-height: 1.6;
+  color: var(--ys-color-text-secondary);
+}
+
+/* Live region stays mounted (so it announces); it takes no space while empty. */
+.rules-message:empty {
+  margin-block-start: -16px;
+}
+@media (max-width: 520px) {
+  .rules-save {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rules-disclosure > summary,
+  .rules-disclosure > summary::after {
+    transition: none;
+  }
 }

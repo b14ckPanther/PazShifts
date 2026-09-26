@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { Alert, PageHeader } from '@yellowshifts/ui';
 import { addDays, rateWeekStart, type HourRules, type HourPolicy } from '@yellowshifts/reports';
 import { saveHourRules } from './actions';
 import '../reports.css';
@@ -23,6 +24,12 @@ const draft: HourRules = {
   restRate: 150,
   holidays: [],
   holidayRate: 150,
+};
+/** Display-only helper: stored values stay in minutes. */
+const hoursHint = (minutes: number) => {
+  if (!Number.isFinite(minutes)) return '';
+  const hours = Math.round((minutes / 60) * 100) / 100;
+  return hours === 1 ? 'שעה אחת' : `${hours} שעות`;
 };
 const time = (minutes: number) =>
   `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
@@ -46,37 +53,60 @@ export function HourRulesForm({
   );
   const [holidayText, setHolidayText] = useState(rules.holidays.join('\n'));
   const [ack, setAck] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
-  function numberField(key: keyof HourRules, label: string, max = 1440) {
+  function numberField(key: keyof HourRules, label: string, max = 1440, minutes = false) {
+    const value = rules[key] as number;
+    const hintId = `rules-${key}-hint`;
     return (
-      <label>
-        {label}
+      <div className="ys-form-field">
+        <label className="ys-label" htmlFor={`rules-${key}`}>
+          {label}
+        </label>
         <input
+          id={`rules-${key}`}
+          className="ys-num"
           type="number"
+          inputMode="numeric"
+          dir="ltr"
           min={key.toLowerCase().includes('rate') ? 100 : 0}
           max={max}
           step="1"
           required
-          value={rules[key] as number}
+          value={value}
+          aria-describedby={minutes ? hintId : undefined}
           onChange={(e) => setRules({ ...rules, [key]: Number(e.target.value) })}
         />
-      </label>
+        {minutes && (
+          <span id={hintId} className="ys-help">
+            {hoursHint(value)}
+          </span>
+        )}
+      </div>
     );
   }
   return (
-    <main className="hours-report hour-rules" dir="rtl">
-      <Link href={`/stations/${stationId}/reports`}>← חזרה לדוח השעות</Link>
-      <header>
-        <p>{stationName}</p>
-        <h1>כללי שעות ותוספות</h1>
-        <p>הגדרות התחנה לדוחות העובדים ולהנהלת חשבונות</p>
-      </header>
-      <div className="report-panel rules-explanation">
-        <strong>
-          {latest ? 'הכללים נשמרים בגרסאות מתוארכות' : 'טיוטה בלבד — טרם הוגדרו כללים לתחנה'}
-        </strong>
+    <div className="hours-report hour-rules">
+      <PageHeader
+        className="report-header"
+        title="כללי שעות ותוספות"
+        description={`הגדרות ${stationName} לדוחות העובדים ולהנהלת חשבונות`}
+      />
+
+      <nav className="station-nav-pills" aria-label="דוחות ושעות">
+        <Link href={`/stations/${stationId}/reports`}>דוח שעות</Link>
+        <Link href={`/stations/${stationId}/reports/settings`} aria-current="page">
+          הגדרת כללי שעות ותוספות
+        </Link>
+      </nav>
+
+      <Alert
+        variant={latest ? 'info' : 'warning'}
+        role="note"
+        title={latest ? 'הכללים נשמרים בגרסאות מתוארכות' : 'טיוטה בלבד — טרם הוגדרו כללים לתחנה'}
+        className="rules-explanation"
+      >
         <p>
           הערכים הראשוניים הם דוגמה לעריכה, לא קביעה של זכאות על פי דין. החישוב נעשה לכל תחנה בנפרד,
           לפי ימים קלנדריים באזור הזמן של התחנה; משמרת לילה מתפצלת בחצות.
@@ -86,11 +116,12 @@ export function HourRulesForm({
           אינן נספרות שוב במכסה השבועית. מדרגת השעות הנוספות הראשונה משותפת לחריגה היומית והשבועית
           באותו יום.
         </p>
-      </div>
+      </Alert>
       <form
+        className="hour-rules-form"
         onSubmit={(e) => {
           e.preventDefault();
-          setMessage('');
+          setMessage(null);
           startTransition(async () => {
             try {
               const result = await saveHourRules(
@@ -99,23 +130,30 @@ export function HourRulesForm({
                 { ...rules, holidays: holidayText.split(/[\s,]+/).filter(Boolean) },
                 ack
               );
-              if (result.error) setMessage(result.error);
+              if (result.error) setMessage({ tone: 'error', text: result.error });
               else {
-                setMessage('הכללים נשמרו. הדוחות יחושבו בהתאם לתאריך התחילה.');
+                setMessage({
+                  tone: 'success',
+                  text: 'הכללים נשמרו. הדוחות יחושבו בהתאם לתאריך התחילה.',
+                });
                 router.refresh();
               }
             } catch {
-              setMessage('לא ניתן לשמור כרגע. נסו שוב.');
+              setMessage({ tone: 'error', text: 'לא ניתן לשמור כרגע. נסו שוב.' });
             }
           });
         }}
       >
-        <section className="report-panel">
-          <h2>תחילה ושבוע עבודה</h2>
-          <div className="rules-grid">
-            <label>
-              בתוקף מתאריך
+        <section className="report-panel" aria-labelledby="rules-start-title">
+          <h2 id="rules-start-title">תחילה ושבוע עבודה</h2>
+          <div className="ys-form-grid">
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="rules-effective">
+                בתוקף מתאריך
+              </label>
               <input
+                id="rules-effective"
+                className="ys-num"
                 type="date"
                 required
                 min={latest ? addDays(today, 1) : '2000-01-01'}
@@ -123,10 +161,13 @@ export function HourRulesForm({
                 value={effective}
                 onChange={(e) => setEffective(e.target.value)}
               />
-            </label>
-            <label>
-              יום תחילת השבוע
+            </div>
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="rules-week-start">
+                יום תחילת השבוע
+              </label>
               <select
+                id="rules-week-start"
                 value={rules.weekStartsOn}
                 disabled={!!latest}
                 onChange={(e) => setRules({ ...rules, weekStartsOn: Number(e.target.value) })}
@@ -137,58 +178,80 @@ export function HourRulesForm({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           </div>
-          <p>
+          <p className="rules-help">
             התאריך צריך לחול ביום תחילת השבוע. שינוי כללים קיימים חל רק בעתיד. שמירה נוספת לאותו
             תאריך עתידי יוצרת גרסה מחליפה; הגרסאות הקודמות נשמרות.
           </p>
           {!latest && effective < today && (
-            <label className="rules-check">
+            <label className="rules-check rules-ack">
               <input
                 type="checkbox"
                 required
                 checked={ack}
                 onChange={(e) => setAck(e.target.checked)}
               />
-              אני מאשר/ת שההגדרה הראשונית תסווג גם שעות היסטוריות מתאריך זה.
+              <span>אני מאשר/ת שההגדרה הראשונית תסווג גם שעות היסטוריות מתאריך זה.</span>
             </label>
           )}
         </section>
-        <section className="report-panel">
-          <h2>שעות רגילות ושעות נוספות</h2>
-          <p>מכסה יומית בדקות — לדוגמה 480 דקות הן 8 שעות. כל משמרות העובד באותו יום מצטברות.</p>
-          <div className="rules-days">
-            {days.map((day, i) => (
-              <label key={day}>
-                {day}
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  max="1440"
-                  step="1"
-                  value={rules.dailyMinutes[i]}
-                  onChange={(e) => {
-                    const dailyMinutes = [...rules.dailyMinutes];
-                    dailyMinutes[i] = Number(e.target.value);
-                    setRules({ ...rules, dailyMinutes });
-                  }}
-                />
-              </label>
-            ))}
-          </div>
-          <div className="rules-grid">
-            {numberField('firstOvertimeMinutes', 'דקות במדרגת השעות הנוספות הראשונה')}
+        <section className="report-panel" aria-labelledby="rules-overtime-title">
+          <h2 id="rules-overtime-title">שעות רגילות ושעות נוספות</h2>
+          <fieldset className="rules-fieldset">
+            <legend>מכסה יומית בדקות</legend>
+            <p className="rules-help">
+              לדוגמה 480 דקות הן 8 שעות. כל משמרות העובד באותו יום מצטברות.
+            </p>
+            <div className="rules-days">
+              {days.map((day, i) => (
+                <div className="ys-form-field" key={day}>
+                  <label className="ys-label" htmlFor={`rules-day-${i}`}>
+                    {day}
+                  </label>
+                  <input
+                    id={`rules-day-${i}`}
+                    className="ys-num"
+                    required
+                    type="number"
+                    inputMode="numeric"
+                    dir="ltr"
+                    min="0"
+                    max="1440"
+                    step="1"
+                    aria-describedby={`rules-day-${i}-hint`}
+                    value={rules.dailyMinutes[i]}
+                    onChange={(e) => {
+                      const dailyMinutes = [...rules.dailyMinutes];
+                      dailyMinutes[i] = Number(e.target.value);
+                      setRules({ ...rules, dailyMinutes });
+                    }}
+                  />
+                  <span id={`rules-day-${i}-hint`} className="ys-help">
+                    {hoursHint(rules.dailyMinutes[i] ?? 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </fieldset>
+          <div className="ys-form-grid">
+            {numberField('firstOvertimeMinutes', 'דקות במדרגת השעות הנוספות הראשונה', 1440, true)}
             {numberField('firstRate', 'אחוז למדרגה הראשונה', 300)}
             {numberField('secondRate', 'אחוז ליתרת השעות הנוספות', 300)}
-            <label>
-              מכסה שבועית בדקות (ריק = ללא מכסה)
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="rules-weeklyMinutes">
+                מכסה שבועית בדקות (ריק = ללא מכסה)
+              </label>
               <input
+                id="rules-weeklyMinutes"
+                className="ys-num"
                 type="number"
+                inputMode="numeric"
+                dir="ltr"
                 min="0"
                 max="10080"
                 step="1"
+                aria-describedby="rules-weeklyMinutes-hint"
                 value={rules.weeklyMinutes ?? ''}
                 onChange={(e) =>
                   setRules({
@@ -197,112 +260,141 @@ export function HourRulesForm({
                   })
                 }
               />
-            </label>
+              <span id="rules-weeklyMinutes-hint" className="ys-help">
+                {rules.weeklyMinutes === null ? 'ללא מכסה שבועית' : hoursHint(rules.weeklyMinutes)}
+              </span>
+            </div>
           </div>
         </section>
-        <details className="report-panel">
+        <details className="report-panel rules-disclosure">
           <summary>הפסקות</summary>
-          <p>
-            ניכוי קבוע לכל משמרת סגורה שהגיעה לסף. לצורך הסיווג בלבד, הניכוי משויך לסוף המשמרת. אין
-            לשנות את זמני הנוכחות. 0 דקות = ללא ניכוי.
-          </p>
-          <div className="rules-grid">
-            {numberField('breakMinutes', 'דקות לניכוי בכל משמרת')}
-            {numberField('breakAfterMinutes', 'ניכוי רק במשמרת שאורכה לפחות (דקות)')}
-          </div>
-        </details>
-        <details className="report-panel">
-          <summary>לילה, ימי מנוחה וחגים</summary>
-          <p>
-            תוספת לילה חלה רק על השעות שבתוך החלון. ימי מנוחה וחגים חלים מחצות עד חצות. אין זיהוי
-            אוטומטי של חגים או ערב חג.
-          </p>
-          <div className="rules-grid">
-            {(['nightStart', 'nightEnd'] as const).map((key) => (
-              <label key={key}>
-                {key === 'nightStart' ? 'תחילת חלון לילה' : 'סיום חלון לילה'}
-                <input
-                  type="time"
-                  dir="ltr"
-                  required
-                  value={time(rules[key])}
-                  onChange={(e) => {
-                    const [h, m] = e.target.value.split(':').map(Number);
-                    setRules({ ...rules, [key]: h! * 60 + m! });
-                  }}
-                />
-              </label>
-            ))}
-            {numberField('nightRate', 'אחוז לילה (100 = ללא תוספת)', 300)}
-            {numberField('restRate', 'אחוז בימי מנוחה', 300)}
-            {numberField('holidayRate', 'אחוז בחגים שנבחרו', 300)}
-          </div>
-          <fieldset>
-            <legend>ימי מנוחה</legend>
-            <div className="rules-days">
-              {days.map((day, i) => (
-                <label className="rules-check" key={day}>
-                  <input
-                    type="checkbox"
-                    checked={rules.restDays.includes(i)}
-                    onChange={(e) =>
-                      setRules({
-                        ...rules,
-                        restDays: e.target.checked
-                          ? [...rules.restDays, i]
-                          : rules.restDays.filter((d) => d !== i),
-                      })
-                    }
-                  />
-                  {day}
-                </label>
-              ))}
+          <div className="rules-disclosure-body">
+            <p className="rules-help">
+              ניכוי קבוע לכל משמרת סגורה שהגיעה לסף. לצורך הסיווג בלבד, הניכוי משויך לסוף המשמרת.
+              אין לשנות את זמני הנוכחות. 0 דקות = ללא ניכוי.
+            </p>
+            <div className="ys-form-grid">
+              {numberField('breakMinutes', 'דקות לניכוי בכל משמרת', 1440, true)}
+              {numberField('breakAfterMinutes', 'ניכוי רק במשמרת שאורכה לפחות (דקות)', 1440, true)}
             </div>
-          </fieldset>
-          <label>
-            תאריכי חגים — תאריך בכל שורה (YYYY-MM-DD)
-            <textarea
-              dir="ltr"
-              rows={4}
-              value={holidayText}
-              onChange={(e) => setHolidayText(e.target.value)}
-              placeholder="2026-10-01"
-            />
-          </label>
+          </div>
         </details>
-        <p role="status" className="rules-message">
-          {message}
-        </p>
-        <button className="rules-save" disabled={pending}>
-          {pending ? 'שומרים…' : 'שמירת כללי התחנה'}
-        </button>
+        <details className="report-panel rules-disclosure">
+          <summary>לילה, ימי מנוחה וחגים</summary>
+          <div className="rules-disclosure-body">
+            <p className="rules-help">
+              תוספת לילה חלה רק על השעות שבתוך החלון. ימי מנוחה וחגים חלים מחצות עד חצות. אין זיהוי
+              אוטומטי של חגים או ערב חג.
+            </p>
+            <div className="ys-form-grid">
+              {(['nightStart', 'nightEnd'] as const).map((key) => (
+                <div className="ys-form-field" key={key}>
+                  <label className="ys-label" htmlFor={`rules-${key}`}>
+                    {key === 'nightStart' ? 'תחילת חלון לילה' : 'סיום חלון לילה'}
+                  </label>
+                  <input
+                    id={`rules-${key}`}
+                    className="ys-num"
+                    type="time"
+                    dir="ltr"
+                    required
+                    value={time(rules[key])}
+                    onChange={(e) => {
+                      const [h, m] = e.target.value.split(':').map(Number);
+                      setRules({ ...rules, [key]: h! * 60 + m! });
+                    }}
+                  />
+                </div>
+              ))}
+              {numberField('nightRate', 'אחוז לילה (100 = ללא תוספת)', 300)}
+              {numberField('restRate', 'אחוז בימי מנוחה', 300)}
+              {numberField('holidayRate', 'אחוז בחגים שנבחרו', 300)}
+            </div>
+            <fieldset className="rules-fieldset">
+              <legend>ימי מנוחה</legend>
+              <div className="rules-days">
+                {days.map((day, i) => (
+                  <label className="rules-check" key={day}>
+                    <input
+                      type="checkbox"
+                      checked={rules.restDays.includes(i)}
+                      onChange={(e) =>
+                        setRules({
+                          ...rules,
+                          restDays: e.target.checked
+                            ? [...rules.restDays, i]
+                            : rules.restDays.filter((d) => d !== i),
+                        })
+                      }
+                    />
+                    <span>{day}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="ys-form-field">
+              <label className="ys-label" htmlFor="rules-holidays">
+                תאריכי חגים — תאריך בכל שורה (YYYY-MM-DD)
+              </label>
+              <textarea
+                id="rules-holidays"
+                className="ys-num"
+                dir="ltr"
+                rows={4}
+                value={holidayText}
+                onChange={(e) => setHolidayText(e.target.value)}
+                placeholder="2026-10-01"
+              />
+            </div>
+          </div>
+        </details>
+        <div role="status" aria-live="polite" className="rules-message">
+          {message && (
+            <p className={`admin-feedback admin-feedback--${message.tone}`}>
+              <span>{message.text}</span>
+            </p>
+          )}
+        </div>
+        <div className="ys-form-actions">
+          <button
+            className="ys-button ys-button--primary rules-save"
+            disabled={pending}
+            aria-busy={pending || undefined}
+          >
+            {pending ? 'שומרים…' : 'שמירת כללי התחנה'}
+          </button>
+        </div>
       </form>
       {policies.length > 0 && (
-        <details className="report-panel">
-          <summary>גרסאות שמורות ({policies.length})</summary>
-          {[...policies].reverse().map((p) => (
-            <details key={p.id} className="rules-version">
-              <summary>
-                מתאריך <bdi>{p.effectiveFrom}</bdi> · גרסה {p.id}
-              </summary>
-              <p>
-                מדרגה ראשונה {p.rules.firstOvertimeMinutes} דקות ב-{p.rules.firstRate}%; יתרה ב-
-                {p.rules.secondRate}%. מכסה שבועית: {p.rules.weeklyMinutes ?? 'ללא'} דקות.
-              </p>
-              <p>מכסות יומיות (ראשון–שבת): {p.rules.dailyMinutes.join(' / ')}</p>
-              <p>
-                הפסקה: {p.rules.breakMinutes} דקות אחרי {p.rules.breakAfterMinutes} דקות; לילה:{' '}
-                {time(p.rules.nightStart)}–{time(p.rules.nightEnd)} ב-{p.rules.nightRate}%; מנוחה:{' '}
-                {p.rules.restRate}%; חגים: {p.rules.holidayRate}%.
-              </p>
-              <p>
-                ימי מנוחה: {p.rules.restDays.map((d) => days[d]).join(', ') || 'ללא'}; חגים:{' '}
-                {p.rules.holidays.join(', ') || 'ללא'}
-              </p>
-            </details>
-          ))}
+        <details className="report-panel rules-disclosure">
+          <summary>
+            גרסאות שמורות (<span className="ys-num">{policies.length}</span>)
+          </summary>
+          <div className="rules-disclosure-body rules-versions">
+            {[...policies].reverse().map((p) => (
+              <details key={p.id} className="rules-version">
+                <summary>
+                  מתאריך <bdi className="ys-num">{p.effectiveFrom}</bdi> · גרסה {p.id}
+                </summary>
+                <p>
+                  מדרגה ראשונה {p.rules.firstOvertimeMinutes} דקות ב-{p.rules.firstRate}%; יתרה ב-
+                  {p.rules.secondRate}%. מכסה שבועית: {p.rules.weeklyMinutes ?? 'ללא'} דקות.
+                </p>
+                <p>מכסות יומיות (ראשון–שבת): {p.rules.dailyMinutes.join(' / ')}</p>
+                <p>
+                  הפסקה: {p.rules.breakMinutes} דקות אחרי {p.rules.breakAfterMinutes} דקות; לילה:{' '}
+                  {time(p.rules.nightStart)}–{time(p.rules.nightEnd)} ב-{p.rules.nightRate}%; מנוחה:{' '}
+                  {p.rules.restRate}%; חגים: {p.rules.holidayRate}%.
+                </p>
+                <p>
+                  ימי מנוחה: {p.rules.restDays.map((d) => days[d]).join(', ') || 'ללא'}; חגים:{' '}
+                  {p.rules.holidays.join(', ') || 'ללא'}
+                </p>
+              </details>
+            ))}
+          </div>
         </details>
       )}
-    </main>
+    </div>
   );
 }

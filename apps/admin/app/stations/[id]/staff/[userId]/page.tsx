@@ -9,12 +9,12 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
   Badge,
 } from '@yellowshifts/ui';
-import { ArrowRightIcon, ShieldCheckIcon } from '@yellowshifts/icons';
+import { ArrowRightIcon } from '@yellowshifts/icons';
 import { StationHeader } from '../../../../components/StationHeader';
 import { MemberDetailsActions } from '../../../../components/MemberDetailsActions';
+import { RoleBadge, MembershipStatusBadge } from '../../../../components/StaffFilterableList';
 
 interface StaffMemberDetailsPageProps {
   params: Promise<{ id: string; userId: string }>;
@@ -53,291 +53,120 @@ export default async function StaffMemberDetailsPage({ params }: StaffMemberDeta
   const { profile, membership } = member;
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
-      <StationHeader station={station} context={context} subtitle={`איש צוות • ${profile.fullName || 'משתמש'}`} />
+    <main className="admin-page staff-page" dir="rtl">
+      <StationHeader
+        station={station}
+        context={context}
+        subtitle={`איש צוות • ${profile.fullName || 'משתמש'}`}
+      />
 
-      <Container size="md">
-        <div style={{ margin: '32px 0 24px 0' }}>
-          <Link
-            href={`/stations/${stationId}/staff`}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: 'var(--ys-color-text-secondary, #6B7280)',
-              fontSize: '13px',
-              textDecoration: 'none',
-              marginBottom: '8px',
-            }}
-          >
-            <ArrowRightIcon size={14} />
+      <Container size="lg">
+        <div className="admin-page-body">
+          <Link href={`/stations/${stationId}/staff`} className="admin-back-link">
+            <ArrowRightIcon size={16} aria-hidden="true" />
             חזרה לצוות התחנה
           </Link>
 
-          <PageHeader
-            title={profile.fullName || 'משתמש ללא שם'}
-            description={`איש צוות בתחנת ${station.name} (${station.code})`}
-            badge={
-              <Badge
-                variant={
-                  membership.role === 'ADMIN'
-                    ? 'brandYellow'
-                    : membership.role === 'SHIFT_MANAGER'
-                      ? 'brandCrimson'
-                      : 'neutral'
-                }
-              >
-                {membership.role === 'ADMIN'
-                  ? 'מנהל תחנה'
-                  : membership.role === 'SHIFT_MANAGER'
-                    ? 'מנהל משמרת'
-                    : 'עובד'}
-              </Badge>
-            }
-          />
-        </div>
+          <div className="station-hero-section">
+            <PageHeader
+              title={profile.fullName || 'משתמש ללא שם'}
+              description={`איש צוות בתחנת ${station.name} (${station.code})`}
+              badge={<RoleBadge role={membership.role} />}
+            />
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Member Details Card */}
-          <Card>
-            <CardHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldCheckIcon size={20} color="var(--ys-color-brand-yellow)" />
+          <div className="staff-profile">
+            <Card className="staff-profile-facts">
+              <CardHeader>
                 <CardTitle>פרטי חברות וזהות</CardTitle>
-              </div>
-              <CardDescription>פרטי עובד ופרופיל מאומתים במערכת</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '20px',
-                }}
-              >
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    שם מלא
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    {profile.fullName || 'לא הוזן'}
-                  </div>
+                <CardDescription>פרטי עובד ופרופיל מאומתים במערכת</CardDescription>
+              </CardHeader>
+              <dl className="staff-facts">
+                <div className="staff-fact">
+                  <dt>שם מלא</dt>
+                  <dd>{profile.fullName || 'לא הוזן'}</dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    כתובת אימייל
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    {profile.email}
-                  </div>
+                <div className="staff-fact">
+                  <dt>כתובת אימייל</dt>
+                  <dd dir="auto">{profile.email}</dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מספר טלפון
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                    dir="ltr"
-                  >
-                    {profile.phone || 'לא הוזן'}
-                  </div>
+                <div className="staff-fact">
+                  <dt>מספר טלפון</dt>
+                  <dd>
+                    {profile.phone ? (
+                      <span dir="ltr" className="ys-num">
+                        {profile.phone}
+                      </span>
+                    ) : (
+                      'לא הוזן'
+                    )}
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    קוד עובד בתחנה
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
+                <div className="staff-fact">
+                  <dt>קוד עובד בתחנה</dt>
+                  <dd>
                     {membership.employeeCode ? (
                       <Badge variant="neutral">{membership.employeeCode}</Badge>
                     ) : (
                       'לא הוגדר'
                     )}
-                  </div>
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    תפקיד בתחנה
-                  </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginTop: '2px' }}>
-                    <Badge
-                      variant={
-                        membership.role === 'ADMIN'
-                          ? 'brandYellow'
-                          : membership.role === 'SHIFT_MANAGER'
-                            ? 'brandCrimson'
-                            : 'neutral'
-                      }
-                    >
-                      {membership.role === 'ADMIN'
-                        ? 'מנהל תחנה'
-                        : membership.role === 'SHIFT_MANAGER'
-                          ? 'מנהל משמרת'
-                          : 'עובד'}
-                    </Badge>
-                  </div>
+                <div className="staff-fact">
+                  <dt>תפקיד בתחנה</dt>
+                  <dd>
+                    <RoleBadge role={membership.role} />
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    סטטוס חברות
-                  </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, marginTop: '2px' }}>
-                    <Badge
-                      variant={
-                        membership.status === 'ACTIVE'
-                          ? 'success'
-                          : membership.status === 'SUSPENDED'
-                            ? 'danger'
-                            : 'neutral'
-                      }
-                      dot
-                    >
-                      {membership.status === 'ACTIVE'
-                        ? 'פעיל'
-                        : membership.status === 'SUSPENDED'
-                          ? 'מושעה'
-                          : 'לא פעיל'}
-                    </Badge>
-                  </div>
+                <div className="staff-fact">
+                  <dt>סטטוס חברות</dt>
+                  <dd>
+                    <MembershipStatusBadge status={membership.status} />
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    תחנה משויכת
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      marginTop: '2px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
+                <div className="staff-fact">
+                  <dt>תחנה משויכת</dt>
+                  <dd>
                     {station.name} ({station.code})
-                  </div>
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    חבר בתחנה החל מ-
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                      marginTop: '2px',
-                    }}
-                  >
+                <div className="staff-fact">
+                  <dt>חבר בתחנה החל מ-</dt>
+                  <dd className="ys-num">
                     {new Date(membership.createdAt).toLocaleDateString('he-IL')}
-                  </div>
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    עדכון אחרון
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      color: 'var(--ys-color-text-primary, #111827)',
-                      marginTop: '2px',
-                    }}
-                  >
+                <div className="staff-fact">
+                  <dt>עדכון אחרון</dt>
+                  <dd className="ys-num">
                     {new Date(membership.updatedAt).toLocaleDateString('he-IL')}
-                  </div>
+                  </dd>
                 </div>
-
-                <div>
-                  <div
-                    style={{ fontSize: '12px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                  >
-                    מזהה משתמש במערכת
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      marginTop: '2px',
-                    }}
-                  >
-                    <code>{profile.id}</code>
-                  </div>
+                <div className="staff-fact">
+                  <dt>מזהה משתמש במערכת</dt>
+                  <dd>
+                    <code className="staff-fact-code">{profile.id}</code>
+                  </dd>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </dl>
+            </Card>
 
-          {/* Action Buttons */}
-          <Card>
-            <CardHeader>
-              <CardTitle>ניהול איש צוות</CardTitle>
-              <CardDescription>הרשאות וגישה לתחנה, תוך שמירה על היסטוריית הפעילות</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <Card className="staff-profile-actions">
+              <CardHeader>
+                <CardTitle>ניהול איש צוות</CardTitle>
+                <CardDescription>
+                  הרשאות וגישה לתחנה, תוך שמירה על היסטוריית הפעילות
+                </CardDescription>
+              </CardHeader>
               <MemberDetailsActions
                 stationId={station.id}
                 member={member}
                 currentUserId={context.user.id}
                 isPlatformAdmin={isPlatformAdmin}
+                layout="panel"
               />
-            </CardContent>
-          </Card>
+            </Card>
+          </div>
         </div>
       </Container>
     </main>

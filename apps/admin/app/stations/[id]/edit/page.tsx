@@ -30,27 +30,23 @@ export default async function EditStationPage({ params }: EditStationPageProps) 
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
+    <main className="admin-page">
       <StationHeader station={station} context={context} subtitle="עריכת תחנה" />
 
-      <Container size="md">
-        <div style={{ margin: '32px 0 24px 0' }}>
+      <Container size="lg">
+        <div className="admin-page-body station-form-page">
           <PageHeader
             title={`עריכת ${station.name}`}
             description="עדכן את פרטי התחנה. השינויים ייכנסו לתוקף מיד במערכת."
-            badge={<Badge variant="brandYellow">{station.code}</Badge>}
+            badge={
+              <Badge variant="brandYellow" dir="ltr">
+                {station.code}
+              </Badge>
+            }
           />
-        </div>
 
-        <EditStationForm station={station} />
+          <EditStationForm station={station} />
+        </div>
       </Container>
     </main>
   );

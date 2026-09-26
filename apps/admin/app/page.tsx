@@ -1,28 +1,25 @@
 import { getServerContext } from '@/app/lib/server-context';
 import { SchedulingHome } from './components/SchedulingHome';
-import { BrandMark } from '@yellowshifts/ui';
 import { redirect } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
+import { AdminHeader } from '@/app/components/AdminHeader';
 import { t } from '@yellowshifts/i18n';
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
   Badge,
   Alert,
-  Button,
   Container,
   PageHeader,
+  EmptyState,
+  StatusBadge,
 } from '@yellowshifts/ui';
 import {
   StationIcon,
-  ShieldAlertIcon,
   LockIcon,
   PlusIcon,
   ShieldCheckIcon,
+  CircleCheckIcon,
+  PowerIcon,
 } from '@yellowshifts/icons';
 import { isSupabaseConfigured, listAllStations } from '@yellowshifts/database';
 import { LogoutButton } from './components/LogoutButton';
@@ -37,8 +34,8 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
 
   if (!isConfigured) {
     return (
-      <main style={{ minHeight: '100vh', padding: '40px 16px', direction: 'rtl' }}>
-        <Container size="md">
+      <main className="admin-page">
+        <Container size="md" className="admin-page-body">
           <Alert variant="warning" title="הגדרות מערכת חסרות">
             לא הוגדרו משתני סביבה מתאימים. אנא ודא קיום קובץ הגדרות סביבה תקין.
           </Alert>
@@ -68,89 +65,38 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
   // CASE 1: Neither Platform Admin NOR Station Admin (SHIFT_MANAGER, WORKER, or Unassigned)
   if (!isPlatformAdmin && adminMemberships.length === 0) {
     return (
-      <main
-        style={{
-          minHeight: '100vh',
-          backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-          color: 'var(--ys-color-text-primary, #111827)',
-          paddingBottom: '64px',
-          direction: 'rtl',
-        }}
-      >
-        <header
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 95,
-            backgroundColor: 'var(--ys-color-brand-yellow, #fcbc00)',
-            borderBottom: '2px solid #e0a500',
-            boxShadow: '0 2px 10px rgba(180, 83, 9, 0.15)',
-            padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
-          }}
-        >
-          <Container size="lg">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <ShieldAlertIcon size={24} color="#8f002b" />
-                <h2
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: 800,
-                    margin: 0,
-                    color: '#8f002b',
-                  }}
-                >
-                  YellowShifts Admin
-                </h2>
-              </div>
-              <LogoutButton variant="outline" />
-            </div>
-          </Container>
-        </header>
-
+      <main className="admin-page">
+        <AdminHeader title="YellowShifts" subtitle="ניהול תחנות" homeHref="/" context={context} />
         <Container size="md">
-          <div style={{ marginTop: '56px' }}>
-            <Card>
-              <CardHeader>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}
-                >
-                  <LockIcon size={22} color="var(--ys-color-status-danger)" />
-                  <Badge variant="danger" dot>
-                    גישה מוגבלת
-                  </Badge>
+          <div className="admin-page-body admin-access-body">
+            <Card className="admin-access-card">
+              <EmptyState
+                icon={<LockIcon size={26} />}
+                title={t('auth.unauthorizedAdminTitle')}
+                description={t('auth.unauthorizedAdminDesc')}
+              />
+              <dl className="admin-access-facts">
+                <div>
+                  <dt>משתמש</dt>
+                  <dd>{profile?.fullName || user.email}</dd>
                 </div>
-                <CardTitle>{t('auth.unauthorizedAdminTitle')}</CardTitle>
-                <CardDescription>{t('auth.unauthorizedAdminDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div
-                  style={{
-                    backgroundColor: 'var(--ys-color-surface-muted)',
-                    padding: '16px',
-                    borderRadius: 'var(--ys-radius-md)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    fontSize: '13px',
-                    color: 'var(--ys-color-text-secondary)',
-                  }}
-                >
-                  <div>
-                    <strong>משתמש:</strong> {profile?.fullName || user.email}
-                  </div>
-                  <div>
-                    <strong>מזהה:</strong> <code>{user.id}</code>
-                  </div>
-                  <div>
-                    <strong>סטטוס הרשאה:</strong> חסום — למשתמש זה אין תפקיד ADMIN או
+                <div>
+                  <dt>מזהה</dt>
+                  <dd>
+                    <code dir="ltr">{user.id}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>סטטוס הרשאה</dt>
+                  <dd>
+                    <StatusBadge status="error" label="גישה מוגבלת" /> למשתמש זה אין תפקיד ADMIN או
                     PLATFORM_ADMIN.
-                  </div>
+                  </dd>
                 </div>
-              </CardContent>
-              <CardFooter>
+              </dl>
+              <div className="ys-form-actions">
                 <LogoutButton variant="secondary" />
-              </CardFooter>
+              </div>
             </Card>
           </div>
         </Container>
@@ -192,260 +138,53 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
     const inactiveStations = totalStations - activeStations;
 
     return (
-      <main
-        style={{
-          minHeight: '100vh',
-          backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-          color: 'var(--ys-color-text-primary, #111827)',
-          paddingBottom: '64px',
-          direction: 'rtl',
-        }}
-      >
-        <header
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 95,
-            backgroundColor: 'var(--ys-color-brand-yellow, #fcbc00)',
-            borderBottom: '2px solid #e0a500',
-            boxShadow: '0 2px 10px rgba(180, 83, 9, 0.15)',
-            padding: 'max(10px, env(safe-area-inset-top, 10px)) 0 10px 0',
-          }}
-        >
-          <Container size="lg">
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '12px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '12px',
-                    backgroundColor: '#ffffff',
-                    border: '1.5px solid rgba(143, 0, 43, 0.2)',
-                    boxShadow: '0 2px 8px rgba(143, 0, 43, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <BrandMark size={32} />
-                </div>
-                <div>
-                  <h2
-                    style={{
-                      fontSize: '18px',
-                      fontWeight: 800,
-                      margin: 0,
-                      lineHeight: '1.2',
-                      color: '#8f002b',
-                    }}
-                  >
-                    YellowShifts Admin
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: '#700020',
-                      opacity: 0.92,
-                      margin: 0,
-                    }}
-                  >
-                    {t('roles.platformAdmin')} • ניהול מערכת גלובלי
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Badge variant="brandCrimson" dot>
-                  {t('roles.platformAdmin')}
-                </Badge>
-                <LogoutButton variant="outline" />
-              </div>
-            </div>
-          </Container>
-        </header>
-
-        <Container size="lg">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '16px',
-              margin: '32px 0 24px 0',
-            }}
-          >
-            <PageHeader
-              title={t('stationsAdmin.title')}
-              description="ממשק ניהול רב-תחנתי עליון. הקמה, עדכון, ניהול סטטוס והקצאת מנהלי תחנות ברשת YellowShifts."
-              badge={
-                <Badge variant="brandCrimson" dot>
-                  הרשאת על גלובלית
-                </Badge>
-              }
-            />
-
-            <Link href="/stations/new" style={{ textDecoration: 'none' }}>
-              <Button variant="primary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <PlusIcon size={16} />
-                  {t('stationsAdmin.createStation')}
-                </span>
-              </Button>
-            </Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Real Stats Metric Cards */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '16px',
-              }}
-            >
-              <Card>
-                <CardHeader style={{ paddingBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <StationIcon size={18} color="var(--ys-color-brand-yellow)" />
-                    <CardTitle
-                      style={{ fontSize: '14px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                    >
-                      {t('stationsAdmin.totalStations')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-text-primary, #111827)',
-                    }}
-                  >
-                    {totalStations}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      marginTop: '4px',
-                    }}
-                  >
-                    תחנות פעילות ברשת
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader style={{ paddingBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Badge variant="success" dot>
-                      פעילות
-                    </Badge>
-                    <CardTitle
-                      style={{ fontSize: '14px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                    >
-                      {t('stationsAdmin.activeStations')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div style={{ fontSize: '28px', fontWeight: 700, color: '#16A34A' }}>
-                    {activeStations}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      marginTop: '4px',
-                    }}
-                  >
-                    פתוחות לכניסת עובדים ומנהלים
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader style={{ paddingBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Badge variant="neutral" dot>
-                      מושבתות
-                    </Badge>
-                    <CardTitle
-                      style={{ fontSize: '14px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                    >
-                      {t('stationsAdmin.inactiveStations')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                    }}
-                  >
-                    {inactiveStations}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      marginTop: '4px',
-                    }}
-                  >
-                    גישה חסומה ברמת RLS
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader style={{ paddingBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShieldCheckIcon size={18} color="var(--ys-color-brand-yellow)" />
-                    <CardTitle
-                      style={{ fontSize: '14px', color: 'var(--ys-color-text-secondary, #6B7280)' }}
-                    >
-                      {t('stationsAdmin.totalAdmins')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 700,
-                      color: 'var(--ys-color-brand-yellow)',
-                    }}
-                  >
-                    {totalAdminsCount}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      color: 'var(--ys-color-text-secondary, #6B7280)',
-                      marginTop: '4px',
-                    }}
-                  >
-                    הקצאות מנהלי תחנה פעילות
-                  </div>
-                </CardContent>
-              </Card>
+      <main className="admin-page">
+        <AdminHeader title="YellowShifts" subtitle="ניהול תחנות" homeHref="/" context={context} />
+        <Container size="xl">
+          <div className="admin-page-body">
+            <div className="station-hero-section">
+              <PageHeader
+                title={t('stationsAdmin.title')}
+                description="הקמה, עדכון, סטטוס והקצאת מנהלים לכל תחנות הרשת."
+                badge={<Badge variant="brandCrimson">{t('roles.platformAdmin')}</Badge>}
+              />
+              <Link href="/stations/new" className="ys-button ys-button--primary">
+                <PlusIcon size={18} aria-hidden="true" />
+                <span>{t('stationsAdmin.createStation')}</span>
+              </Link>
             </div>
 
-            {/* Filterable Stations List */}
+            <dl className="admin-facts" aria-label="סיכום רשת התחנות">
+              <div className="admin-fact">
+                <dt>
+                  <StationIcon size={16} aria-hidden="true" />
+                  {t('stationsAdmin.totalStations')}
+                </dt>
+                <dd className="ys-num">{totalStations}</dd>
+              </div>
+              <div className="admin-fact">
+                <dt>
+                  <CircleCheckIcon size={16} aria-hidden="true" />
+                  {t('stationsAdmin.activeStations')}
+                </dt>
+                <dd className="ys-num">{activeStations}</dd>
+              </div>
+              <div className="admin-fact">
+                <dt>
+                  <PowerIcon size={16} aria-hidden="true" />
+                  {t('stationsAdmin.inactiveStations')}
+                </dt>
+                <dd className="ys-num">{inactiveStations}</dd>
+              </div>
+              <div className="admin-fact">
+                <dt>
+                  <ShieldCheckIcon size={16} aria-hidden="true" />
+                  {t('stationsAdmin.totalAdmins')}
+                </dt>
+                <dd className="ys-num">{totalAdminsCount}</dd>
+              </div>
+            </dl>
+
             <StationFilterableList stations={stations} memberCounts={memberCounts} />
           </div>
         </Container>

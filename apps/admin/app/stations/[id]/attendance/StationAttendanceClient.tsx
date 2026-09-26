@@ -10,15 +10,24 @@ import {
   Button,
   Badge,
   Alert,
+  Dialog,
+  EmptyState,
+  StatusBadge,
 } from '@yellowshifts/ui';
 import {
-  ClockIcon,
+  CalendarClockIcon,
   CheckIcon,
+  CircleCheckIcon,
+  ClockIcon,
   CopyIcon,
+  DangerIcon,
+  HistoryIcon,
+  NfcTagIcon,
+  PlusIcon,
+  RefreshIcon,
   RotateCcwIcon,
   ShieldAlertIcon,
-  UserIcon,
-  CloseIcon,
+  WarningIcon,
 } from '@yellowshifts/icons';
 import { refreshStationAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
 import { configuredAppOrigin } from '@yellowshifts/database';
@@ -40,6 +49,33 @@ interface StationAttendanceClientProps {
   initialCompletedRecords: AttendanceRecordWithDetails[];
 }
 
+type AttendanceTab = 'ACTIVE' | 'COMPLETED' | 'NFC';
+type DeviationTone = 'danger' | 'warning' | 'info' | 'success';
+
+const TABS: AttendanceTab[] = ['ACTIVE', 'COMPLETED', 'NFC'];
+
+/** Deviation as icon + text; the tone only reinforces what the words already say. */
+function DeviationBadge({ tone, label }: { tone: DeviationTone; label: string }) {
+  const Icon =
+    tone === 'danger'
+      ? DangerIcon
+      : tone === 'warning'
+        ? WarningIcon
+        : tone === 'info'
+          ? CalendarClockIcon
+          : CircleCheckIcon;
+  return (
+    <span className={`att-deviation att-deviation--${tone}`}>
+      <Icon size={14} aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+function roleLabel(role: string | undefined) {
+  return role === 'ADMIN' ? 'מנהל תחנה' : role === 'SHIFT_MANAGER' ? 'מנהל משמרת' : 'עובד';
+}
+
 export function StationAttendanceClient({
   station,
   members,
@@ -47,7 +83,7 @@ export function StationAttendanceClient({
   initialActiveRecords,
   initialCompletedRecords,
 }: StationAttendanceClientProps) {
-  const [activeTab, setActiveTab] = useState<'ACTIVE' | 'COMPLETED' | 'NFC'>('ACTIVE');
+  const [activeTab, setActiveTab] = useState<AttendanceTab>('ACTIVE');
   const [activeRecords, setActiveRecords] =
     useState<AttendanceRecordWithDetails[]>(initialActiveRecords);
   const [completedRecords, setCompletedRecords] =
@@ -68,10 +104,18 @@ export function StationAttendanceClient({
   // Rotate Token Confirm Modal State
   const [showRotateModal, setShowRotateModal] = useState<boolean>(false);
 
+  const tabRefs = useRef<Record<AttendanceTab, HTMLButtonElement | null>>({
+    ACTIVE: null,
+    COMPLETED: null,
+    NFC: null,
+  });
+
+  const timezone = station.timezone || 'Asia/Jerusalem';
+
   const formatStationTime = (isoString: string) => {
     try {
       return new Intl.DateTimeFormat('he-IL', {
-        timeZone: station.timezone || 'Asia/Jerusalem',
+        timeZone: timezone,
         hour: '2-digit',
         minute: '2-digit',
       }).format(new Date(isoString));
@@ -80,7 +124,32 @@ export function StationAttendanceClient({
     }
   };
 
-  const getTotalDuration = (startAt: string, endAt: string | null) => {
+  const stationDateKey = (value: string | number) => {
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(value));
+    } catch {
+      return String(value).slice(0, 10);
+    }
+  };
+
+  const formatStationDate = (isoString: string) => {
+    try {
+      return new Intl.DateTimeFormat('he-IL', {
+        timeZone: timezone,
+        day: '2-digit',
+        month: '2-digit',
+      }).format(new Date(isoString));
+    } catch {
+      return isoString.slice(5, 10);
+    }
+  };
+
+  const renderTotalDuration = (startAt: string, endAt: string | null) => {
     if (!endAt) return '--';
     const diffMin = Math.max(
       0,
@@ -88,10 +157,16 @@ export function StationAttendanceClient({
     );
     const hours = Math.floor(diffMin / 60);
     const mins = diffMin % 60;
-    return `${hours} שעות ו-${mins} דקות`;
+    return (
+      <>
+        <span className="ys-num">{hours}</span> שעות ו-<span className="ys-num">{mins}</span> דקות
+      </>
+    );
   };
 
-  const getRecordDeviation = (record: AttendanceRecordWithDetails) => {
+  const getRecordDeviation = (
+    record: AttendanceRecordWithDetails
+  ): { label: string; tone: DeviationTone; detail: string | null } => {
     const allowedLate = station.allowedLateMinutes ?? 10;
     const allowedEarly = station.allowedEarlyLeaveMinutes ?? 10;
     const leftOpenWarningHours = station.leftOpenWarningHours ?? 12;
@@ -101,20 +176,14 @@ export function StationAttendanceClient({
       if (elapsedHours >= leftOpenWarningHours) {
         return {
           label: 'משמרת לא נסגרה',
-          color: '#EF4444',
-          bg: 'rgba(239, 68, 68, 0.12)',
+          tone: 'danger',
           detail: `פתוח ${Math.round(elapsedHours * 10) / 10} שעות`,
         };
       }
     }
 
     if (!record.scheduled_shift) {
-      return {
-        label: 'לא מתוכננת',
-        color: '#3B82F6',
-        bg: 'rgba(59, 130, 246, 0.12)',
-        detail: null,
-      };
+      return { label: 'לא מתוכננת', tone: 'info', detail: null };
     }
 
     const scheduledStartMs = new Date(record.scheduled_shift.start_at).getTime();
@@ -134,33 +203,17 @@ export function StationAttendanceClient({
     if (isLate && isEarly) {
       return {
         label: 'איחור ויציאה מוקדמת',
-        color: '#EF4444',
-        bg: 'rgba(239, 68, 68, 0.12)',
+        tone: 'danger',
         detail: `איחור: ${lateMin} דק׳ | יציאה מוקדמת: ${earlyMin} דק׳`,
       };
     }
     if (isLate) {
-      return {
-        label: 'איחור',
-        color: '#F59E0B',
-        bg: 'rgba(245, 158, 11, 0.12)',
-        detail: `איחור של ${lateMin} דקות`,
-      };
+      return { label: 'איחור', tone: 'warning', detail: `איחור של ${lateMin} דקות` };
     }
     if (isEarly) {
-      return {
-        label: 'יציאה מוקדמת',
-        color: '#F59E0B',
-        bg: 'rgba(245, 158, 11, 0.12)',
-        detail: `יציאה מוקדמת ב-${earlyMin} דקות`,
-      };
+      return { label: 'יציאה מוקדמת', tone: 'warning', detail: `יציאה מוקדמת ב-${earlyMin} דקות` };
     }
-    return {
-      label: 'בזמן',
-      color: '#10B981',
-      bg: 'rgba(16, 185, 129, 0.12)',
-      detail: null,
-    };
+    return { label: 'בזמן', tone: 'success', detail: null };
   };
 
   // The admin host cannot identify the separate worker project; require its configured origin.
@@ -240,80 +293,114 @@ export function StationAttendanceClient({
     };
   }, [station.id]);
 
+  // Status strip: derived only from the records already on the page.
+  const todayKey = stationDateKey(Date.now());
+  const completedToday = completedRecords.filter(
+    (record) => stationDateKey(record.clock_in_at) === todayKey
+  );
+  const openIssues = [...activeRecords, ...completedToday].filter((record) => {
+    if (record.status === 'FLAGGED') return true;
+    const tone = getRecordDeviation(record).tone;
+    return tone === 'danger' || tone === 'warning';
+  }).length;
+
+  const openEdit = (record: AttendanceRecordWithDetails) => {
+    setSelectedRecord(record);
+    setShowManual(true);
+  };
+
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    const index = TABS.indexOf(activeTab);
+    let next: AttendanceTab | undefined;
+    // RTL: the next tab sits to the visual left.
+    if (event.key === 'ArrowLeft') next = TABS[(index + 1) % TABS.length];
+    if (event.key === 'ArrowRight') next = TABS[(index - 1 + TABS.length) % TABS.length];
+    if (event.key === 'Home') next = TABS[0];
+    if (event.key === 'End') next = TABS[TABS.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    setActiveTab(next);
+    tabRefs.current[next]?.focus();
+  };
+
+  const tabProps = (tab: AttendanceTab) => ({
+    ref: (node: HTMLButtonElement | null) => {
+      tabRefs.current[tab] = node;
+    },
+    type: 'button' as const,
+    role: 'tab',
+    id: `attendance-tab-${tab}`,
+    'aria-selected': activeTab === tab,
+    'aria-controls': `attendance-panel-${tab}`,
+    tabIndex: activeTab === tab ? 0 : -1,
+    onClick: () => setActiveTab(tab),
+    onKeyDown: onTabKeyDown,
+  });
+
+  const panelProps = (tab: AttendanceTab) => ({
+    role: 'tabpanel',
+    id: `attendance-panel-${tab}`,
+    'aria-labelledby': `attendance-tab-${tab}`,
+    hidden: activeTab !== tab,
+    tabIndex: 0,
+    className: 'attendance-panel',
+  });
+
   return (
-    <div
-      className="station-attendance"
-      style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
-    >
+    <div className="station-attendance">
+      <p className="att-facts">
+        <span className="att-fact att-fact--live">
+          <span className="att-fact-dot" aria-hidden="true" />
+          <span className="ys-num">{activeRecords.length}</span> במשמרת עכשיו
+        </span>
+        <span className="att-fact">
+          <span className="ys-num">{completedToday.length}</span> הסתיימו היום
+        </span>
+        <span
+          className={`att-fact${openIssues > 0 ? ' att-fact--attention' : ''}`}
+          title="איחור, יציאה מוקדמת או משמרת פתוחה"
+        >
+          {openIssues > 0 ? (
+            <WarningIcon size={16} aria-hidden="true" />
+          ) : (
+            <CircleCheckIcon size={16} aria-hidden="true" />
+          )}
+          <span className="ys-num">{openIssues}</span> לבדיקה
+        </span>
+      </p>
+
       <div className="attendance-toolbar">
-        <span role="status">
+        <span
+          role="status"
+          className={`attendance-sync${refreshError ? ' attendance-sync--error' : ''}`}
+        >
+          {refreshError ? <WarningIcon size={16} aria-hidden="true" /> : null}
           {refreshError ? 'העדכון נכשל — הנתונים עשויים להיות לא עדכניים' : 'מתעדכן כל 15 שניות'}
         </span>
-        <Button variant="secondary" onClick={refreshAttendance}>
-          רענון
-        </Button>
-        {canManageAttendance && (
+        <div className="admin-toolbar-actions">
+          {canManageAttendance && (
+            <Button
+              rightIcon={<PlusIcon size={16} />}
+              onClick={() => {
+                setSelectedRecord(null);
+                setShowManual(true);
+              }}
+            >
+              דיווח ידני
+            </Button>
+          )}
           <Button
-            onClick={() => {
-              setSelectedRecord(null);
-              setShowManual(true);
-            }}
+            variant="secondary"
+            rightIcon={<RefreshIcon size={16} />}
+            onClick={refreshAttendance}
           >
-            דיווח ידני
+            רענון
           </Button>
-        )}
-      </div>
-      {/* Tab Navigation - Horizontal Rail */}
-      <div className="attendance-tabs-rail" role="tablist" aria-label="לשוניות נוכחות">
-        <Button
-          variant={activeTab === 'ACTIVE' ? 'primary' : 'ghost'}
-          size="sm"
-          className={`attendance-tab-btn ${activeTab === 'ACTIVE' ? 'attendance-tab-btn-active' : ''}`}
-          onClick={() => setActiveTab('ACTIVE')}
-          role="tab"
-          aria-selected={activeTab === 'ACTIVE'}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <ClockIcon size={16} />
-            נוכחים כעת במשמרת
-            <Badge variant={activeRecords.length > 0 ? 'brandYellow' : 'neutral'}>
-              {activeRecords.length}
-            </Badge>
-          </span>
-        </Button>
-
-        <Button
-          variant={activeTab === 'COMPLETED' ? 'primary' : 'ghost'}
-          size="sm"
-          className={`attendance-tab-btn ${activeTab === 'COMPLETED' ? 'attendance-tab-btn-active' : ''}`}
-          onClick={() => setActiveTab('COMPLETED')}
-          role="tab"
-          aria-selected={activeTab === 'COMPLETED'}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <CheckIcon size={16} />
-            דיווחים אחרונים
-            <Badge variant="neutral">{completedRecords.length}</Badge>
-          </span>
-        </Button>
-
-        <Button
-          variant={activeTab === 'NFC' ? 'primary' : 'ghost'}
-          size="sm"
-          className={`attendance-tab-btn ${activeTab === 'NFC' ? 'attendance-tab-btn-active' : ''}`}
-          onClick={() => setActiveTab('NFC')}
-          role="tab"
-          aria-selected={activeTab === 'NFC'}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <ClockIcon size={16} />
-            עמדת שעון נוכחות
-          </span>
-        </Button>
+        </div>
       </div>
 
       {/* Global Alerts */}
-      {errorMessage && (
+      {errorMessage && !showRotateModal && (
         <Alert variant="danger" title="שגיאה">
           {errorMessage}
         </Alert>
@@ -325,463 +412,305 @@ export function StationAttendanceClient({
         </Alert>
       )}
 
+      <div className="ys-segmented attendance-tabs" role="tablist" aria-label="לשוניות נוכחות">
+        <button {...tabProps('ACTIVE')}>
+          <ClockIcon size={16} aria-hidden="true" />
+          <span>נוכחים כעת</span>
+          <span className="attendance-tab-count ys-num">{activeRecords.length}</span>
+        </button>
+        <button {...tabProps('COMPLETED')}>
+          <HistoryIcon size={16} aria-hidden="true" />
+          <span>דיווחים אחרונים</span>
+          <span className="attendance-tab-count ys-num">{completedRecords.length}</span>
+        </button>
+        <button {...tabProps('NFC')}>
+          <NfcTagIcon size={16} aria-hidden="true" />
+          <span>עמדת שעון</span>
+        </button>
+      </div>
+
       {/* TAB 1: Currently Clocked In */}
-      {activeTab === 'ACTIVE' && (
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardHeader>
+      <section {...panelProps('ACTIVE')}>
+        <h2 className="ys-visually-hidden">עובדים פעילים כעת בתחנה</h2>
+        {activeRecords.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<ClockIcon size={24} />}
+              title="אין עובדים פעילים במשמרת כעת"
+              description="ברגע שעובד ידווח נוכחות בתחנה, נתוניו יופיעו כאן בעדכון הבא."
+            />
+          </Card>
+        ) : (
+          <ul className="attendance-live-grid">
+            {activeRecords.map((record) => {
+              const dev = getRecordDeviation(record);
+              const name = record.user?.full_name || 'עובד';
+              return (
+                <li key={record.id} className="attendance-live-card">
+                  <div className="attendance-live-head">
+                    <div className="attendance-live-person">
+                      <h3 className="attendance-live-name">{name}</h3>
+                      <span className="attendance-live-role">
+                        {roleLabel(record.membership?.role)}
+                      </span>
+                    </div>
+                    <StatusBadge status="live" />
+                  </div>
+
+                  <div className="attendance-live-timer">
+                    <span className="attendance-live-timer-label">זמן נוכחי במשמרת</span>
+                    <span className="attendance-live-timer-value ys-num" dir="ltr">
+                      <ElapsedDuration start={record.clock_in_at} />
+                    </span>
+                  </div>
+
+                  <dl className="attendance-live-facts">
+                    <div>
+                      <dt>כניסה</dt>
+                      <dd>
+                        <bdi dir="ltr" className="ys-num">
+                          {formatStationTime(record.clock_in_at)}
+                        </bdi>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>משמרת</dt>
+                      <dd>
+                        {record.scheduled_shift
+                          ? record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'
+                          : 'ללא שיבוץ מוקדם'}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="attendance-deviation-row">
+                    <DeviationBadge tone={dev.tone} label={dev.label} />
+                    {dev.detail && (
+                      <span className="attendance-deviation-detail">{dev.detail}</span>
+                    )}
+                  </div>
+
+                  {canManageAttendance && (
+                    <AttendanceRecordActions
+                      record={record}
+                      onSaved={() => {
+                        void refreshAttendance();
+                      }}
+                      onEdit={() => openEdit(record)}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* TAB 2: Recent reports */}
+      <section {...panelProps('COMPLETED')}>
+        <div className="admin-section-header">
+          <div>
+            <h2 className="admin-section-title">דיווחים אחרונים</h2>
+            <p className="admin-section-description">
+              תיעוד רשומות נוכחות שהושלמו בתחנה כולל ביקורת תיקונים
+            </p>
+          </div>
+        </div>
+        {completedRecords.length === 0 ? (
+          <Card>
+            <EmptyState icon={<HistoryIcon size={24} />} title="אין דיווחים אחרונים" />
+          </Card>
+        ) : (
+          <div className="ys-table-wrap ys-table-wrap--stack attendance-history">
+            <table className="ys-table">
+              <thead>
+                <tr>
+                  <th scope="col">עובד</th>
+                  <th scope="col">כניסה</th>
+                  <th scope="col">יציאה</th>
+                  <th scope="col">משך</th>
+                  <th scope="col">מול הסידור</th>
+                  {canManageAttendance && <th scope="col">פעולות</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {completedRecords.map((record) => {
+                  const dev = getRecordDeviation(record);
+                  const isToday = stationDateKey(record.clock_in_at) === todayKey;
+                  return (
+                    <tr key={record.id}>
+                      <td className="attendance-history-person">
+                        <div>
+                          <span className="attendance-history-name">
+                            {record.user?.full_name || 'עובד'}
+                          </span>
+                          <span className="attendance-history-badges">
+                            {record.status === 'COMPLETED' ? (
+                              <StatusBadge status="completed" label="הושלמה" />
+                            ) : (
+                              <StatusBadge status="error" label="סומנה לביקורת" />
+                            )}
+                            {record.clock_out_source === 'MANUAL_ADMIN' && (
+                              <Badge variant="brandCrimson">סגירה מנהלית</Badge>
+                            )}
+                          </span>
+                          <span className="attendance-history-shift">
+                            {record.scheduled_shift
+                              ? `משמרת מתוכננת: ${record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}`
+                              : 'ללא שיבוץ מוקדם'}
+                          </span>
+                          {record.corrected_by && (
+                            <span className="attendance-correction">
+                              <ShieldAlertIcon size={14} aria-hidden="true" />
+                              <span>
+                                תוקן מנהלית ע״י: {record.corrector?.full_name || 'מנהל'} | סיבה:{' '}
+                                {record.correction_reason}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td data-label="כניסה">
+                        <span className="attendance-history-time">
+                          <bdi dir="ltr" className="ys-num">
+                            {formatStationTime(record.clock_in_at)}
+                          </bdi>
+                          <span className="attendance-history-date">
+                            {isToday ? (
+                              'היום'
+                            ) : (
+                              <bdi dir="ltr" className="ys-num">
+                                {formatStationDate(record.clock_in_at)}
+                              </bdi>
+                            )}
+                          </span>
+                        </span>
+                      </td>
+                      <td data-label="יציאה">
+                        <bdi dir="ltr" className="ys-num">
+                          {record.clock_out_at ? formatStationTime(record.clock_out_at) : '--:--'}
+                        </bdi>
+                      </td>
+                      <td data-label="משך">
+                        <span className="attendance-history-duration">
+                          {renderTotalDuration(record.clock_in_at, record.clock_out_at)}
+                        </span>
+                      </td>
+                      <td data-label="מול הסידור">
+                        <span className="attendance-history-deviation">
+                          <DeviationBadge tone={dev.tone} label={dev.label} />
+                          {dev.detail && (
+                            <span className="attendance-deviation-detail">{dev.detail}</span>
+                          )}
+                        </span>
+                      </td>
+                      {canManageAttendance && (
+                        <td className="attendance-history-actions">
+                          <AttendanceRecordActions
+                            record={record}
+                            layout="row"
+                            onSaved={() => {
+                              void refreshAttendance();
+                            }}
+                            onEdit={() => openEdit(record)}
+                          />
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* TAB 3: Station Clock Setup */}
+      <section {...panelProps('NFC')}>
+        <Card className="attendance-clock">
+          <CardHeader className="attendance-clock-header">
+            <span className="attendance-clock-icon" aria-hidden="true">
+              <NfcTagIcon size={22} />
+            </span>
             <div>
-              <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
-                עובדים פעילים כעת בתחנה
-              </CardTitle>
-              <CardDescription style={{ color: '#6B7280' }}>
-                מעקב נוכחות ופעילות עובדים בזמן אמת בתחנה
+              <CardTitle>הגדרות עמדת שעון נוכחות</CardTitle>
+              <CardDescription>
+                קישור ייעודי ומאובטח לעמדת שעון הנוכחות המוצבת בתחנה
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent>
-            {activeRecords.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '40px 16px',
-                  color: '#9CA3AF',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <ClockIcon size={32} />
-                <p style={{ margin: 0, fontSize: '15px', color: '#374151' }}>
-                  אין עובדים פעילים במשמרת כעת
-                </p>
-                <span style={{ fontSize: '13px', color: '#6B7280' }}>
-                  ברגע שעובד ידווח נוכחות בתחנה, נתוניו יופיעו כאן בעדכון הבא.
-                </span>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {activeRecords.map((record) => (
-                  <div key={record.id} className="attendance-active-card">
-                    <div className="attendance-card-main">
-                      <div className="attendance-card-user">
-                        <div className="attendance-card-avatar" aria-hidden="true">
-                          <UserIcon size={22} />
-                        </div>
-                        <div className="attendance-card-info">
-                          <div className="attendance-card-header-row">
-                            <span className="attendance-card-worker-name">
-                              {record.user?.full_name || 'עובד'}
-                            </span>
-                            <div className="attendance-card-badges">
-                              <Badge variant="neutral">
-                                {record.membership?.role === 'ADMIN'
-                                  ? 'מנהל תחנה'
-                                  : record.membership?.role === 'SHIFT_MANAGER'
-                                    ? 'מנהל משמרת'
-                                    : 'עובד'}
-                              </Badge>
-                              {(() => {
-                                const dev = getRecordDeviation(record);
-                                return (
-                                  <Badge
-                                    variant="neutral"
-                                    style={{
-                                      backgroundColor: dev.bg,
-                                      color: dev.color,
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {dev.label}
-                                  </Badge>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                          <div className="attendance-card-meta">
-                            <span>כניסה: {formatStationTime(record.clock_in_at)}</span>
-                            {record.scheduled_shift ? (
-                              <span>
-                                משמרת: {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
-                              </span>
-                            ) : (
-                              <span style={{ color: '#9CA3AF' }}>ללא שיבוץ מוקדם</span>
-                            )}
-                            {(() => {
-                              const dev = getRecordDeviation(record);
-                              return dev.detail ? (
-                                <div className="attendance-card-warning-pill">
-                                  <span>•</span>
-                                  <span>{dev.detail}</span>
-                                </div>
-                              ) : null;
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Live Ticking Duration */}
-                      <div className="attendance-card-duration">
-                        <span className="attendance-card-duration-label">
-                          <span className="attendance-pulse-dot" aria-hidden="true" />
-                          <span>זמן נוכחי במשמרת</span>
-                        </span>
-                        <p className="attendance-card-duration-value">
-                          <ElapsedDuration start={record.clock_in_at} />
-                        </p>
-                      </div>
-                    </div>
-
-                    {canManageAttendance && (
-                      <AttendanceRecordActions
-                        record={record}
-                        onSaved={() => {
-                          void refreshAttendance();
-                        }}
-                        onEdit={() => {
-                          setSelectedRecord(record);
-                          setShowManual(true);
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* TAB 2: Completed Today */}
-      {activeTab === 'COMPLETED' && (
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardHeader>
-            <CardTitle style={{ fontSize: '18px', color: '#111827' }}>דיווחים אחרונים</CardTitle>
-            <CardDescription style={{ color: '#6B7280' }}>
-              תיעוד רשומות נוכחות שהושלמו בתחנה כולל ביקורת תיקונים
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {completedRecords.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 16px', color: '#6B7280' }}>
-                <p style={{ margin: 0, fontSize: '15px' }}>אין דיווחים אחרונים</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {completedRecords.map((record) => (
-                  <div
-                    key={record.id}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      padding: '14px 16px',
-                      backgroundColor: '#F9FAFB',
-                      borderRadius: 'var(--ys-radius-md)',
-                      border: '1px solid #E5E7EB',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '8px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-                          {record.user?.full_name || 'עובד'}
-                        </span>
-                        <Badge variant={record.status === 'COMPLETED' ? 'success' : 'danger'}>
-                          {record.status === 'COMPLETED' ? 'הושלמה' : 'סומנה לביקורת'}
-                        </Badge>
-                        {record.clock_out_source === 'MANUAL_ADMIN' && (
-                          <Badge variant="brandCrimson">סגירה מנהלית</Badge>
-                        )}
-                        {(() => {
-                          const dev = getRecordDeviation(record);
-                          return (
-                            <Badge
-                              variant="neutral"
-                              style={{
-                                backgroundColor: dev.bg,
-                                color: dev.color,
-                                fontWeight: 600,
-                              }}
-                            >
-                              {dev.label}
-                            </Badge>
-                          );
-                        })()}
-                      </div>
-
-                      <div style={{ fontSize: '13px', color: '#374151' }}>
-                        <span>{formatStationTime(record.clock_in_at)}</span>
-                        <span style={{ margin: '0 6px' }}>←</span>
-                        <span>
-                          {record.clock_out_at ? formatStationTime(record.clock_out_at) : '--:--'}
-                        </span>
-                        <span style={{ margin: '0 8px', color: '#9CA3AF' }}>|</span>
-                        <strong style={{ color: '#D97706' }}>
-                          {getTotalDuration(record.clock_in_at, record.clock_out_at)}
-                        </strong>
-                      </div>
-                    </div>
-
-                    {/* Scheduled Shift Context & Deviation Details */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        fontSize: '12px',
-                        color: '#6B7280',
-                      }}
-                    >
-                      {record.scheduled_shift ? (
-                        <span>
-                          משמרת מתוכננת:{' '}
-                          {record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#9CA3AF' }}>ללא שיבוץ מוקדם</span>
-                      )}
-                      {(() => {
-                        const dev = getRecordDeviation(record);
-                        return dev.detail ? (
-                          <span style={{ color: dev.color, fontWeight: 500 }}>• {dev.detail}</span>
-                        ) : null;
-                      })()}
-                    </div>
-
-                    {canManageAttendance && (
-                      <AttendanceRecordActions
-                        record={record}
-                        onSaved={() => {
-                          void refreshAttendance();
-                        }}
-                        onEdit={() => {
-                          setSelectedRecord(record);
-                          setShowManual(true);
-                        }}
-                      />
-                    )}
-                    {/* Audited Correction Footnote if corrected */}
-                    {record.corrected_by && (
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#B45309',
-                          backgroundColor: '#FEF3C7',
-                          border: '1px solid #FDE68A',
-                          padding: '6px 10px',
-                          borderRadius: 'var(--ys-radius-sm)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                        }}
-                      >
-                        <ShieldAlertIcon size={14} />
-                        <span>
-                          תוקן מנהלית ע״י: {record.corrector?.full_name || 'מנהל'} | סיבה:{' '}
-                          {record.correction_reason}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* TAB 3: Station Clock Setup */}
-      {activeTab === 'NFC' && (
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardHeader>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--ys-radius-md)',
-                  backgroundColor: 'var(--ys-color-brand-yellow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--ys-color-brand-crimson)',
-                }}
-              >
-                <ClockIcon size={22} />
-              </div>
-              <div>
-                <CardTitle style={{ fontSize: '18px', color: '#111827' }}>
-                  הגדרות עמדת שעון נוכחות
-                </CardTitle>
-                <CardDescription style={{ color: '#4B5563' }}>
-                  קישור ייעודי ומאובטח לעמדת שעון הנוכחות המוצבת בתחנה
-                </CardDescription>
-              </div>
+          <CardContent className="attendance-clock-body">
+            <div className="attendance-clock-note">
+              <strong>אבטחת שעון הנוכחות ברשת YellowShifts:</strong>
+              <p>
+                עמדת השעון מכילה קישור מאובטח לזיהוי התחנה בלבד. העמדה אינה שומרת מזהה עובד, טוקן
+                הרשאה או סיסמה. האימות מתבצע אך ורק באמצעות הזדהות מאובטחת של העובד במערכת, והרשאות
+                הכניסה נבדקות בצד השרת.
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Architecture Explanation */}
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: 'var(--ys-radius-md)',
-                  backgroundColor: '#F9FAFB',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '13px',
-                  color: '#111827',
-                  lineHeight: 1.6,
-                }}
-              >
-                <strong>אבטחת שעון הנוכחות ברשת YellowShifts:</strong>
-                <p style={{ margin: '6px 0 0 0', color: '#4B5563' }}>
-                  עמדת השעון מכילה קישור מאובטח לזיהוי התחנה בלבד. העמדה אינה שומרת מזהה עובד, טוקן הרשאה או
-                  סיסמה. האימות מתבצע אך ורק באמצעות הזדהות מאובטחת של העובד במערכת, והרשאות הכניסה
-                  נבדקות בצד השרת.
-                </p>
-              </div>
 
-              {/* Public Station Token Box */}
+            <dl className="attendance-clock-fields">
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  מזהה תחנה מאובטח
-                </label>
-                <div
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--ys-radius-md)',
-                    backgroundColor: '#F9FAFB',
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    color: '#B45309',
-                    border: '1px solid #E5E7EB',
-                    wordBreak: 'break-all',
-                  }}
-                >
-                  {nfcToken}
-                </div>
+                <dt>מזהה תחנה מאובטח</dt>
+                <dd>
+                  <code className="attendance-clock-value" dir="ltr">
+                    {nfcToken}
+                  </code>
+                </dd>
               </div>
-
-              {/* Clock Station URL to Encode Box */}
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    color: '#374151',
-                    marginBottom: '6px',
-                  }}
-                >
-                  כתובת ה-URL של עמדת שעון הנוכחות
-                </label>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 14px',
-                    borderRadius: 'var(--ys-radius-md)',
-                    backgroundColor: '#F9FAFB',
-                    border: '1px solid #E5E7EB',
-                  }}
-                >
-                  <span
-                    style={{
-                      flex: 1,
-                      fontFamily: 'monospace',
-                      fontSize: '14px',
-                      color: '#111827',
-                      wordBreak: 'break-all',
-                    }}
-                  >
-                    {nfcStationUrl ||
-                      'קישור לשעון הנוכחות אינו זמין. יש להגדיר כתובת תקינה לאפליקציית העובדים.'}
-                  </span>
+                <dt>כתובת ה-URL של עמדת שעון הנוכחות</dt>
+                <dd className="attendance-clock-url">
+                  {nfcStationUrl ? (
+                    <code className="attendance-clock-value" dir="ltr">
+                      {nfcStationUrl}
+                    </code>
+                  ) : (
+                    <span className="attendance-clock-missing">
+                      קישור לשעון הנוכחות אינו זמין. יש להגדיר כתובת תקינה לאפליקציית העובדים.
+                    </span>
+                  )}
                   <Button
                     variant={copied ? 'primary' : 'secondary'}
-                    size="sm"
                     onClick={handleCopyNfcUrl}
                     disabled={!nfcStationUrl}
+                    rightIcon={copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
                   >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-                      {copied ? 'הועתק!' : 'העתק'}
-                    </span>
+                    {copied ? 'הועתק!' : 'העתק'}
                   </Button>
-                </div>
+                  <span className="ys-visually-hidden" role="status">
+                    {copied ? 'הקישור הועתק' : ''}
+                  </span>
+                </dd>
               </div>
+            </dl>
 
-              {/* Token Rotation Section */}
-              {canManageAttendance && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingTop: '16px',
-                    borderTop: '1px solid #E5E7EB',
-                    flexWrap: 'wrap',
-                    gap: '12px',
-                  }}
-                >
-                  <div>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
-                      איפוס מזהה עמדה (Rotation)
-                    </span>
-                    <p style={{ fontSize: '12px', color: '#4B5563', margin: '2px 0 0 0' }}>
-                      במקרה של צורך באבטחה מחדש של עמדת השעון בתחנה, ניתן לאפס את המזהה.
-                    </p>
-                  </div>
-                  <Button variant="destructive" size="sm" onClick={() => setShowRotateModal(true)}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      <RotateCcwIcon size={14} />
-                      איפוס מזהה שעון
-                    </span>
-                  </Button>
+            {/* Token Rotation Section */}
+            {canManageAttendance && (
+              <div className="attendance-clock-rotate">
+                <div>
+                  <h3 className="attendance-clock-rotate-title">איפוס מזהה עמדה (Rotation)</h3>
+                  <p className="attendance-clock-rotate-text">
+                    במקרה של צורך באבטחה מחדש של עמדת השעון בתחנה, ניתן לאפס את המזהה.
+                  </p>
                 </div>
-              )}
-            </div>
+                <Button
+                  variant="destructiveOutline"
+                  rightIcon={<RotateCcwIcon size={16} />}
+                  onClick={() => setShowRotateModal(true)}
+                >
+                  איפוס מזהה שעון
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      </section>
 
       {showManual && (
         <ManualAttendanceDialog
           stationId={station.id}
-          timezone={station.timezone || 'Asia/Jerusalem'}
+          timezone={timezone}
           members={members}
           record={selectedRecord}
           onClose={() => {
@@ -795,94 +724,37 @@ export function StationAttendanceClient({
         />
       )}
 
-      {/* Rotate Token Confirm Modal */}
-      {showRotateModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 110,
-            padding: '16px',
-          }}
-          onClick={() => setShowRotateModal(false)}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              border: '1px solid #E5E7EB',
-              width: '100%',
-              maxWidth: '460px',
-              padding: '24px',
-              direction: 'rtl',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px',
-              }}
+      {/* Rotate Token Confirm Dialog */}
+      <Dialog
+        open={showRotateModal}
+        onClose={() => setShowRotateModal(false)}
+        dismissible={!isPending}
+        title="אישור איפוס מזהה שעון"
+        footer={
+          <>
+            <Button variant="destructive" isLoading={isPending} onClick={handleRotateToken}>
+              אשר איפוס מזהה שעון
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowRotateModal(false)}
+              disabled={isPending}
             >
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#111827' }}>
-                אישור איפוס מזהה שעון
-              </h3>
-              <button
-                onClick={() => setShowRotateModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#6B7280',
-                  cursor: 'pointer',
-                  padding: '4px',
-                }}
-              >
-                <CloseIcon size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{ fontSize: '14px', color: '#374151', margin: 0, lineHeight: 1.5 }}>
-                פעולה זו תיצור מזהה חדש לעמדת השעון של התחנה ותבטל את המזהה הקודם. לאחר הפעולה,
-                עמדת השעון הקודמת תפסיק לפעול עד לעדכון הקישור החדש.
-              </p>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                  marginTop: '12px',
-                }}
-              >
-                <Button
-                  variant="outline"
-                  size="md"
-                  onClick={() => setShowRotateModal(false)}
-                  disabled={isPending}
-                >
-                  ביטול
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="md"
-                  isLoading={isPending}
-                  onClick={handleRotateToken}
-                >
-                  אשר איפוס מזהה שעון
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              ביטול
+            </Button>
+          </>
+        }
+      >
+        <p className="attendance-dialog-text">
+          פעולה זו תיצור מזהה חדש לעמדת השעון של התחנה ותבטל את המזהה הקודם. לאחר הפעולה, עמדת השעון
+          הקודמת תפסיק לפעול עד לעדכון הקישור החדש.
+        </p>
+        {errorMessage && (
+          <p className="admin-feedback admin-feedback--error attendance-dialog-error" role="alert">
+            <span>{errorMessage}</span>
+          </p>
+        )}
+      </Dialog>
     </div>
   );
 }

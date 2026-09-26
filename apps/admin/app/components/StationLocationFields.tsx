@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import './station-location.css';
+
 export function StationLocationFields({
   latitude,
   longitude,
@@ -11,27 +13,13 @@ export function StationLocationFields({
   children?: ReactNode;
 }) {
   return (
-    <fieldset
-      style={{
-        border: '1px solid #e2e8f0',
-        borderRadius: 14,
-        padding: 16,
-        margin: '16px 0',
-        minWidth: 0,
-      }}
-    >
+    <fieldset className="ys-fieldset station-location-fields">
       <legend>מיקום התחנה לדיווח נוכחות</legend>
-      <p style={{ fontSize: 13, color: '#475569' }}>
+      <p className="station-location-help">
         העתיקו קו רוחב וקו אורך מנקודת התחנה במפה. ברירת המחדל: 50 מטר. מומלץ לבדוק את הטווח פיזית
         בתחנה.
       </p>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
-          gap: 12,
-        }}
-      >
+      <div className="ys-form-grid">
         {[
           { name: 'latitude', label: 'קו רוחב', value: latitude, min: -90, max: 90 },
           { name: 'longitude', label: 'קו אורך', value: longitude, min: -180, max: 180 },
@@ -43,32 +31,27 @@ export function StationLocationFields({
             max: 200,
           },
         ].map((field) => (
-          <label key={field.name} style={{ display: 'grid', gap: 6, minWidth: 0, fontSize: 13 }}>
-            {field.label}
+          <div key={field.name} className="ys-form-field">
+            <label className="ys-label" htmlFor={'station-' + field.name}>
+              {field.label}
+              <span className="ys-label-required" aria-hidden="true">
+                *
+              </span>
+            </label>
             <input
+              className="ys-input ys-num"
               name={field.name}
               id={'station-' + field.name}
               type="number"
+              inputMode="decimal"
               dir="ltr"
               step={field.name === 'attendanceRadiusM' ? '1' : 'any'}
               required
               min={field.min}
               max={field.max}
               defaultValue={field.value ?? ''}
-              style={{
-                width: '100%',
-                minWidth: 0,
-                boxSizing: 'border-box',
-                fontSize: 16,
-                minHeight: 44,
-                border: '1px solid #cbd5e1',
-                borderRadius: 8,
-                padding: 10,
-                color: '#111827',
-                background: '#fff',
-              }}
             />
-          </label>
+          </div>
         ))}
       </div>
       {children}

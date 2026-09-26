@@ -2,13 +2,8 @@ import { getServerContext, getCachedStation } from '@/app/lib/server-context';
 import { redirect, notFound } from 'next/navigation';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import { listStationAttendance, getStationMembers } from '@yellowshifts/database';
-import { Container, PageHeader, Badge, Button } from '@yellowshifts/ui';
-import {
-  ArrowRightIcon,
-  CalendarIcon,
-  UsersIcon,
-  WarningIcon,
-} from '@yellowshifts/icons';
+import { Container, PageHeader } from '@yellowshifts/ui';
+import { ArrowRightIcon, ClockIcon, WarningIcon } from '@yellowshifts/icons';
 import { StationHeader } from '../../../components/StationHeader';
 import { StationAttendanceClient } from './StationAttendanceClient';
 
@@ -33,7 +28,8 @@ export default async function StationAttendancePage({ params }: StationAttendanc
   const isPlatformAdmin = context.isPlatformAdmin;
   const isStationAdmin = context.memberships.some(
     (m) =>
-      (m.station.id === station.id || m.station.code.toUpperCase() === station.code.toUpperCase()) &&
+      (m.station.id === station.id ||
+        m.station.code.toUpperCase() === station.code.toUpperCase()) &&
       m.membership.role === 'ADMIN' &&
       m.membership.status === 'ACTIVE'
   );
@@ -50,97 +46,46 @@ export default async function StationAttendancePage({ params }: StationAttendanc
 
   const canManageAttendance = isPlatformAdmin || isStationAdmin;
 
+  const base = `/stations/${encodeURIComponent(station.code)}`;
+
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        color: 'var(--ys-color-text-primary, #111827)',
-        paddingBottom: '64px',
-        direction: 'rtl',
-      }}
-    >
-      {/* Top Header */}
+    <main className="admin-page">
       <StationHeader station={station} context={context} subtitle="נוכחות עובדים בזמן אמת" />
 
-      <Container size="lg">
-        {/* Navigation Breadcrumb & Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '16px',
-            margin: '32px 0 24px 0',
-          }}
-        >
-          <div>
-            <Link
-              href={`/stations/${encodeURIComponent(station.code)}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--ys-color-text-secondary, #6B7280)',
-                fontSize: '13px',
-                textDecoration: 'none',
-                marginBottom: '8px',
-              }}
-            >
-              <ArrowRightIcon size={14} />
-              חזרה לפרטי התחנה
-            </Link>
+      <Container size="xl">
+        <div className="admin-page-body">
+          <Link href={base} className="admin-back-link">
+            <ArrowRightIcon size={16} />
+            חזרה לסקירת התחנה
+          </Link>
+
+          <div className="station-hero-section">
             <PageHeader
-              title={`נוכחות עובדים — ${station.name}`}
-              description="בקרת עובדים פעילים בזמן אמת, משמרות שהסתיימו היום, עמדת שעון נוכחות ותיקונים מנהליים."
-              badge={
-                <Badge variant={activeRecords.length > 0 ? 'brandYellow' : 'neutral'} dot>
-                  {activeRecords.length} פעילים כעת
-                </Badge>
-              }
+              className="att-page-header"
+              title="נוכחות עובדים"
+              description="בקרת עובדים פעילים בזמן אמת, משמרות שהסתיימו, עמדת שעון נוכחות ותיקונים מנהליים."
             />
+            <nav className="station-nav-pills" aria-label="מסכי נוכחות">
+              <Link href={`${base}/attendance`} aria-current="page">
+                <ClockIcon size={16} />
+                נוכחות בזמן אמת
+              </Link>
+              <Link href={`${base}/exceptions`}>
+                <WarningIcon size={16} />
+                חריגות נוכחות
+              </Link>
+            </nav>
           </div>
 
-          <div className="station-nav-pills">
-            <Link href={`/stations/${encodeURIComponent(station.code)}/exceptions`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <WarningIcon size={16} />
-                  חריגות נוכחות
-                </span>
-              </Button>
-            </Link>
-
-            <Link href={`/stations/${encodeURIComponent(station.code)}/schedules`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <CalendarIcon size={16} />
-                  סידור עבודה שבועי
-                </span>
-              </Button>
-            </Link>
-
-            <Link href={`/stations/${encodeURIComponent(station.code)}/staff`} style={{ textDecoration: 'none' }}>
-              <Button variant="secondary" size="md">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <UsersIcon size={16} />
-                  צוות התחנה
-                </span>
-              </Button>
-            </Link>
-          </div>
+          <StationAttendanceClient
+            members={members}
+            station={station}
+            canManageAttendance={canManageAttendance}
+            isPlatformAdmin={isPlatformAdmin}
+            initialActiveRecords={activeRecords}
+            initialCompletedRecords={completedRecords}
+          />
         </div>
-
-        {/* Real-time Attendance Client */}
-        <StationAttendanceClient
-          members={members}
-          station={station}
-          canManageAttendance={canManageAttendance}
-          isPlatformAdmin={isPlatformAdmin}
-          initialActiveRecords={activeRecords}
-          initialCompletedRecords={completedRecords}
-        />
       </Container>
     </main>
   );

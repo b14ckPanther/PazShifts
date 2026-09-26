@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Button, Alert } from '@yellowshifts/ui';
+import { PowerIcon, InfoIcon } from '@yellowshifts/icons';
 import { removeStationMemberAction } from '../actions/stations';
 import { StaffDialog } from './StaffDialog';
 
@@ -20,8 +21,10 @@ export function RemoveMemberButton({
   return (
     <>
       <Button
-        variant="ghost"
+        type="button"
+        variant="destructiveOutline"
         size="sm"
+        rightIcon={<PowerIcon size={16} />}
         onClick={() => {
           setError(null);
           setOpen(true);
@@ -35,15 +38,17 @@ export function RemoveMemberButton({
             לסיים את הגישה של <strong>{memberName}</strong> לתחנה?
           </p>
           <div className="staff-preservation-note">
-            איש הצוות יסומן כלא פעיל. דיווחי הנוכחות והמשמרות הקודמות נשמרים, וניתן להפעיל את הגישה
-            מחדש בכל עת.
+            <InfoIcon size={18} aria-hidden="true" />
+            <span>
+              איש הצוות יסומן כלא פעיל. דיווחי הנוכחות והמשמרות הקודמות נשמרים, וניתן להפעיל את
+              הגישה מחדש בכל עת.
+            </span>
           </div>
           {error && <Alert variant="danger">{error}</Alert>}
           <footer className="staff-dialog-footer">
-            <Button variant="secondary" disabled={pending} onClick={() => setOpen(false)}>
-              ביטול
-            </Button>
             <Button
+              type="button"
+              variant="destructive"
               disabled={pending}
               onClick={() => {
                 startTransition(async () => {
@@ -59,6 +64,14 @@ export function RemoveMemberButton({
               isLoading={pending}
             >
               אישור סיום גישה
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={pending}
+              onClick={() => setOpen(false)}
+            >
+              ביטול
             </Button>
           </footer>
         </StaffDialog>
