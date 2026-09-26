@@ -4,22 +4,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { StationWithMembership } from '@yellowshifts/types';
 import { t } from '@yellowshifts/i18n';
-import {
-  StationIcon,
-  ChevronDownIcon,
-  CheckIcon,
-  RefreshIcon,
-} from '@yellowshifts/icons';
+import { StationIcon, ChevronDownIcon, CheckIcon, RefreshIcon } from '@yellowshifts/icons';
 import './station-admin-selector.css';
 
 interface StationAdminSelectorProps {
   adminMemberships: readonly StationWithMembership[];
   activeStationId: string;
+  /** Platform admins see every station; the menu badge names their real role. */
+  isPlatformAdmin?: boolean;
 }
 
 export const StationAdminSelector: React.FC<StationAdminSelectorProps> = ({
   adminMemberships,
   activeStationId,
+  isPlatformAdmin = false,
 }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -122,7 +120,7 @@ export const StationAdminSelector: React.FC<StationAdminSelectorProps> = ({
                 תחנות פעילות בניהולך ({adminMemberships.length})
               </span>
               <span className="station-admin-selector-menu-badge">
-                מנהל תחנה
+                {isPlatformAdmin ? t('roles.platformAdmin') : 'מנהל תחנה'}
               </span>
             </div>
 

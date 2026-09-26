@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-
-import {
-  Container,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Button,
-  Alert,
-} from '@yellowshifts/ui';
+import { Alert, Button } from '@yellowshifts/ui';
 import { DangerIcon, RefreshIcon, ArrowRightIcon } from '@yellowshifts/icons';
 
 interface ErrorProps {
@@ -27,97 +16,37 @@ export default function AdminError({ error }: ErrorProps) {
   }, [error]);
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'var(--ys-color-surface-base, #F8FAFC)',
-        padding: '32px 16px',
-        direction: 'rtl',
-      }}
-    >
-      <Container size="sm">
-        <Card
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          }}
-        >
-          <CardHeader>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}
-            >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: 'var(--ys-radius-sm)',
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#EF4444',
-                }}
-              >
-                <DangerIcon size={22} />
-              </div>
-              <CardTitle style={{ color: '#111827' }}>שגיאת ניהול מערכת</CardTitle>
-            </div>
-            <CardDescription style={{ color: '#6B7280' }}>
-              אירעה שגיאה בעיבוד הנתונים הניהוליים של התחנה.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <Alert variant="danger">לא הצלחנו לטעון את העמוד. נסו שוב, או חזרו למסך הראשי.</Alert>
-            {error.digest && (
-              <p style={{ color: '#64748b', overflowWrap: 'anywhere' }}>
-                קוד לפנייה לתמיכה: <bdi>{error.digest}</bdi>
-              </p>
-            )}
-          </CardContent>
-
-          <CardFooter>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                flexWrap: 'wrap',
-                gap: '10px',
-              }}
-            >
-              <Button
-                variant="primary"
-                isLoading={retrying}
-                onClick={() => {
-                  setRetrying(true);
-                  window.location.reload();
-                }}
-              >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <RefreshIcon size={16} />
-                  נסה שנית
-                </span>
-              </Button>
-
-              <a href="/" style={{ textDecoration: 'none' }}>
-                <Button variant="secondary">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <ArrowRightIcon size={16} />
-                    חזרה למסך הראשי
-                  </span>
-                </Button>
-              </a>
-            </div>
-          </CardFooter>
-        </Card>
-      </Container>
+    <main className="admin-page admin-page-message">
+      <section className="ys-card admin-message-card" aria-labelledby="admin-error-title">
+        <span className="admin-message-icon is-danger" aria-hidden="true">
+          <DangerIcon size={24} />
+        </span>
+        <h1 id="admin-error-title">שגיאת ניהול מערכת</h1>
+        <p>אירעה שגיאה בעיבוד הנתונים הניהוליים של התחנה.</p>
+        <Alert variant="danger">לא הצלחנו לטעון את העמוד. נסו שוב, או חזרו למסך הראשי.</Alert>
+        {error.digest && (
+          <p className="admin-message-digest">
+            קוד לפנייה לתמיכה: <bdi>{error.digest}</bdi>
+          </p>
+        )}
+        <div className="ys-form-actions">
+          <Button
+            variant="primary"
+            isLoading={retrying}
+            rightIcon={<RefreshIcon size={18} />}
+            onClick={() => {
+              setRetrying(true);
+              window.location.reload();
+            }}
+          >
+            נסה שנית
+          </Button>
+          <a href="/" className="ys-button ys-button--secondary">
+            <ArrowRightIcon size={18} aria-hidden="true" />
+            חזרה למסך הראשי
+          </a>
+        </div>
+      </section>
     </main>
   );
 }

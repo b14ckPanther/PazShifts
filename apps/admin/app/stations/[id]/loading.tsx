@@ -1,4 +1,4 @@
-import { RouteLoading } from '@yellowshifts/ui';
+import { RouteSkeleton } from '@yellowshifts/ui';
 export default function Loading() {
-  return <RouteLoading />;
+  return <RouteSkeleton />;
 }

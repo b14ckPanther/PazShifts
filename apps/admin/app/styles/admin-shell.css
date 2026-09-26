@@ -1,0 +1,201 @@
+/*
+ * Admin shell and shared page patterns. Screens compose these instead of inline styles:
+ * .admin-page > (AdminHeader | StationHeader) + Container > .admin-page-body.
+ */
+.admin-page {
+  min-height: 100dvh;
+  min-width: 0;
+}
+.admin-page-body {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding-block: 8px 40px;
+}
+.admin-page-body > * {
+  min-width: 0;
+}
+
+/* Back / breadcrumb row above a page header */
+.admin-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 12px;
+  padding: 0 10px 0 12px;
+  border-radius: var(--ys-radius-pill);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+  transition:
+    background-color var(--ys-transition-fast),
+    color var(--ys-transition-fast);
+  justify-self: start;
+}
+.admin-back-link:hover {
+  background: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-primary);
+}
+
+/* Title row: page header text with actions at the inline end */
+.station-hero-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  min-width: 0;
+}
+.station-hero-section > * {
+  min-width: 0;
+}
+.station-hero-section .ys-page-header {
+  padding-bottom: 0;
+}
+
+/* In-page section switch (attendance / exceptions / schedules) */
+.station-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Keeps the RTL scroller's hidden overflow out of the page width; padding leaves room
+     for focus rings inside the clip. */
+  contain: paint;
+  padding: 7px;
+  margin: -5px;
+}
+.station-nav-pills::-webkit-scrollbar {
+  display: none;
+}
+.station-nav-pills > * {
+  flex-shrink: 0;
+}
+.station-nav-pills {
+  justify-self: start;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-sunken);
+}
+/* Same selection language as .ys-segmented: a raised white segment on the sunken track. */
+.station-nav-pills a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  color: var(--ys-color-text-secondary);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color var(--ys-transition-fast),
+    color var(--ys-transition-fast),
+    box-shadow var(--ys-transition-fast);
+}
+.station-nav-pills a:hover:not([aria-current='page']) {
+  color: var(--ys-color-text-primary);
+  background: rgba(255, 255, 255, 0.55);
+}
+.station-nav-pills a[aria-current='page'] {
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  box-shadow:
+    0 1px 2px rgba(40, 28, 16, 0.1),
+    0 2px 6px rgba(40, 28, 16, 0.06);
+}
+
+/* Toolbar: filters and actions that wrap cleanly on phones */
+.admin-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  min-width: 0;
+}
+.admin-toolbar > .ys-form-field,
+.admin-toolbar > label {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.admin-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+/* Section heading inside a page */
+.admin-section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.admin-section-title {
+  font-size: var(--ys-text-lg);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.admin-section-description {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+
+/* Inline action feedback (replaces dark banners); pairs with role=status/alert */
+.admin-feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 12px 14px;
+  border-radius: var(--ys-radius-md);
+  font-size: var(--ys-text-md);
+  font-weight: 600;
+  animation: ys-fade-in 200ms var(--ys-ease-standard);
+}
+.admin-feedback > span {
+  flex: 1;
+  min-width: 0;
+}
+.admin-feedback--success {
+  background: var(--ys-color-status-success-subtle);
+  color: var(--ys-color-status-success-ink);
+}
+.admin-feedback--error {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+}
+
+@media (max-width: 640px) {
+  .admin-page-body {
+    gap: 16px;
+    padding-bottom: 28px;
+  }
+  .admin-toolbar-actions {
+    width: 100%;
+    margin-inline-start: 0;
+  }
+  .admin-toolbar-actions > * {
+    flex: 1 1 auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-feedback {
+    animation: none;
+  }
+}
+
+/* Inside a page body the grid gap already separates the header from what is above it. */
+.admin-page-body .ys-page-header {
+  padding-block: 4px 0;
+}

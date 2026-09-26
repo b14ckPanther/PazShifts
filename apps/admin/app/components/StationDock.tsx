@@ -3,7 +3,8 @@ import { NavigationLink as Link } from './NavigationLink';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { MobileDock } from '@yellowshifts/ui';
-import { StationIcon, CalendarIcon, UsersIcon, ClockIcon, ReportIcon } from '@yellowshifts/icons';
+import { isStationNavActive, stationNavItems } from './station-nav';
+
 export function StationDock({ stationId, admin }: { stationId: string; admin: boolean }) {
   const path = usePathname();
   // Rewrites can render a UUID internally; use the browser path after hydration.
@@ -13,33 +14,13 @@ export function StationDock({ stationId, admin }: { stationId: string; admin: bo
   }, [path]);
   const base = visibleBase || `/stations/${stationId}`;
   const activePath = path.replace(/^\/stations\/[^/]+/, base);
-  const items = admin
-    ? [
-        { href: base, label: 'התחנה', Icon: StationIcon },
-        { href: `${base}/schedules`, label: 'סידור', Icon: CalendarIcon },
-        { href: `${base}/attendance`, label: 'נוכחות', Icon: ClockIcon },
-        { href: `${base}/reports`, label: 'שעות', Icon: ReportIcon },
-        { href: `${base}/staff`, label: 'צוות', Icon: UsersIcon },
-      ]
-    : [
-        { href: '/', label: 'התחנות שלי', Icon: StationIcon },
-        { href: `${base}/schedules`, label: 'סידור עבודה', Icon: CalendarIcon },
-      ];
   return (
     <MobileDock>
-      {items.map(({ href, label, Icon }) => (
+      {stationNavItems(base, admin).map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}
-          aria-current={
-            (
-              href === base
-                ? activePath === href
-                : activePath === href || activePath.startsWith(href + '/')
-            )
-              ? 'page'
-              : undefined
-          }
+          aria-current={isStationNavActive(href, base, activePath) ? 'page' : undefined}
         >
           <Icon size={22} />
           <span>{label}</span>
