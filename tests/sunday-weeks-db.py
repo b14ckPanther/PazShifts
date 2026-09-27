@@ -31,9 +31,9 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT jsonb_build_object('session_id',coalesce(nullif(current_setting('request.jwt.claim.session_id',true),''),auth.uid()::text)) $$;
         GRANT USAGE ON SCHEMA auth TO authenticated, anon;""")
         migrations=sorted((ROOT / 'supabase/migrations').glob('*.sql'))
-        for migration in migrations[:-1]: sql(migration.read_text())
-        upgrade=migrations[-1].read_text()
-        assert migrations[-1].name=='20260913000022_sunday_calendar_weeks.sql'
+        target=next(i for i,m in enumerate(migrations) if m.name=='20260913000022_sunday_calendar_weeks.sql')
+        for migration in migrations[:target]: sql(migration.read_text())
+        upgrade=migrations[target].read_text()
         sql("ALTER TABLE public.stations ALTER COLUMN latitude SET DEFAULT 32.858784, ALTER COLUMN longitude SET DEFAULT 35.090755;")
         sql("""
         INSERT INTO auth.users(id,email) VALUES ('00000000-0000-0000-0000-000000000001','sunday@example.com');
