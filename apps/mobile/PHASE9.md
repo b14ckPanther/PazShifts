@@ -143,7 +143,7 @@ verify the identifier printed before uploading anything.
 
 ## Universal links, NFC and AASA
 
-Live GETs on both `paz.darb.co.il` and `paz-shifts.vercel.app`:
+Live GETs on `paz.darb.co.il`:
 
 - `/` responds 200.
 - `/.well-known/apple-app-site-association`: 503, association configuration pending.
@@ -420,7 +420,7 @@ its own install/permission/foreground/background/closed-app tap smoke test.
 
 ### AASA diagnosis and exact deployment change
 
-Both `paz.darb.co.il` and `paz-shifts.vercel.app` currently return HTTP 503, JSON
+`paz.darb.co.il` returned HTTP 503, JSON
 `{"error":"Association configuration pending"}` for both association endpoints. The Apple route
 returns that exact response only when `appleAssociation(process.env.APPLE_APP_IDS)` is null:
 missing/empty IDs or invalid syntax. Middleware explicitly bypasses authentication. Correct env
@@ -429,7 +429,7 @@ cache max-age 300. No association code fix is needed. Hosted env is not readable
 missing-versus-malformed distinction cannot be established from HTTP alone.
 
 Vercel → select the WORKER project with Root Directory `apps/web`, whose Domains include
-`paz.darb.co.il` and legacy `paz-shifts.vercel.app` → Settings → Environment Variables:
+`paz.darb.co.il` → Settings → Environment Variables:
 
 ```dotenv
 APPLE_APP_IDS=KHQ29Z6A7S.il.co.darb.yellowshifts.dev,KHQ29Z6A7S.il.co.darb.yellowshifts
@@ -556,7 +556,6 @@ project with the env above. Verify each host directly (do not hide redirects wit
 
 ```sh
 curl -i https://paz.darb.co.il/.well-known/apple-app-site-association
-curl -i https://paz-shifts.vercel.app/.well-known/apple-app-site-association
 curl -I https://paz.darb.co.il/privacy/yellowshifts
 curl -I https://paz.darb.co.il/support/yellowshifts
 ```

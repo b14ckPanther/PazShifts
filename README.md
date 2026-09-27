@@ -6,7 +6,7 @@
 
 Workforce management for fuel stations: weekly scheduling, NFC-based attendance and hours reporting. Built for Paz stations in Israel and currently in pilot at a working station, where employees clock in by tapping a physical NFC tag at the counter.
 
-The repository is named PazShifts; the product is YellowShifts.
+YellowShifts is part of [Darb](https://darb.co.il). The worker app runs at [paz.darb.co.il](https://paz.darb.co.il) and the admin app at [admin.paz.darb.co.il](https://admin.paz.darb.co.il). The repository is named PazShifts; the product is YellowShifts.
 
 ## What it does
 

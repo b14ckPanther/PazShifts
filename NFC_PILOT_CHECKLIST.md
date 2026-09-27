@@ -1,20 +1,22 @@
 # Physical NFC pilot — automatic scan-in / confirmed scan-out
 
-The pilot tag was written with the original worker origin `https://paz-shifts.vercel.app`, which stays assigned to the worker project alongside the current worker origin `https://paz.darb.co.il` (see [DEPLOYMENT.md](DEPLOYMENT.md)). The tag URL stays unchanged:
+Each station tag holds the worker URL for that station:
 
 ```text
-https://paz-shifts.vercel.app/nfc/c716fc17587a465bbd6dc74997c99db4
+https://paz.darb.co.il/nfc/<station-token>
 ```
 
-Station: **פז כורדני**, code `KURDANI`, recorded station ID `7f0dd990-83d8-4588-b3dd-94bf860cdbaf`. Migration 17 sets its location to 32.858784, 35.090755 with the default 50 m radius. Verify the token, station and location against the deployed database before the pilot. Automated tests use isolated fixtures and do not establish physical success.
+Copy the exact URL from the station's attendance page in the admin app. The token is a credential: keep it out of the repository, tickets and chat. Rotating it in admin invalidates the old URL, and the tag must be rewritten.
+
+Pilot station: **פז כורדני**, code `KURDANI`. Migration 17 sets its location to 32.858784, 35.090755 with the default 50 m radius. Verify the token, station and location against the deployed database before the pilot. Automated tests use isolated fixtures and do not establish physical success.
 
 ## Before testing the updated flow
 
 1. Apply migrations in order, including `20260911000009_staff_permission_boundaries.sql` , `20260911000010_atomic_nfc_scans.sql`, `20260911000011_nfc_checkout_confirmation.sql`, `20260911000012_auth_profile_contact_sync.sql`, `20260912000016_attendance_removal.sql` and `20260912000017_station_geofence.sql`, to the intended Supabase project. For the native app, also apply `20260913000020_native_nfc.sql` and `20260913000021_left_open_notifications.sql`.
-2. Deploy the updated worker and admin apps together: migration 17 replaces the scan RPC, and old clients without location fail closed. Set both actual app origins and configure Supabase redirect URLs as described in [DEPLOYMENT.md](DEPLOYMENT.md). Keep `paz-shifts.vercel.app` serving the worker app, without a redirect, while this tag uses it.
+2. Deploy the updated worker and admin apps together: migration 17 replaces the scan RPC, and old clients without location fail closed. Set both actual app origins and configure Supabase redirect URLs as described in [DEPLOYMENT.md](DEPLOYMENT.md).
 3. In the admin station page, confirm the station's coordinates and radius (30–200 m). A station without coordinates rejects every scan.
 4. Confirm the worker has an active profile and active membership at the station, and check whether they already have a shift open. A scan with an existing active shift asks for checkout confirmation; it does not close the shift immediately.
-5. Write the **bare tag URL above** using NFC Tools → Write → Add a record → URL / URI. Never write the temporary `?scan=...&at=...` receipt URL from the browser address bar. Keep the tag unlocked for future domain changes.
+5. Write the **bare tag URL** copied from admin using NFC Tools → Write → Add a record → URL / URI. Never write the temporary `?scan=...&at=...` receipt URL from the browser address bar. Keep the tag unlocked so it can be rewritten after a token rotation.
 
 ## Expected experience
 
@@ -40,17 +42,18 @@ A static URL tag cannot prove physical proximity: opening a copied bare URL is i
 6. Test another-station conflict, inactive membership, invalid/rotated token, and a network interruption. No unauthorized or duplicate records should appear.
 7. Test location at the tag: inside and outside the radius, denied permission, and an inaccurate reading. The 50 m default needs physical testing at the tag location.
 8. Test login, password autofill/show-hide, keyboard open, scan receipt, and error states on actual iPhone Safari and Android Chrome. Browser simulations do not reproduce all OS keyboard/NFC behavior.
-9. Test Add to Home Screen / standalone launch. Launching the PWA opens the personal home, not an old scan. The phone OS may open an NFC link in its default browser or, when installed, the native app; each has its own logged-in session. Sessions are host-scoped: a session on `paz.darb.co.il` does not cover the old tag host.
+9. Test Add to Home Screen / standalone launch. Launching the PWA opens the personal home, not an old scan. The phone OS may open an NFC link in its default browser or, when installed, the native app; each has its own logged-in session.
 
 ## Verification status
 
-| Item                                                   | Status                                                |
-| ------------------------------------------------------ | ----------------------------------------------------- |
-| NFC hardware                                           | AVAILABLE                                             |
-| Previous physical scan                                 | Reported by user for the old confirmation-button flow |
-| Updated scan-in / confirmed checkout on hardware       | PENDING USER AFTER MIGRATION / DEPLOYMENT             |
-| Station location / radius at the tag                   | PENDING USER                                          |
-| Native app tag tap                                     | PENDING USER                                          |
-| Actual iPhone / Android keyboard and standalone checks | PENDING USER                                          |
-| Automated scan transaction and responsive-layout tests | Separate from physical verification                   |
-| Real station pilot on this version                     | NOT YET VERIFIED                                      |
+| Item                                                   | Status                                     |
+| ------------------------------------------------------ | ------------------------------------------ |
+| NFC hardware                                           | AVAILABLE                                  |
+| Tag written with `paz.darb.co.il` URL                  | DONE                                       |
+| Previous physical scan                                 | Done with the old confirmation-button flow |
+| Updated scan-in / confirmed checkout on hardware       | PENDING USER AFTER MIGRATION / DEPLOYMENT  |
+| Station location / radius at the tag                   | PENDING USER                               |
+| Native app tag tap                                     | PENDING USER                               |
+| Actual iPhone / Android keyboard and standalone checks | PENDING USER                               |
+| Automated scan transaction and responsive-layout tests | Separate from physical verification        |
+| Real station pilot on this version                     | NOT YET VERIFIED                           |

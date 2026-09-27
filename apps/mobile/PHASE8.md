@@ -42,7 +42,7 @@ Preview/production explicitly pin these build flags to `false`:
 
 Development retains NFC/location testing defaults; location remains user opt-in. To qualify a release capability, deliberately edit the reviewed preview profile flag and rebuild; do not assume remote EAS variables override the pinned profile value. Enable production only after the matching physical tests. Missing runtime feature manifest values fail closed.
 
-The existing web NFC fallback and both public hosts remain supported: `paz.darb.co.il` and legacy `paz-shifts.vercel.app`. Default release associations are empty, so installed release apps do not claim these HTTPS NFC URLs. A manually opened disabled native attendance route explains web attendance and offers Home; it does not mutate attendance. Foreground scan validation is independent of optional background reminders.
+The existing web NFC fallback on `paz.darb.co.il` remains supported. Default release associations are empty, so installed release apps do not claim its HTTPS NFC URLs. A manually opened disabled native attendance route explains web attendance and offers Home; it does not mutate attendance. Foreground scan validation is independent of optional background reminders.
 
 Release plugin guardrails remove unused Face ID, Bonjour/local-network permission copy and nonessential background `fetch`/`location` modes when location is disabled. ATS disallows arbitrary loads. Android backup is disabled; release manifests block legacy storage/overlay permissions. Development-client generated schemes are disabled for release. No continuous GPS service was introduced.
 
@@ -84,8 +84,6 @@ Then inspect direct 200 JSON responses without authentication/redirects:
 ```sh
 curl --fail --include https://paz.darb.co.il/.well-known/apple-app-site-association
 curl --fail --include https://paz.darb.co.il/.well-known/assetlinks.json
-curl --fail --include https://paz-shifts.vercel.app/.well-known/apple-app-site-association
-curl --fail --include https://paz-shifts.vercel.app/.well-known/assetlinks.json
 ```
 
 Do not open a real NFC URL merely to smoke-test deployment: the legacy authenticated web flow can write attendance. Native association scope is `/nfc/*`, not the whole website. AASA/assetlinks acceptance and OS caches must be tested with the signed installed app after enabling preview associations.

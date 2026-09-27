@@ -8,7 +8,7 @@ Reuse `process_nfc_scan` from migration 17: authenticated identity, active profi
 
 Native needs a mobile-safe token-scoped preview and a thin transactional expected-action wrapper, so attendance changed after preview cannot turn intended checkout into check-in. Receipt replay must precede expected-state checks. Native must persist the receipt before sending and never queue a write offline.
 
-Existing domains: `paz.darb.co.il` and retained `paz-shifts.vercel.app`, per DEPLOYMENT.md. Both must serve association documents without authentication or redirection. Public route scope is `/nfc/*` only. No token rotation or tag rewrite.
+Worker domain: `paz.darb.co.il`, per DEPLOYMENT.md. It must serve association documents without authentication or redirection. Public route scope is `/nfc/*` only. No token rotation or tag rewrite.
 
 Apple signing identifiers/certificate fingerprints remain external setup inputs. Never invent a Team ID or SHA256 fingerprint. Missing association configuration fails closed. Native routes, guards and web fallback can be implemented before signing.
 
@@ -62,7 +62,7 @@ Worker Vercel project server configuration (public signing identifiers, not secr
 
 Existing native overrides remain `MOBILE_IOS_BUNDLE_ID`, `MOBILE_ANDROID_PACKAGE`, and `EAS_PROJECT_ID`; development bundle/package default remains `il.co.darb.yellowshifts.dev`. No new mobile secrets or packages. Existing `EXPO_PUBLIC_NOTIFICATIONS_ENABLED` controls Phase 5 push features; left-open delivery additionally needs the existing Phase 5 dispatcher/provider setup. Neither push permission nor device-token registration is required for attendance.
 
-Deploy the association endpoints to **both** `paz.darb.co.il` and `paz-shifts.vercel.app` on the worker project. Keep the legacy hostname serving the app instead of redirecting it to the new hostname. Verify each well-known endpoint returns 200 JSON with no redirect before testing installation. Do not associate development builds with production hosts unless intentionally testing that build. Configure production signing identifiers before its build; do not publish placeholders.
+Deploy the association endpoints to `paz.darb.co.il` on the worker project. Verify each well-known endpoint returns 200 JSON with no redirect before testing installation. Do not associate development builds with production hosts unless intentionally testing that build. Configure production signing identifiers before its build; do not publish placeholders.
 
 Build a new signed development binary after Apple activation / Android credentials are available:
 

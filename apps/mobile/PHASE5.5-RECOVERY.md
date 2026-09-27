@@ -252,7 +252,7 @@ https://expo.dev/accounts/millionroses/projects/yellowshifts-worker/builds/ff727
 Downloaded IPA to ignored credentials/yellowshifts-dev.ipa. Extracted locally and verified
 codesign --verify --deep --strict. Bundle il.co.darb.yellowshifts.dev, version 1.0.0,
 build 1; signed application identifier matches team KHQ29Z6A7S. aps-environment production;
-associated domains paz.darb.co.il and paz-shifts.vercel.app are present.
+associated domain paz.darb.co.il is present.
 Installed successfully via devicectl on the owner's connected iPhone 15 Pro Max.
 Native process launch command succeeded. This verifies installation and OS launch, not
 visual runtime behavior or all app flows. Owner confirmation of the screen remains pending.
