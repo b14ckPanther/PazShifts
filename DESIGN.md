@@ -216,7 +216,7 @@ Two brand hues with strict jobs over a warm, slightly yellowed neutral ramp; sta
 
 ### Primary
 
-- **Canopy Yellow** (#fcbc00): the canopy. The sticky header band in both apps, the 45-degree cut band on full-screen flows (login, NFC attendance, error), the one cut corner on the live panel, the launch reveal and navigation splash, and selection indicators (the bottom tab bar pill, a checked option's border, the "window" availability choice). Never a button fill for ordinary actions, never body text.
+- **Canopy Yellow** (#fcbc00): the canopy. The sticky header band in both apps, the 45-degree cut band on full-screen flows (login, NFC attendance, the worker error and not-found pages), the one cut corner on the live panel, the launch reveal and navigation splash, and selection indicators (the bottom tab bar pill, a checked option's border, the "window" availability choice). Never a button fill for ordinary actions, never body text.
 - **Canopy Yellow Subtle** (#fff4cc) and **Canopy Yellow Ink** (#5c4300): the quiet form of the brand: empty-state and message icon wells, brand alerts, header subtitles and unselected canopy tab labels.
 
 ### Secondary
@@ -224,7 +224,7 @@ Two brand hues with strict jobs over a warm, slightly yellowed neutral ramp; sta
 - **Forecourt Crimson** (#d10040): action and live state. Primary buttons, the on-shift panel, the live status pill, live counts in fact lines, switches and checkbox accent, the text caret.
 - **Crimson Hover** (#b30037) and **Deep Crimson** (#8f002b): hover and pressed states of crimson actions; Deep Crimson is also the crimson text colour for tertiary buttons and crimson badges.
 - **Crimson Subtle** (#fdebf0): tertiary-button hover and crimson badge fill.
-- **Splash Wine** (#700020): ink on the yellow splash only (orbit ring, dot, progress track).
+- **Splash Wine** (#700020): ink on the default yellow splash entrance only (orbit ring, dot, progress track). Both apps now show the 3D logomark reveal instead, so it survives only in the shared `BrandEntrance` fallback.
 
 ### Neutral
 
@@ -277,7 +277,9 @@ A 4px grid (steps 2 to 64px) with a fluid gutter of clamp(16px, 4vw, 32px). Cont
 
 Rhythm is tight and vertical: page sections stack in grids with 10 to 24px gaps; cards pad at clamp(16px, 3.2vw, 24px); list rows are at least 60px tall with 12px by 16px padding. Page headers put text at the inline start and actions at the inline end, wrapping to full width under 640px.
 
-Breakpoints observed in the build: 360px (tight phones), 520px (form actions go full width), 640px (dialogs become bottom sheets, page headers compact), 720px (stacked tables become row cards), 768px (bottom tab bar gives way to canopy tabs), 1024px (canopy tab labels and account name reappear). Pointer type also drives density: `pointer: fine` shrinks controls to 40/32/48px and inputs to 15px; touch keeps 44/40/52px and 16px inputs so iOS never zooms.
+Breakpoints observed in the build: 360px (tight phones), 520px (form actions go full width), 640px (dialogs become bottom sheets, page headers compact), 720px (stacked tables become row cards), 768px (bottom tab bar gives way to canopy tabs), 1024px (canopy tab labels and account name reappear; the admin schedule offers its week grid, below this it is a single-day view with day tabs). Pointer type also drives density: `pointer: fine` shrinks controls to 40/32/48px and inputs to 15px; touch keeps 44/40/52px and 16px inputs so iOS never zooms.
+
+Admin screens share one shell: `.admin-page` holds the canopy header (`AdminHeader`, or `StationHeader` on station pages) and a Container with `.admin-page-body`, a grid with 20px gaps (16px under 640px). Inside it, an optional pill back link, a title row (page header text at the inline start, actions at the inline end), `.admin-toolbar` filter rows whose actions go full width on phones, and `.admin-section` blocks.
 
 The phone shell owns one bottom clearance region (64px tab bar + safe area + 12px) and scroll padding so focused fields clear the bar. All insets honour `env(safe-area-inset-*)`. Horizontal overflow is clipped at the root; only genuinely wide grids (the week schedule) scroll sideways.
 
@@ -329,6 +331,7 @@ Confident and compact, with a small press-in.
 
 - **StatusBadge:** always a vector icon plus text, 0.75rem 700, 26px min height. Live is a crimson pill with a pulsing yellow dot; the rest follow the shape rules in Shapes.
 - **Badge:** neutral, crimson, success, warning, danger, info, all subtle fill plus `-ink` text; the `brandYellow` variant renders as a white outlined badge, not a yellow fill.
+- **Inline feedback (admin):** action results appear in place as `.admin-feedback`, a 14px-radius strip in the success or danger subtle fill with `-ink` text, paired with `role="status"` or `role="alert"`. It replaces dark banners.
 
 ### Cards / Containers
 
@@ -340,28 +343,30 @@ Confident and compact, with a small press-in.
 
 ### Inputs / Fields
 
-- **Style:** white fill, 1px Border Medium, 10px radius, 44px min height, 10px by 14px padding, 16px text on touch (15px and 40px under a fine pointer). Selects use a custom chevron at the inline end.
+- **Style:** white fill, 1px Border Medium, 10px radius, 44px min height, 10px by 14px padding, 16px text on touch (15px and 40px under a fine pointer). Selects use a custom chevron at the inline end. Date and time inputs drop the native appearance so they fill their column on iOS Safari like every other field.
 - **Focus:** warm-ink border plus a 4px yellow halo.
 - **Error / Disabled:** danger border on a faint pink fill with a danger-ink message led by an icon; disabled goes Concrete Muted with muted text.
 - **Switch:** a native checkbox dressed as a 44 by 26px pill, crimson when on.
 
 ### Navigation
 
-- **Canopy header (both apps):** sticky, 60px, Canopy Yellow under the safe area, logomark in a white 40px tile, 1rem 800 title with a yellow-ink subtitle, account avatar as a warm-ink disc with yellow initials.
-- **Desktop / tablet (768px and up):** section tabs sit in the canopy as pills on a translucent white track; the current tab is a white pill with ink 700 text and a yellow-ink tinted shadow. Labels hide to icons between 768 and 1023px.
-- **Phones (under 768px):** a white 64px bottom tab bar plus safe area with the Bar shadow; the current tab gets a 60 by 32px yellow pill that springs in behind its 24px icon and a bold ink label. A still-loading destination shows a half-opacity pill at once.
-- **In-page switches:** one selection language: a white raised segment on a Concrete Sunken track (segmented controls, station section pills, the login method switch).
-- **Navigation feedback:** a 3px yellow-crimson-yellow progress line under the safe area while a route loads.
+- **Canopy header (both apps):** `WorkerHeader` and `AdminHeader` (wrapped by `StationHeader` on station pages). Sticky, 60px, Canopy Yellow under the safe area, logomark in a white 40px tile, 1.0625rem 800 title with a yellow-ink subtitle, account avatar as a 38px warm-ink disc with yellow initials. The avatar opens an account menu: a white dropdown panel (18px radius, Dropdown shadow, 180ms entrance) with the person and role, station name and code, and the logout button.
+- **Desktop / tablet (768px and up):** section tabs sit in the canopy as pills on a translucent white track; the current tab is a white pill with ink 700 text and a yellow-ink tinted shadow. Labels hide to icons between 768 and 1023px. In the admin app the tabs appear on station pages for station admins and shift managers, and come from the same list as its phone tab bar (`station-nav.ts`).
+- **Phones (under 768px):** a white 64px bottom tab bar plus safe area with the Bar shadow; the current tab gets a 60 by 32px yellow pill that springs in behind its 24px icon and a bold ink label. A still-loading destination shows a half-opacity pill at once. The admin app shows the same bar (`StationDock`) on station pages.
+- **In-page switches:** one selection language: a white raised segment on a Concrete Sunken track (segmented controls, station section pills such as attendance / exceptions, the attendance tabs, the schedule day tabs, the login method switch).
+- **Back link (admin):** a 40px pill link in secondary ink above a page header, returning to the parent screen; it fills with Concrete Muted on hover.
+- **Week switcher (worker):** the selected week is the headline: a compact day/month range in Ubuntu numerals that never wraps, the year(s) in a muted caption below, and quiet previous / next arrows.
+- **Navigation feedback:** a 3px yellow-crimson-yellow progress line under the safe area while a route loads. Admin route loading shows only this line plus a `RouteSkeleton` (title, subtitle and two card shapes, pulsing), never a splash.
 
 ### Dialogs and Sheets
 
-- **Base:** native `<dialog>`, white, 26px radius, Modal shadow, 560px (820px large), warm overlay `rgba(28, 23, 20, 0.52)`; header, scrolling body and a #fbfaf8 footer divided by a hairline. Enters in 220ms with a small rise.
+- **Base:** native `<dialog>`, white, 26px radius, Modal shadow, 560px (820px large), warm overlay `rgba(28, 23, 20, 0.52)`; header, a content-sized body that scrolls only once the dialog reaches its max height, and a Surface Soft (#faf9f6) footer divided by a hairline; a form's own action row stays pinned to the bottom while the body scrolls. Enters in 220ms with a small rise. The dialog itself takes focus on open, so no focus ring flashes on the close button.
 - **Phones (640px and under):** the same dialog becomes a bottom sheet: full width, top corners rounded, a 40 by 4px grab handle, rising in 280ms.
-- **Exception:** staff assignment docks as a full-height 520px side sheet at the inline start on desktop so the week grid it edits stays visible.
+- **Exception:** staff assignment docks as a full-height 520px side sheet at the inline start above 640px, sliding in over 240ms, so the week grid it edits stays visible.
 
 ### Fact Lines
 
-Live state is written, not tiled. Under a page header, a single wrapping line of labelled facts (a crimson dot and crimson numeral for live counts, warning-ink for items needing attention). Profiles and panels use definition lists: 0.75rem muted `dt` over a 0.9375rem 600 `dd`, divided by hairlines.
+Live state is written, not tiled. Under a page header, a single wrapping line of labelled facts (a crimson dot and crimson numeral for live counts, warning-ink for items needing attention). The admin station overview holds its live facts in one status strip: a single panel with three linked facts divided by hairlines, stacking under 760px. Profiles and panels use definition lists: 0.75rem muted `dt` over a 0.9375rem 600 `dd`, divided by hairlines.
 
 ### Live Shift Panel (signature)
 
@@ -373,7 +378,9 @@ Empty states centre a 52px yellow-subtle icon well, a Title, a 44ch explanation 
 
 ### Brand Reveal and Splash
 
-The worker app's launch plays a 1600ms 3D reveal of the logomark on Canopy Yellow, then fades to the app; with reduced motion, only the static front-facing mark shows. Navigation between tabs raises a yellow radial splash (logomark in an orbit ring, wordmark, progress track in Splash Wine) for a minimum of 1800ms or until content is ready. The admin app uses the same splash for route loading.
+Both apps open with `LaunchIntro`: a 1150ms 3D reveal of the logomark on Canopy Yellow, server-rendered as the first paint, that fades to the app with a slight scale-up while the app hydrates underneath. It plays once per launch session (sessionStorage) and never on NFC attendance links or their login step. With reduced motion, the static front-facing mark holds briefly and then fades over 450ms.
+
+In the worker app, moving between tabs raises the navigation splash (`BrandSplash`), which replays the same reveal on a yellow radial gradient for a minimum of 1000ms and until the destination's content is ready; worker route loading screens show the same reveal, and a loading screen stays hidden under a splash already running. The splash never shows on NFC links. The admin app has no navigation splash: routes change under the progress line and skeleton only.
 
 ## Do's and Don'ts
 

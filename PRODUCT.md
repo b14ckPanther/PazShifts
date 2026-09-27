@@ -17,7 +17,7 @@ Two installable Next.js web apps sharing `@yellowshifts/ui`: `apps/web` (worker 
 
 ## Product Purpose
 
-YellowShifts runs a station's workforce operations: weekly schedules and publishing, worker availability, NFC-based attendance with exceptions and manual corrections, hour rules and hours/pay reports with PDF export, staff and station management, and worker notifications. Success means a worker instantly knows whether they are on shift, where, when the next shift is, and whether their action worked; and a manager can build, publish, and correct the station's operations without friction on any device.
+YellowShifts runs a station's workforce operations: weekly schedules, shift templates and publishing, worker availability, NFC-based attendance with exceptions and manual corrections, hour rules and hours/pay reports with PDF export, staff and station management, and worker notifications. Success means a worker instantly knows whether they are on shift, where, when the next shift is, and whether their action worked; and a manager can build, publish, and correct the station's operations without friction on any device.
 
 ## Operating Context
 
@@ -30,7 +30,7 @@ YellowShifts runs a station's workforce operations: weekly schedules and publish
 - Roles: platform admin, station admin, shift manager, worker; permissions enforced by Supabase RLS.
 - Existing routes, actions, forms, field names, and business rules are product truth; presentation work must not change behavior.
 - Real data only: no mock records or placeholder content.
-- PWA installability, service worker offline fallback, and the NFC attendance flow must keep working.
+- PWA installability, service worker offline fallback, and the NFC attendance flow must keep working. Brand motion never delays NFC attendance: the launch intro and navigation splash are skipped on NFC links and their login step.
 
 ## Brand Commitments
 

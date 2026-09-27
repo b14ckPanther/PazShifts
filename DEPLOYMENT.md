@@ -1,6 +1,6 @@
 # Deployment — Darb domains and legacy NFC compatibility
 
-The user reports connecting the worker to `https://paz.darb.co.il` and admin to
+The worker app is served from `https://paz.darb.co.il` and the admin app from
 `https://admin.paz.darb.co.il`. Keep `https://paz-shifts.vercel.app` assigned to the
 worker project and serving the same deployment while existing physical NFC tags
 use it. Do not configure a domain-wide redirect from that host during this transition.
@@ -85,14 +85,20 @@ These settings follow [Vercel build configuration](https://vercel.com/docs/build
 
 Configure these variables in the **Production** environment:
 
-| Variable                        | Worker                            | Admin                             |
-| ------------------------------- | --------------------------------- | --------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Actual Supabase project URL       | Same project URL                  |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Actual anon/public key            | Same anon/public key              |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Do not set                        | Actual secret, server-only        |
-| `NEXT_PUBLIC_APP_URL`           | Actual worker origin after Step D | Actual worker origin after Step D |
-| `NEXT_PUBLIC_ADMIN_URL`         | Actual admin origin after Step D  | Actual admin origin after Step D  |
-| `ENABLE_EXPERIMENTAL_COREPACK`  | `1`                               | `1`                               |
+| Variable                                                                                   | Worker                            | Admin                                           |
+| ------------------------------------------------------------------------------------------ | --------------------------------- | ----------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                                                                 | Actual Supabase project URL       | Same project URL                                |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                            | Actual anon/public key            | Same anon/public key                            |
+| `SUPABASE_SERVICE_ROLE_KEY`                                                                | Do not set                        | Actual secret, server-only                      |
+| `NEXT_PUBLIC_APP_URL`                                                                      | Actual worker origin after Step D | Actual worker origin after Step D               |
+| `NEXT_PUBLIC_ADMIN_URL`                                                                    | Actual admin origin after Step D  | Actual admin origin after Step D                |
+| `ENABLE_EXPERIMENTAL_COREPACK`                                                             | `1`                               | `1`                                             |
+| `NEXT_PUBLIC_NFC_APP_URL`                                                                  | Do not set                        | Optional, see domain settings                   |
+| `APPLE_APP_IDS`, `ANDROID_APP_LINKS_PACKAGE`, `ANDROID_APP_LINKS_SHA256`                   | Native app links, see below       | Do not set                                      |
+| `NOTIFICATIONS_ENABLED`, `NOTIFICATIONS_CRON_SECRET`, `EXPO_ACCESS_TOKEN` (optional)       | Do not set                        | Push dispatcher, server-only, see below         |
+| `STATION_LEADS_RATE_SECRET`, `STATION_LEADS_EMAIL`, `STATION_LEADS_FROM`, `RESEND_API_KEY` | Do not set                        | Station-interest intake, server-only, see below |
+
+The last three rows belong to features added after this preparation; leave them unset until that feature is rolled out. `turbo.json` declares the server-only variables under `tasks.build.env`; add any new server variable there too.
 
 Never prefix the service-role key with `NEXT_PUBLIC_`. It must not reach browser code. Local `.env.local` files are not uploaded by Git. If enabling Preview deployments, configure their environments deliberately; do not use arbitrary previews as physical tag destinations.
 
@@ -228,9 +234,9 @@ Verification: `node --test tests/*.test.mjs` and `python3 tests/staff-permission
 
 ## Login switcher and branded startup
 
-The worker login defaults to Phone; admin login defaults to Email. The animated switch preserves each identifier and the shared password. Phone uses the telephone keyboard, email uses the email keyboard, and both authenticate with the same password. Israeli local numbers are normalized before password authentication. A disabled Phone provider now produces a clear message directing the user to Email instead of incorrectly reporting a bad password.
+Both worker and admin login default to Phone (shared `CompactLogin`). The animated switch preserves each identifier and the shared password. Phone uses the telephone keyboard, email uses the email keyboard, and both authenticate with the same password. Israeli local numbers are normalized before password authentication. A disabled Phone provider now produces a clear message directing the user to Email instead of incorrectly reporting a bad password.
 
-Both apps use the existing YellowShifts artwork for the startup and route-loading screens. The startup animation runs for at most 1.1 seconds once per browser tab/session, dismisses on interaction, and never intercepts input or delays an auth/NFC request. Direct NFC routes skip it. Reduced-motion users skip the startup animation and receive static route-loading artwork. This is an in-app entrance; the operating system controls its native PWA launch screen.
+Both apps use the existing YellowShifts artwork for the startup and route-loading screens. The startup reveal (`LaunchIntro`) plays for about 1.15 seconds once per browser tab/standalone PWA session (sessionStorage). It covers the page while the app hydrates underneath and is not dismissed by interaction; it does not delay an auth/NFC request. Direct NFC routes and logins returning to an NFC route skip it. Reduced-motion users get a short fade instead. The worker app also shows a branded splash on same-origin navigation, back/forward and login submit (not NFC routes): at least 1 second, held until route-loading/pending indicators clear, and it blocks input while visible. Admin uses skeleton route-loading instead. This is an in-app entrance; the operating system controls its native PWA launch screen.
 
 No new database migration is required for this login/splash update. Deploy both apps to receive the UI changes. Verify phone/password with an actual worker account on the hosted app, including a return NFC scan in the same browser session; automated UI checks do not substitute for a physical phone test.
 
@@ -265,9 +271,11 @@ Verify on an actual iPhone in portrait and landscape: status/home areas stay cle
 
 Auth context now runs the independent profile, role and membership reads concurrently. Page/layout reads use React's request-scoped `cache` through each app's `getServerContext`; it does not persist authorization between requests or share data between users. Mutating server actions continue checking authorization freshly. Weekly schedules embed their shifts/assignments in one database read; active/history attendance reads run concurrently.
 
-Station overview no longer downloads the full staff directory and account editor. These remain available under the Staff tab. Station routes have a loading boundary inside the persistent station layout, so the dock stays usable and Next can prefetch the loading shell. Ordinary navigation uses lightweight placeholders instead of replaying the full branding screen. Navigation links show pending feedback immediately; NFC routes are excluded from the new link wrapper and retain their scan/receipt handling. No authenticated page data is added to the service-worker cache.
+Station overview no longer downloads the full staff directory and account editor. These remain available under the Staff tab. Station routes have a loading boundary inside the persistent station layout, so the dock stays usable and Next can prefetch the loading shell. Ordinary admin navigation uses lightweight placeholders; the worker app now replays its branded navigation splash (see above). Navigation links show pending feedback immediately; NFC routes are excluded from the new link wrapper and retain their scan/receipt handling. No authenticated page data is added to the service-worker cache.
 
 Validation on 2026-09-12: three alternating reads against the same hosted project measured auth-context medians of 784 ms before and 293 ms after. This measures that server-data step from the development machine, not end-to-end Vercel or iPhone navigation. The joined schedule query returned identical data to the previous implementation for a hosted six-shift schedule. No new migration or Vercel configuration is needed; deploy both apps and verify tab response on a physical phone.
+
+Later changes (2026-09-24/25) alter this: auth context and the admin schedule workspace now use single-round-trip RPCs from migration 25, and middleware skips the Supabase Auth call when a session cookie is still valid. See [Performance RPCs and middleware fast path — migration 25](#performance-rpcs-and-middleware-fast-path--migration-25).
 
 ## Stop or remove mistaken attendance (migration 16)
 
@@ -305,26 +313,31 @@ unchanged. No schema migration or environment variable is required.
 Existing UUID GET links temporarily redirect (307) to the current code, retaining
 subroutes and query parameters. UUID POST requests are not redirected; code POST
 requests rewrite to the same internal action route. Refreshed session cookies
-are copied to redirects and rewrites. No station mapping is cached across users.
-The resolver adds one small authorized `id, code` read per station request;
-legacy links also incur a redirect. Station-list links use codes directly.
+are copied to redirects and rewrites. Since 2026-09-24 middleware keeps an
+in-memory `id`/`code` map per server instance for 30 minutes, shared across users;
+it holds no permissions, and pages still authorize every request. A cache miss adds
+one small authorized `id, code` read; legacy links also incur a redirect. Station-list,
+dock and station-page links use codes directly.
 
 Deploy the admin app. Verify station switching, nested reports/schedules, login
 return URLs, and a normal save with an authorized test account. Local middleware
 contract tests cover resolution, missing/denied stations, cookies and POST handling;
 hosted authenticated browser behavior remains owner verification. Changing a
-station code changes its readable URL; old UUID links remain valid. Revert this
+station code changes its readable URL; old UUID links remain valid. A warm instance
+may still resolve the old code for up to 30 minutes. Revert this
 change and redeploy to restore UUID-only routing.
 
 ### Readable worker station URLs
 
-Worker station links use `/stations/KURDANI`, `/stations/KURDANI/availability`, and
-`/stations/KURDANI/hours`. Existing `stationId` query links redirect to the code
-path on GET/HEAD, keeping week/date filters. The root `/` still selects the user's
-usual station. Code routes rewrite internally to the existing worker pages with
-the resolved UUID; server-side membership checks and mutations remain unchanged.
-The resolver uses the signed-in RLS client and does not cache station mappings.
-It adds one `id, code` lookup to station-specific requests.
+Worker station links use `/stations/KURDANI`, `/stations/KURDANI/home`,
+`/stations/KURDANI/availability`, and `/stations/KURDANI/hours`. Existing `stationId`
+query links (`/`, `/home`, `/hours`, `/availability`) redirect to the code path on
+GET/HEAD, keeping week/date filters. The root `/` still selects the user's usual
+station; a signed-in visit to `/login` without `next` goes to `/home`. Code routes
+rewrite internally to the existing worker pages with the resolved UUID; server-side
+membership checks and mutations remain unchanged. The resolver uses the signed-in
+RLS client; since 2026-09-24 the `id`/`code` mapping is cached in memory per
+server instance for 30 minutes, as in admin. A cache miss adds one `id, code` lookup.
 
 NFC `/nfc/<token>` routes and their scan receipts are unchanged: do not rewrite the
 physical tag. Legacy POST targets are retained, while code-path POSTs rewrite
@@ -408,3 +421,74 @@ before releasing the new native attendance build. No production migration or
 association deployment was performed during implementation. Signing, environment
 values, inspection/apply commands, rollback and physical-device checks are in
 [`apps/mobile/PHASE7.md`](apps/mobile/PHASE7.md).
+
+The worker middleware also leaves `/privacy/yellowshifts`, `/support/yellowshifts`
+and the Heebo font files public (privacy and support pages for the YellowShifts
+mobile app).
+
+### Migrations 18–23 (mobile phases)
+
+Migrations 18, 19, 22 and 23 also affect the web apps. Their rollout notes live
+beside the feature:
+
+| Migration                                   | Affects                                  | Notes                                                                      |
+| ------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| `20260913000018_atomic_worker_availability` | Worker web and mobile availability saves | Apply before the web caller; [PHASE3](apps/mobile/PHASE3.md)               |
+| `20260913000019_worker_notifications`       | Device/inbox tables, publication trigger | [PHASE5](apps/mobile/PHASE5.md)                                            |
+| `20260913000020/21` native NFC, left-open   | Native attendance, reminders             | [PHASE7](apps/mobile/PHASE7.md)                                            |
+| `20260913000022_sunday_calendar_weeks`      | Admin, worker web and mobile week keys   | Maintenance window, preflight; [SUNDAY-WEEKS](scripts/sql/SUNDAY-WEEKS.md) |
+| `20260914000023_notification_station_time`  | Reminder timing in station time          | [PHASE9](apps/mobile/PHASE9.md)                                            |
+
+`apps/mobile/PHASE9.md` records migrations 1–23 as matching the linked project on
+2026-09-14. Hosted state of 24 and 25 has not been verified here.
+
+### Push notification dispatcher (admin)
+
+The admin project serves `POST /api/internal/notifications`. Middleware exempts
+this exact path; the route requires `Authorization: Bearer <NOTIFICATIONS_CRON_SECRET>`
+(401 otherwise), returns `{enabled:false}` unless `NOTIFICATIONS_ENABLED=true`, and
+503 without `NEXT_PUBLIC_SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`. It uses the
+service-role key server-side. `EXPO_ACCESS_TOKEN` is only needed if Expo enhanced
+push security is enabled. Set these on the admin project only and redeploy.
+
+Supabase `pg_cron` + `pg_net` call the route every minute; there is no Vercel Cron.
+The same secret must be stored in Supabase Vault as
+`yellowshifts_notifications_cron_secret`. The job is created by
+`scripts/sql/notification-scheduler.sql` (a production operation, not a migration),
+which targets `https://admin.paz.darb.co.il`. Setup, pause, monitoring and the
+2026-09-15 activation record are in
+[`scripts/sql/NOTIFICATION-SCHEDULER.md`](scripts/sql/NOTIFICATION-SCHEDULER.md).
+
+### Station-interest intake — migration 24
+
+The admin project serves the public `POST /api/station-interest` used by the
+mobile login's station-owner card. Middleware exempts this exact path. Apply
+`20260916000024_station_interest_leads.sql` (RLS-protected leads, hashed-IP rate
+limits, service-role-only RPC) before shipping the mobile UI; until then the route
+returns 503.
+
+Admin Production variables: `STATION_LEADS_RATE_SECRET` (server-only, at least 32
+characters; the route returns 503 without it), and for email notification
+`RESEND_API_KEY`, `STATION_LEADS_EMAIL`, `STATION_LEADS_FROM`. Without the email
+variables leads are stored with `email_status=pending`. The route trusts
+`x-forwarded-for` only when `VERCEL=1`. Details, limits and release order are in
+[`apps/mobile/STATION-INTEREST.md`](apps/mobile/STATION-INTEREST.md).
+
+### Performance RPCs and middleware fast path — migration 25
+
+Apply `20260925000025_performance_rpcs.sql`, then deploy both apps. It adds four
+`SECURITY INVOKER` functions keyed on `auth.uid()`: `get_authenticated_user_context`
+(profile, platform-admin flag and active memberships in one call),
+`get_station_schedule_workspace` (schedule, templates, members and availability),
+and `assign_worker_to_shift_rpc` / `remove_worker_from_shift_rpc`, which check
+`can_manage_station_schedule`. No tables, policies or data change. If an RPC call
+fails, the code falls back to the previous RLS queries, so deploying before the
+migration works without the latency gain.
+
+Both middlewares now decode the Supabase auth cookie locally and call
+`auth.getUser()` only when the cookie is missing, malformed or within 60 seconds of
+expiry. Middleware is a routing gate; data access remains enforced by Supabase with
+the caller's JWT and RLS. Schedule assign/remove no longer revalidates the page;
+the admin schedule updates optimistically and rolls back on failure. No new
+environment variables. `node --test tests/auth-security-regression.test.mjs`
+covers the middleware paths.
