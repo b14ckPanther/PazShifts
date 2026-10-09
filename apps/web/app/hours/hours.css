@@ -1,116 +1,123 @@
-/* Worker hours: pick a range, read the total, export. */
+/* Worker hours: pick a period, read the total, scan the shifts, download. */
 .worker-hours {
   width: 100%;
-  max-width: calc(1040px + 2 * var(--ys-gutter));
+  max-width: calc(760px + 2 * var(--ys-gutter));
   margin-inline: auto;
   padding: 0 var(--ys-gutter) 32px;
   min-width: 0;
+  display: grid;
+  gap: 12px;
 }
 .worker-hours h2 {
-  font-size: var(--ys-text-lg);
+  margin: 0 0 6px;
+  font-size: var(--ys-text-md);
   font-weight: 800;
-  margin-bottom: 14px;
 }
-.worker-hours-controls,
-.worker-hours-table,
-.worker-hours-exports {
+.worker-hours-card {
   min-width: 0;
-  margin-top: 14px;
-  padding: clamp(16px, 3.2vw, 22px);
+  padding: clamp(14px, 3.2vw, 20px);
   border-radius: var(--ys-radius-lg);
   background: var(--ys-color-surface-raised);
   border: 1px solid var(--ys-color-border-subtle);
   box-shadow: var(--ys-shadow-card);
 }
-
-/* Range form */
-.worker-hours-controls {
-  display: grid;
-  gap: 14px;
-}
-.worker-hours-controls label {
+.worker-hours-station {
   display: grid;
   gap: 6px;
-  min-width: 0;
   font-size: var(--ys-text-sm);
   font-weight: 600;
-}
-.worker-hours-controls form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  align-items: end;
-}
-.worker-hours-controls form > .ys-button {
-  grid-column: 1 / -1;
-}
-@media (min-width: 720px) {
-  .worker-hours-controls form {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  }
-  .worker-hours-controls form > .ys-button {
-    grid-column: auto;
-  }
-}
-.hours-week-nav {
-  width: 100%;
 }
 
-/* Totals: two numerals, the first carries the page */
+/* Summary: one number carries the page. */
+.worker-hours-summary {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
 .worker-hours-total {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 10px;
-  margin-top: 14px;
-}
-.worker-hours-total > div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 16px 18px;
+  gap: 2px;
+  padding: 18px 20px;
   border-radius: var(--ys-radius-lg);
-  background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
-  box-shadow: var(--ys-shadow-card);
-}
-.worker-hours-total > div:first-child {
   background: var(--ys-color-text-primary);
-  border-color: transparent;
   color: #fff;
 }
-.worker-hours-total span {
+.worker-hours-total > span {
   font-size: var(--ys-text-sm);
   font-weight: 600;
-  color: var(--ys-color-text-secondary);
-}
-.worker-hours-total > div:first-child span {
   color: #d8d2cb;
 }
 .worker-hours-total strong {
-  font-size: clamp(1.75rem, 8vw, 2.25rem);
+  font-family: var(--ys-font-numeric);
+  font-size: clamp(2.5rem, 13vw, 3.25rem);
   font-weight: 500;
-  line-height: 1.1;
-}
-.worker-hours-total > div:first-child strong {
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
   color: #fff;
 }
-
-/* Table section: the shared HoursTable scrolls inside its own region */
-.worker-hours-table {
-  overflow: hidden;
+.worker-hours-total strong bdi {
+  direction: ltr;
+}
+.worker-hours-total p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 0;
+  font-size: var(--ys-text-sm);
+  color: #d8d2cb;
+}
+.worker-hours-total p b {
+  font-family: var(--ys-font-numeric);
+  font-weight: 700;
+  color: #fff;
+}
+.worker-hours-attention {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-status-warning-subtle);
+  color: var(--ys-color-status-warning-ink);
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+}
+.worker-hours-summary .hour-rates {
+  margin: 0;
 }
 
-/* Exports */
-.worker-hours-exports > div {
+/* Export: one obvious action, spreadsheets on request. */
+.worker-hours-export {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-  gap: 10px;
+  gap: 8px;
 }
-.worker-hours-exports > div > .ys-button {
+.worker-hours-export > .ys-button {
   width: 100%;
 }
+.worker-hours-export-scope {
+  margin: 0;
+  text-align: center;
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.worker-hours-csv {
+  border-top: 1px solid var(--ys-color-border-subtle);
+  padding-top: 6px;
+}
+.worker-hours-csv summary {
+  padding: 8px 0;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+  cursor: pointer;
+}
+.worker-hours-csv > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+  gap: 8px;
+  padding-bottom: 4px;
+}
 .worker-hours-error {
-  margin-top: 12px;
+  margin: 0;
   padding: 10px 14px;
   border-radius: var(--ys-radius-md);
   background: var(--ys-color-status-danger-subtle);
@@ -118,38 +125,15 @@
   font-size: var(--ys-text-sm);
   font-weight: 600;
 }
-.worker-hours-note {
-  margin-top: 14px;
-  font-size: var(--ys-text-sm);
-  line-height: 1.6;
-  color: var(--ys-color-text-secondary);
-  max-width: 70ch;
-}
 .worker-hours-refresh {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 8px 12px;
-  margin-top: 14px;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--ys-color-border-subtle);
 }
 .worker-hours-refresh small {
   font-size: var(--ys-text-xs);
   color: var(--ys-color-text-muted);
-}
-@media (max-width: 380px) {
-  .worker-hours-total {
-    grid-template-columns: 1fr;
-  }
-}
-
-.worker-hours-total > div.is-attention {
-  background: var(--ys-color-status-warning-subtle);
-  border-color: rgba(217, 122, 0, 0.25);
-}
-.worker-hours-total > div.is-attention span,
-.worker-hours-total > div.is-attention strong {
-  color: var(--ys-color-status-warning-ink);
 }

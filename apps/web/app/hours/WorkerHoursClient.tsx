@@ -3,15 +3,14 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   hoursExportName,
-  addDays,
-  duration,
+  hoursMinutes,
+  hoursSummary,
   reportCsv,
   summaryCsv,
   weeklyCsv,
-  weekStart,
   type HoursReport,
 } from '@yellowshifts/reports';
-import { HoursTable, RateBreakdown, PageHeader } from '@yellowshifts/ui';
+import { HoursTable, RateBreakdown, PageHeader, PeriodPicker, periodLabel } from '@yellowshifts/ui';
 import { DownloadIcon, RefreshIcon } from '@yellowshifts/icons';
 import type { StationWithMembership } from '@yellowshifts/types';
 import { WorkerHeader } from '@/app/components/WorkerHeader';
@@ -49,9 +48,7 @@ export function WorkerHoursClient({
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const total = report.entries.reduce((s, e) => s + e.seconds, 0);
-  const flagged = new Set(report.entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id))
-    .size;
+  const summary = hoursSummary(report.entries);
   const exportName = (kind: 'pdf' | 'daily' | 'weekly' | 'detail') =>
     hoursExportName(report, kind, report.people[0]?.name || 'עובד');
   function navigate(from: string, to: string, id = stationId) {
@@ -84,143 +81,117 @@ export function WorkerHoursClient({
         />
       )}
       <main className="worker-hours" dir="rtl" aria-busy={pending}>
-        <PageHeader
-          title="השעות שלי"
-          description={`הנוכחות שלך בתחנת ${report.station}, יום אחרי יום.`}
-        />
+        <PageHeader title="השעות שלי" />
         {memberships && memberships.length > 1 && (
           <StationSelector memberships={memberships} activeStationId={stationId} />
         )}
-        <section className="worker-hours-controls">
-          {!memberships && stations.length > 1 && (
-            <label>
-              תחנה
-              <select
-                value={stationId}
-                onChange={(e) => navigate(report.from, report.to, e.target.value)}
-              >
-                {stations.map((s) => (
-                  <option value={s.id} key={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <form
-            key={`${report.from}-${report.to}`}
-            onSubmit={(e) => {
-              e.preventDefault();
-              const f = new FormData(e.currentTarget);
-              navigate(String(f.get('from')), String(f.get('to')));
-            }}
-          >
-            <label>
-              מתאריך
-              <input type="date" name="from" required defaultValue={report.from} />
-            </label>
-            <label>
-              עד תאריך
-              <input type="date" name="to" required defaultValue={report.to} />
-            </label>
-            <button
-              className="ys-button ys-button--primary"
-              disabled={pending}
-              aria-busy={pending || undefined}
+        {!memberships && stations.length > 1 && (
+          <label className="worker-hours-station">
+            תחנה
+            <select
+              value={stationId}
+              onChange={(e) => navigate(report.from, report.to, e.target.value)}
             >
-              {pending ? 'טוענים…' : 'הצגת שעות'}
-            </button>
-          </form>
-          <div className="hours-week-nav ys-segmented" role="group" aria-label="מעבר בין שבועות">
-            <button
-              disabled={pending}
-              onClick={() => navigate(addDays(report.from, -7), addDays(report.to, -7))}
-            >
-              שבוע קודם
-            </button>
-            <button
-              aria-pressed={
-                report.from === weekStart(today, 0) && report.to === addDays(weekStart(today, 0), 6)
-              }
-              disabled={pending}
-              onClick={() => navigate(weekStart(today, 0), addDays(weekStart(today, 0), 6))}
-            >
-              השבוע
-            </button>
-            <button
-              disabled={pending}
-              onClick={() => navigate(addDays(report.from, 7), addDays(report.to, 7))}
-            >
-              שבוע הבא
-            </button>
-          </div>
+              {stations.map((s) => (
+                <option value={s.id} key={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <section className="worker-hours-card" aria-label="בחירת תקופה">
+          <PeriodPicker
+            from={report.from}
+            to={report.to}
+            today={today}
+            pending={pending}
+            onChange={(from, to) => navigate(from, to)}
+          />
         </section>
-        <section className="worker-hours-total">
-          <div>
-            <span>סך שעות סגורות</span>
-            <strong className="ys-num" dir="ltr">
-              {duration(total)}
+
+        <section className="worker-hours-summary" aria-label="סיכום התקופה">
+          <div className="worker-hours-total">
+            <span>סה״כ שעות</span>
+            <strong>
+              <bdi>{hoursMinutes(summary.seconds)}</bdi>
             </strong>
+            <p>
+              <span>
+                <b>{summary.days}</b> ימי עבודה
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                <b>{summary.shifts}</b> משמרות
+              </span>
+            </p>
           </div>
-          <div className={flagged > 0 ? 'is-attention' : undefined}>
-            <span>רשומות לבדיקה</span>
-            <strong className="ys-num">{flagged}</strong>
-          </div>
-        </section>
-        <section className="worker-hours-table">
-          <h2>פירוט שעות העבודה</h2>
+          {summary.attention > 0 && (
+            <p className="worker-hours-attention" role="status">
+              {summary.attention === 1
+                ? 'משמרת אחת לא נספרה'
+                : `${summary.attention} משמרות לא נספרו`}{' '}
+              – פתוחה או ממתינה לבדיקת המנהל.
+            </p>
+          )}
           <RateBreakdown entries={report.entries} />
+        </section>
+
+        <section className="worker-hours-card" aria-labelledby="worker-shifts-title">
+          <h2 id="worker-shifts-title">משמרות</h2>
           <HoursTable report={report} />
         </section>
-        <section className="worker-hours-exports">
-          <h2>הדוח שלך להורדה</h2>
-          <div>
-            <button
-              className="ys-button ys-button--primary"
-              onClick={pdf}
-              disabled={busy || pending}
-              aria-busy={busy || undefined}
-            >
-              <DownloadIcon size={18} aria-hidden="true" />
-              {busy ? 'מכינים PDF…' : 'הורדת PDF'}
-            </button>
-            <button
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => saveCsv(summaryCsv(report), `${exportName('daily')}.csv`)}
-            >
-              CSV יומי
-            </button>
-            <button
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => saveCsv(weeklyCsv(report), `${exportName('weekly')}.csv`)}
-            >
-              CSV שבועי
-            </button>
-            <button
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => saveCsv(reportCsv(report), `${exportName('detail')}.csv`)}
-            >
-              CSV מפורט
-            </button>
-          </div>
+
+        <section className="worker-hours-card worker-hours-export" aria-label="הורדת הדוח">
+          <button
+            className="ys-button ys-button--primary ys-button--lg"
+            onClick={pdf}
+            disabled={busy || pending}
+            aria-busy={busy || undefined}
+          >
+            <DownloadIcon size={18} aria-hidden="true" />
+            {busy ? 'מכינים PDF…' : 'הורדת דוח PDF'}
+          </button>
+          <p className="worker-hours-export-scope">{periodLabel(report.from, report.to)}</p>
           {error && (
             <p className="worker-hours-error" role="alert">
               {error}
             </p>
           )}
-          <p className="worker-hours-note">
-            משמרות פתוחות או מסומנות לבדיקה אינן נספרות. משמרת לילה מוצגת בשלמותה ביום הכניסה, לפי
-            אזור הזמן של התחנה. שעות נוכחות אינן חישוב שכר.
-          </p>
+          <details className="worker-hours-csv">
+            <summary>קבצים לאקסל (CSV)</summary>
+            <div>
+              <button
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() => saveCsv(summaryCsv(report), `${exportName('daily')}.csv`)}
+              >
+                סיכום יומי
+              </button>
+              <button
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() => saveCsv(weeklyCsv(report), `${exportName('weekly')}.csv`)}
+              >
+                סיכום שבועי
+              </button>
+              <button
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() => saveCsv(reportCsv(report), `${exportName('detail')}.csv`)}
+              >
+                פירוט משמרות
+              </button>
+            </div>
+          </details>
           <footer className="worker-hours-refresh">
             <small>
-              עודכן לאחרונה:{' '}
+              עודכן{' '}
               <bdi>
-                {new Date(report.generatedAt).toLocaleString('he-IL', {
+                {new Date(report.generatedAt).toLocaleTimeString('he-IL', {
                   timeZone: report.timezone,
+                  hour: '2-digit',
+                  minute: '2-digit',
                 })}
               </bdi>
             </small>
@@ -232,7 +203,7 @@ export function WorkerHoursClient({
               onClick={() => startTransition(() => router.refresh())}
             >
               <RefreshIcon size={16} aria-hidden="true" />
-              {pending ? 'מרעננים…' : 'רענון הנתונים'}
+              {pending ? 'מרעננים…' : 'רענון'}
             </button>
           </footer>
         </section>

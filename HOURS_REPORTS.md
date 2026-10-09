@@ -2,11 +2,11 @@
 
 Station admins and platform admins can open **שעות / דוח שעות עבודה** from a station. Shift managers and workers cannot access these reports. The page verifies the current user's station role before querying attendance, and queries use the authenticated Supabase client and existing RLS.
 
-Choose a week (Sunday–Saturday) or a date range of up to 93 days. Select one worker or the whole station team. Historical/inactive memberships and admins are included so past attendance remains reportable. Expand a worker to see weekly totals, daily totals and attendance shifts. Refresh before exporting if attendance was recently corrected.
+Choose this/last week, this/last month, step with the arrows, or tap the period label for a custom range of up to 93 days. Select one worker or the whole station team. Historical/inactive memberships and admins are included so past attendance remains reportable. Expand a worker to see weekly totals, daily totals and attendance shifts. Refresh before exporting if attendance was recently corrected.
 
 Exports follow the selected worker and period:
 
-- PDF: team summary, individual totals, daily and weekly detail, statuses and correction reasons. Hebrew RTL with embedded, locally hosted Heebo font (license in `apps/admin/public/fonts/Heebo-OFL.txt`); generation runs on the client and loads only on demand.
+- PDF: one page per worker with the app logo, worker name, station, period, three totals (hours, work days, shifts) and a shift table (date, weekday, in, out, decimal hours, and percent columns only when station rules classify hours). A note column appears only for shifts that were not counted. Totals are sums of the printed row values. Team exports open with a one-page summary table; workers without attendance are left out. The footer carries the Darb mark and page numbers. Hebrew RTL with embedded, locally hosted Heebo Regular/Bold (license in `apps/*/public/fonts/Heebo-OFL.txt`) and `public/brand/logomark-report.png`; generation runs on the client and loads only on demand.
 - Daily CSV: one row per worker per date, including zero-hour dates.
 - Weekly CSV: one row per worker per Sunday-start week, with totals limited to shifts that start in the selected date range.
 - Detail CSV: one row per attendance record with its full check-in and check-out, stable identifiers, original record ID, source and correction information. CSV files have a UTF-8 BOM for Hebrew in Excel and escape formula-like text.

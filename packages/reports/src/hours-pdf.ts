@@ -1,206 +1,385 @@
 import { jsPDF } from 'jspdf';
 import {
-  addDays,
-  clock,
-  duration,
-  localDate,
-  weekStart,
-  rateText,
+  decimalHours,
+  displayDate,
+  hoursSummary,
+  isCounted,
+  payRateKeys,
+  payRates,
+  shortClock,
+  weekdayLabel,
   type HoursReport,
+  type ReportEntry,
+  type ReportPerson,
 } from './hours-report';
 
-/** Loaded only on export; the Hebrew font is served locally and embedded in the file. */
-export function createHoursPdf(report: HoursReport, font: string) {
+export type PdfAssets = { regular: string; bold?: string; logo?: string };
+
+const PAGE = { width: 210, height: 297, margin: 14 };
+const RIGHT = PAGE.width - PAGE.margin;
+const CONTENT = PAGE.width - PAGE.margin * 2;
+const BODY_BOTTOM = 276;
+const ROW = 7.4;
+const INK = '#1c1714';
+const MUTED = '#6e665f';
+const HAIRLINE = '#e6e2da';
+const SOFT = '#faf9f6';
+const YELLOW = '#fcbc00';
+const YELLOW_SUBTLE = '#fff4cc';
+const CRIMSON = '#d10040';
+const WARNING = '#8a4b00';
+const HEBREW = /[֐-׿]/;
+
+type Column = {
+  label: string;
+  width: number;
+  align?: 'center' | 'right';
+};
+
+/** Generated on the client and loaded only on export; fonts and logo are served locally. */
+export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
   const doc = new jsPDF({ compress: true });
-  doc.addFileToVFS('Heebo.ttf', font);
+  doc.addFileToVFS('Heebo.ttf', assets.regular);
   doc.addFont('Heebo.ttf', 'Heebo', 'normal');
-  doc.setFont('Heebo');
-  let y = 18;
-  let continuation = '';
-  function text(value: string, x: number, top: number, rtl = true, size = 10) {
+  doc.addFileToVFS('Heebo-Bold.ttf', assets.bold ?? assets.regular);
+  doc.addFont('Heebo-Bold.ttf', 'Heebo', 'bold');
+  doc.setFont('Heebo', 'normal');
+  doc.setLineHeightFactor(1);
+
+  const years = report.from.slice(0, 4) !== report.to.slice(0, 4);
+  const shortDate = (date: string) => {
+    const [y, m, d] = date.split('-');
+    return years ? `${d}/${m}/${y!.slice(2)}` : `${d}/${m}`;
+  };
+  const period = `${displayDate(report.from)} – ${displayDate(report.to)}`;
+  let y = 0;
+
+  function text(
+    value: string,
+    x: number,
+    top: number,
+    {
+      size = 9.5,
+      bold = false,
+      color = INK,
+      align = 'right',
+    }: { size?: number; bold?: boolean; color?: string; align?: 'left' | 'right' | 'center' } = {}
+  ) {
+    const rtl = HEBREW.test(value);
+    doc.setFont('Heebo', bold ? 'bold' : 'normal');
     doc.setFontSize(size);
+    doc.setTextColor(color);
     doc.setR2L(false);
     doc.text(value, x, top, {
-      align: rtl ? 'right' : 'left',
+      align,
+      baseline: 'middle',
       isInputVisual: false,
       isOutputVisual: true,
       isInputRtl: rtl,
       isOutputRtl: false,
     });
   }
-  function header() {
-    doc.setFillColor('#FFBF00');
-    doc.rect(0, 0, 210, 4, 'F');
-    doc.setTextColor('#111827');
-    text('דוח שעות עבודה', 196, 16, true, 17);
-    text(report.station, 196, 24);
-    text(`${report.from} — ${report.to} | ${report.timezone}`, 14, 33, false, 9);
-    y = 43;
-    if (continuation) {
-      text(continuation, 196, y, true, 10);
-      y += 9;
+
+  function header(title: string, subtitle: string) {
+    doc.setFillColor(YELLOW);
+    doc.rect(0, 0, PAGE.width, 2.2, 'F');
+    let titleX = RIGHT;
+    if (assets.logo) {
+      doc.addImage(assets.logo, 'PNG', RIGHT - 15, 9, 15, 15);
+      titleX = RIGHT - 19;
     }
+    text(title, titleX, 14.2, { size: 17, bold: true });
+    text(subtitle, titleX, 21.2, { size: 10, color: MUTED });
+    text(period, PAGE.margin, 14.2, { size: 11, bold: true, align: 'left' });
+    doc.setDrawColor(HAIRLINE);
+    doc.setLineWidth(0.3);
+    doc.line(PAGE.margin, 29, RIGHT, 29);
+    y = 35;
   }
-  function room(height: number) {
-    if (y + height > 277) {
-      doc.addPage();
-      header();
-    }
+
+  function stats(items: { label: string; value: string }[]) {
+    const gap = 3;
+    const width = Math.min(42, (CONTENT - gap * (items.length - 1)) / items.length);
+    const height = 18;
+    items.forEach((item, i) => {
+      const right = RIGHT - i * (width + gap);
+      doc.setFillColor(i === 0 ? INK : SOFT);
+      doc.setDrawColor(i === 0 ? INK : HAIRLINE);
+      doc.roundedRect(right - width, y, width, height, 2.2, 2.2, 'FD');
+      const color = i === 0 ? '#ffffff' : INK;
+      const muted = i === 0 ? '#d8d2cb' : MUTED;
+      text(item.label, right - 3.5, y + 4.8, { size: 8, color: muted });
+      text(item.value, right - 3.5, y + 11.6, { size: 14, bold: true, color });
+    });
+    y += height + 7;
   }
-  function line(value: string, size = 10) {
-    doc.setFontSize(size);
-    const lines = doc.splitTextToSize(value, 180) as string[];
-    for (const part of lines) {
-      room(7);
-      text(part, 196, y, true, size);
-      y += 7;
-    }
+
+  function columnsAt(columns: Column[]) {
+    let right = RIGHT;
+    return columns.map((column) => {
+      const at = { ...column, right, left: right - column.width };
+      right -= column.width;
+      return at;
+    });
   }
-  function divider() {
-    room(5);
-    doc.setDrawColor('#E2E8F0');
-    doc.line(14, y, 196, y);
-    y += 6;
-  }
-  function tableHeader() {
-    doc.setFillColor('#F1F5F9');
-    doc.rect(14, y - 4, 182, 9, 'F');
-    for (const [label, x] of [
-      ['תאריך', 193],
-      ['כניסה', 155],
-      ['יציאה', 130],
-      ['משך', 105],
-      ['מצב / מקור', 76],
-    ] as const)
-      text(label, x, y + 2, true, 9);
-    y += 10;
-  }
-  function tableRow(
-    date: string,
-    start: string | null,
-    end: string | null,
-    seconds: number,
-    status: string,
-    extraHeight = 0
+
+  function cell(
+    value: string,
+    column: ReturnType<typeof columnsAt>[number],
+    top: number,
+    options: { bold?: boolean; color?: string; size?: number } = {}
   ) {
-    doc.setFontSize(9);
-    const overnight =
-      end && localDate(new Date(end), report.timezone) !== date
-        ? ` · יציאה ב-${localDate(new Date(end), report.timezone)}`
-        : '';
-    const lines = doc.splitTextToSize(status + overnight, 60) as string[];
-    const height = Math.max(10, lines.length * 5 + 4);
-    if (y + height + extraHeight > 277) {
+    if (!value) return;
+    if (column.align === 'right') text(value, column.right - 2.5, top, options);
+    else text(value, column.left + column.width / 2, top, { ...options, align: 'center' });
+  }
+
+  function tableHead(columns: ReturnType<typeof columnsAt>) {
+    doc.setFillColor(INK);
+    doc.roundedRect(PAGE.margin, y, CONTENT, ROW + 0.6, 1.6, 1.6, 'F');
+    for (const column of columns)
+      cell(column.label, column, y + (ROW + 0.6) / 2, { bold: true, color: '#ffffff', size: 8.5 });
+    y += ROW + 0.6;
+  }
+
+  function rowBackground(index: number) {
+    if (index % 2) {
+      doc.setFillColor(SOFT);
+      doc.rect(PAGE.margin, y, CONTENT, ROW, 'F');
+    }
+    doc.setDrawColor(HAIRLINE);
+    doc.setLineWidth(0.2);
+    doc.line(PAGE.margin, y + ROW, RIGHT, y + ROW);
+  }
+
+  function totalRow(columns: ReturnType<typeof columnsAt>, values: (string | undefined)[]) {
+    y += 1.2;
+    doc.setFillColor(YELLOW_SUBTLE);
+    doc.setDrawColor(YELLOW);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(PAGE.margin, y, CONTENT, ROW + 1, 1.6, 1.6, 'FD');
+    columns.forEach((column, i) => {
+      if (values[i]) cell(values[i]!, column, y + (ROW + 1) / 2, { bold: true, size: 10 });
+    });
+    y += ROW + 1;
+  }
+
+  // 100/125/150 are always printed; station rules may add other percentages.
+  const split = payRates(report.entries);
+  const rateKeys = payRateKeys;
+  // Totals are sums of the printed per-shift values, so every column adds up on paper.
+  const hundredths = (seconds: number) => Math.round(seconds / 36);
+  const printed = (value: number) => (value / 100).toFixed(2);
+  const sumHours = (entries: ReportEntry[]) =>
+    entries.reduce((sum, e) => sum + hundredths(e.seconds), 0);
+  // Per shift, rate cells are rounded so they add up to the printed hours (unless a break
+  // deduction makes them intentionally smaller); the rounding remainder goes to the top rate.
+  const rowCache = new Map<ReportEntry, Record<string, number>>();
+  function rowRates(entry: ReportEntry) {
+    let row = rowCache.get(entry);
+    if (row) return row;
+    row = {};
+    const keys = Object.keys(split.get(entry) ?? {}).sort((a, b) => Number(a) - Number(b));
+    for (const key of keys) row[key] = hundredths(split.get(entry)![key]!);
+    const top = keys.filter((key) => row![key]! > 0).pop();
+    if (top && !entry.breakSeconds)
+      row[top]! += hundredths(entry.seconds) - keys.reduce((sum, key) => sum + row![key]!, 0);
+    rowCache.set(entry, row);
+    return row;
+  }
+  const sumRate = (entries: ReportEntry[], rate: string) =>
+    entries.reduce((sum, e) => sum + (rowRates(e)[rate] || 0), 0);
+  const rateValue = (entries: ReportEntry[], rate: string) => {
+    const value = sumRate(entries, rate);
+    return value > 0 ? printed(value) : '';
+  };
+
+  function note(entry: ReportEntry): string {
+    if (!isCounted(entry)) {
+      if (entry.status === 'משמרת פתוחה') return 'משמרת פתוחה · לא נספרה';
+      if (entry.status.startsWith('חפיפה')) return 'חפיפה · לא נספרה';
+      return 'לבדיקה · לא נספרה';
+    }
+    return '';
+  }
+
+  function personPage(person: ReportPerson, entries: ReportEntry[]) {
+    const title = person.name;
+    header(title, report.station);
+    const summary = hoursSummary(entries);
+    const rates = rateKeys(entries);
+    const items = [
+      { label: 'סה״כ שעות', value: printed(sumHours(entries)) },
+      { label: 'ימי עבודה', value: String(summary.days) },
+      { label: 'משמרות', value: String(summary.shifts) },
+    ];
+    if (!entries.length) {
+      stats(items);
+      text('לא נרשמו משמרות בתקופה זו.', RIGHT, y + 4, { color: MUTED, size: 11 });
+      return;
+    }
+    stats(items);
+
+    const notes = entries.some((e) => note(e));
+    const fixed = 22 + 10 + 19 + 24 + 19 + rates.length * 17;
+    const spare = CONTENT - fixed;
+    const columns = columnsAt([
+      { label: 'תאריך', width: 22 + (notes ? 0 : spare * 0.2), align: 'right' },
+      { label: 'יום', width: 10 },
+      { label: 'כניסה', width: 19 + (notes ? 0 : spare * 0.2) },
+      { label: 'יציאה', width: 24 + (notes ? 0 : spare * 0.2) },
+      { label: 'שעות', width: 19 + (notes ? 0 : spare * 0.2) },
+      ...rates.map((rate) => ({
+        label: `${rate}%`,
+        width: 17 + (notes ? 0 : (spare * 0.2) / rates.length),
+      })),
+      ...(notes ? [{ label: 'הערה', width: spare, align: 'right' as const }] : []),
+    ]);
+    tableHead(columns);
+    let previousDate = '';
+    entries.forEach((entry, index) => {
+      if (y + ROW > BODY_BOTTOM - ROW - 2) {
+        doc.addPage();
+        header(title, report.station);
+        tableHead(columns);
+        previousDate = '';
+      }
+      rowBackground(index);
+      const middle = y + ROW / 2;
+      const counted = isCounted(entry);
+      const dimmed = counted ? INK : MUTED;
+      if (entry.date !== previousDate) {
+        cell(shortDate(entry.date), columns[0]!, middle);
+        cell(weekdayLabel(entry.date), columns[1]!, middle, { color: MUTED });
+      }
+      previousDate = entry.date;
+      cell(shortClock(entry.start, report.timezone), columns[2]!, middle, { color: dimmed });
+      cell(shortClock(entry.end, report.timezone), columns[3]!, middle, { color: dimmed });
+      cell(counted ? decimalHours(entry.seconds) : '—', columns[4]!, middle, {
+        bold: counted,
+        color: dimmed,
+      });
+      rates.forEach((rate, i) =>
+        cell(rateValue([entry], rate), columns[5 + i]!, middle, { color: dimmed })
+      );
+      if (notes) {
+        const value = note(entry);
+        cell(value, columns[columns.length - 1]!, middle, {
+          size: 8,
+          color: counted ? MUTED : WARNING,
+        });
+      }
+      y += ROW;
+    });
+    totalRow(columns, [
+      'סה״כ',
+      '',
+      '',
+      '',
+      printed(sumHours(entries)),
+      ...rates.map((rate) => rateValue(entries, rate)),
+    ]);
+  }
+
+  function teamPage(people: ReportPerson[]) {
+    header('סיכום צוות', report.station);
+    const summary = hoursSummary(report.entries);
+    const rates = rateKeys(report.entries);
+    stats([
+      { label: 'סה״כ שעות', value: printed(sumHours(report.entries)) },
+      { label: 'עובדים', value: String(people.length) },
+      { label: 'משמרות', value: String(summary.shifts) },
+    ]);
+    const fixed = 18 + 20 + 22 + rates.length * 18;
+    const columns = columnsAt([
+      { label: 'עובד', width: CONTENT - fixed, align: 'right' },
+      { label: 'ימי עבודה', width: 18 },
+      { label: 'משמרות', width: 20 },
+      { label: 'שעות', width: 22 },
+      ...rates.map((rate) => ({ label: `${rate}%`, width: 18 })),
+    ]);
+    tableHead(columns);
+    people.forEach((person, index) => {
+      if (y + ROW > BODY_BOTTOM - ROW - 2) {
+        doc.addPage();
+        header('סיכום צוות', report.station);
+        tableHead(columns);
+      }
+      const entries = report.entries.filter((e) => e.personId === person.id);
+      const own = hoursSummary(entries);
+      rowBackground(index);
+      const middle = y + ROW / 2;
+      cell(person.name, columns[0]!, middle, { bold: true });
+      cell(String(own.days), columns[1]!, middle);
+      cell(String(own.shifts), columns[2]!, middle);
+      cell(printed(sumHours(entries)), columns[3]!, middle, { bold: true });
+      rates.forEach((rate, i) => cell(rateValue(entries, rate), columns[4 + i]!, middle));
+      y += ROW;
+    });
+    totalRow(columns, [
+      'סה״כ',
+      String(summary.days),
+      String(summary.shifts),
+      printed(sumHours(report.entries)),
+      ...rates.map((rate) => rateValue(report.entries, rate)),
+    ]);
+  }
+
+  // Team exports open with one summary page; only workers with attendance get a page.
+  const people = report.people.filter(
+    (person) => report.people.length === 1 || report.entries.some((e) => e.personId === person.id)
+  );
+  if (report.people.length > 1) {
+    teamPage(people);
+    for (const person of people) {
       doc.addPage();
-      header();
-      tableHeader();
+      personPage(
+        person,
+        report.entries.filter((e) => e.personId === person.id)
+      );
     }
-    text(date, 160, y, false, 9);
-    text(clock(start, report.timezone), 134, y, false, 9);
-    text(clock(end, report.timezone), 109, y, false, 9);
-    text(duration(seconds), 80, y, false, 9);
-    lines.forEach((part, i) => text(part, 76, y + i * 5, true, 9));
-    y += height;
-    doc.setDrawColor('#E2E8F0');
-    doc.line(14, y - 5, 196, y - 5);
-  }
-  header();
-  line('נוכחות וסיווג לפי כללי התחנה — ללא חישוב שכר כספי.');
-  line('התוספות אינן מצטברות; שעות ללא כללים מסומנות בנפרד.');
-  line(rateText(report.entries), 9);
-  line('רשומות פתוחות, מסומנות וחופפות אינן נכללות בסיכום.');
-  line('כל משמרת נספרת בשלמותה לפי תאריך הכניסה, גם אם היציאה למחרת.');
-  line('משך מוצג בשעות:דקות:שניות. התיקונים הידניים כלולים ומסומנים.');
-  line(`סה״כ שעות סגורות: ${duration(report.entries.reduce((s, e) => s + e.seconds, 0))}`);
-  divider();
-  line('סיכום הצוות', 14);
-  for (const person of report.people) {
-    line(
-      `${person.name} — ${duration(report.entries.filter((e) => e.personId === person.id).reduce((s, e) => s + e.seconds, 0))}`
-    );
-  }
-  divider();
-  for (const person of report.people) {
-    continuation = person.name;
-    room(30);
-    line(person.name, 14);
-    line(`קוד עובד: ${person.code || 'לא הוגדר'}`);
-    // Stable identity remains available even for duplicate names or missing employee codes.
-    room(7);
-    text(person.id, 14, y, false, 8);
-    y += 7;
-    const entries = report.entries.filter((e) => e.personId === person.id);
-    line(`סך שעות בתקופה: ${duration(entries.reduce((s, e) => s + e.seconds, 0))}`);
-    line(rateText(entries), 9);
-    let week = '';
-    for (let date = report.from; date <= report.to; date = addDays(date, 1)) {
-      const currentWeek = weekStart(date, 0);
-      if (week !== currentWeek) {
-        week = currentWeek;
-        room(21);
-        line(
-          `שבוע ${week} — סה״כ ${duration(entries.filter((e) => weekStart(e.date, 0) === week).reduce((s, e) => s + e.seconds, 0))}`,
-          11
-        );
-      }
-      if (date === report.from || date === currentWeek)
-        line(rateText(entries.filter((e) => weekStart(e.date, 0) === week)), 9);
-      const daily = entries.filter((e) => e.date === date);
-      if (date === report.from || date === currentWeek) {
-        room(20);
-        tableHeader();
-      }
-      if (!daily.length) tableRow(date, null, null, 0, 'ללא נוכחות');
-      for (const entry of daily) {
-        doc.setFontSize(9);
-        const extraHeight =
-          doc.splitTextToSize(rateText([entry]), 180).length * 7 +
-          (entry.reason ? doc.splitTextToSize(entry.reason, 180).length * 7 : 0) +
-          (entry.correctedAt ? 7 : 0);
-        tableRow(
-          date,
-          entry.start,
-          entry.end,
-          entry.seconds,
-          `${entry.status} · ${entry.source}`,
-          extraHeight
-        );
-        line(rateText([entry]), 8);
-        if (entry.reason) line(`סיבת תיקון: ${entry.reason}`, 9);
-        if (entry.correctedAt) {
-          room(7);
-          text(entry.correctedAt, 14, y, false, 8);
-          y += 7;
-        }
-      }
-      if (daily.length > 1)
-        line(`סה״כ ביום ${date}: ${duration(daily.reduce((sum, e) => sum + e.seconds, 0))}`, 9);
-    }
-    divider();
-  }
+  } else if (people[0]) personPage(people[0], report.entries);
+  else header('דוח שעות', report.station);
+
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);
-    doc.setTextColor('#475569');
-    text(`${page} / ${pages}`, 14, 289, false, 9);
-    text(
-      `הופק: ${new Date(report.generatedAt).toLocaleString('he-IL', { timeZone: report.timezone })}`,
-      196,
-      289,
-      true,
-      8
-    );
+    doc.setDrawColor(HAIRLINE);
+    doc.setLineWidth(0.3);
+    doc.line(PAGE.margin, 283, RIGHT, 283);
+    doc.setFont('Heebo', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(INK);
+    doc.text('Darb', PAGE.margin, 288.5, { baseline: 'middle' });
+    doc.setTextColor(CRIMSON);
+    doc.text('.', PAGE.margin + doc.getTextWidth('Darb'), 288.5, { baseline: 'middle' });
+    if (pages > 1)
+      text(`${page} / ${pages}`, RIGHT, 288.5, { size: 8, color: MUTED, align: 'right' });
   }
   return doc;
 }
-export async function exportHoursPdf(report: HoursReport, filename: string) {
-  const response = await fetch('/fonts/Heebo-Regular.ttf');
-  if (!response.ok || response.redirected) throw new Error('Font unavailable');
+
+async function base64(path: string, check?: (bytes: Uint8Array) => boolean) {
+  const response = await fetch(path);
+  if (!response.ok || response.redirected) throw new Error(`Unavailable: ${path}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes[0] !== 0 || bytes[1] !== 1 || bytes[2] !== 0 || bytes[3] !== 0)
-    throw new Error('Invalid font');
+  if (check && !check(bytes)) throw new Error(`Invalid: ${path}`);
   let binary = '';
   for (let i = 0; i < bytes.length; i += 8192)
     binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-  createHoursPdf(report, btoa(binary)).save(`${filename}.pdf`);
+  return btoa(binary);
+}
+const isTrueType = (bytes: Uint8Array) =>
+  bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0;
+
+export async function exportHoursPdf(report: HoursReport, filename: string) {
+  const [regular, bold, logo] = await Promise.all([
+    base64('/fonts/Heebo-Regular.ttf', isTrueType),
+    // Bold weight and logo are presentation only; the report still exports without them.
+    base64('/fonts/Heebo-Bold.ttf', isTrueType).catch(() => undefined),
+    base64('/brand/logomark-report.png', (b) => b[0] === 0x89 && b[1] === 0x50)
+      .then((data) => `data:image/png;base64,${data}`)
+      .catch(() => undefined),
+  ]);
+  createHoursPdf(report, { regular, bold, logo }).save(`${filename}.pdf`);
 }

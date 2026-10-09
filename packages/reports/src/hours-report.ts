@@ -87,6 +87,108 @@ export function duration(seconds: number): string {
 export function clock(value: string | null, timezone: string): string {
   return value ? dateFormatter(timezone, 'clock').format(new Date(value)) : '—';
 }
+/** Readable totals: 61:27 (hours may exceed 24). Rounded to the nearest minute. */
+export function hoursMinutes(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  return `${Math.floor(minutes / 60)}:${(minutes % 60).toString().padStart(2, '0')}`;
+}
+/** Payroll-style decimal hours: 7.50. */
+export function decimalHours(seconds: number): string {
+  return (Math.round(seconds / 36) / 100).toFixed(2);
+}
+/** Clock without seconds, in the station timezone: 07:05. */
+export function shortClock(value: string | null, timezone: string): string {
+  return value ? clock(value, timezone).slice(0, 5) : '—';
+}
+/** 2026-09-01 -> 01/09/2026 */
+export function displayDate(date: string): string {
+  return date.split('-').reverse().join('/');
+}
+export const HEBREW_WEEKDAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+export function weekdayLabel(date: string): string {
+  return HEBREW_WEEKDAYS[new Date(date + 'T12:00:00Z').getUTCDay()]!;
+}
+/** Only closed shifts count; open, flagged and overlapping records show with zero hours. */
+export function isCounted(entry: Pick<ReportEntry, 'status'>): boolean {
+  return entry.status === 'הושלמה';
+}
+export function isManual(entry: Pick<ReportEntry, 'source'>): boolean {
+  return entry.source !== 'NFC';
+}
+/** Totals for one worker (or the whole selection): hours, distinct work days and shifts. */
+export function hoursSummary(entries: ReportEntry[]) {
+  const counted = entries.filter((e) => isCounted(e) && e.seconds > 0);
+  return {
+    seconds: entries.reduce((sum, e) => sum + e.seconds, 0),
+    days: new Set(counted.map((e) => `${e.personId}:${e.date}`)).size,
+    shifts: counted.length,
+    attention: new Set(entries.filter((e) => !isCounted(e)).map((e) => e.id)).size,
+  };
+}
+/** Percent buckets with classified time; empty when no hour rules apply to the selection. */
+export function classifiedRates(entries: ReportEntry[]): [string, number][] {
+  return Object.entries(rateTotals(entries))
+    .filter(([rate, seconds]) => rate !== 'unclassified' && seconds > 0)
+    .sort(([a], [b]) => Number(a) - Number(b));
+}
+/** Rate columns always shown in exports, plus any other percentage the station rules use. */
+export const STANDARD_RATES = ['100', '125', '150'] as const;
+const DEFAULT_REGULAR = 8 * 3600;
+const DEFAULT_FIRST_OVERTIME = 2 * 3600;
+/**
+ * Seconds per percentage for each shift. Station rules win where they classified the time;
+ * otherwise a work day (per worker, by check-in date) is 8h at 100%, the next 2h at 125%
+ * and the rest at 150%. Multiple shifts on one day share the same 8 hours.
+ */
+export function payRates(entries: ReportEntry[]): Map<ReportEntry, Record<string, number>> {
+  const result = new Map<ReportEntry, Record<string, number>>();
+  const days = new Map<string, number>();
+  // ISO timestamps sort correctly as plain strings (and much faster than localeCompare).
+  for (const entry of [...entries].sort((a, b) =>
+    a.start < b.start ? -1 : a.start > b.start ? 1 : 0
+  )) {
+    const rates: Record<string, number> = {};
+    const given = entry.rateSeconds || { unclassified: entry.seconds };
+    for (const [rate, seconds] of Object.entries(given))
+      if (rate !== 'unclassified' && seconds > 0) rates[rate] = seconds;
+    let left = given.unclassified || 0;
+    if (left > 0) {
+      const key = `${entry.personId}:${entry.date}`;
+      let worked = days.get(key) || 0;
+      for (const [rate, limit] of [
+        ['100', DEFAULT_REGULAR],
+        ['125', DEFAULT_REGULAR + DEFAULT_FIRST_OVERTIME],
+        ['150', Infinity],
+      ] as const) {
+        const part = Math.min(left, Math.max(0, limit - worked));
+        if (part > 0) {
+          rates[rate] = (rates[rate] || 0) + part;
+          worked += part;
+          left -= part;
+        }
+      }
+      days.set(key, worked);
+    }
+    result.set(entry, rates);
+  }
+  return result;
+}
+export function payRateTotals(entries: ReportEntry[]): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (const rates of payRates(entries).values())
+    for (const [rate, seconds] of Object.entries(rates))
+      totals[rate] = (totals[rate] || 0) + seconds;
+  return totals;
+}
+/** 100/125/150 always, then any extra percentage that holds time (e.g. 175, 200). */
+export function payRateKeys(
+  entries: ReportEntry[],
+  totals: Record<string, number> = payRateTotals(entries)
+): string[] {
+  return [
+    ...new Set([...STANDARD_RATES, ...Object.keys(totals).filter((k) => totals[k]! > 0)]),
+  ].sort((a, b) => Number(a) - Number(b));
+}
 export function buildEntries(
   records: AttendanceRecord[],
   from: string,

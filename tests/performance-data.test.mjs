@@ -160,14 +160,16 @@ test('collapsed worker details do not render tables, selected worker remains imm
           }
         : n === '@yellowshifts/reports'
           ? h
-          : require(n),
+          : n === '@yellowshifts/icons'
+            ? { DownloadIcon: () => null }
+            : require(n),
   });
   const props = { report: { entries: [{ seconds: 3600 }] }, person: { name: 'עובד', code: 'EMP' } };
   const closed = renderToStaticMarkup(
     React.createElement(PersonHours, { ...props, initiallyOpen: false })
   );
   assert.equal(tableRenders, 0);
-  assert.match(closed, /01:00:00/);
+  assert.match(closed, />1:00</);
   renderToStaticMarkup(React.createElement(PersonHours, { ...props, initiallyOpen: true }));
   assert.equal(tableRenders, 1);
 });

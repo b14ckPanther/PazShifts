@@ -1,0 +1,157 @@
+/* Period: read the current range, step through it, or jump to a preset. */
+.period-picker {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.period-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+.period-step {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ys-color-border-subtle);
+  border-radius: var(--ys-radius-sm);
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  cursor: pointer;
+  transition:
+    background-color var(--ys-transition-fast),
+    border-color var(--ys-transition-fast);
+}
+.period-step:hover:not(:disabled) {
+  background: var(--ys-color-surface-soft);
+  border-color: var(--ys-color-border-medium);
+}
+.period-step:focus-visible {
+  outline: none;
+  box-shadow: var(--ys-focus-ring);
+}
+.period-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.period-current {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--ys-radius-sm);
+  background: none;
+  color: var(--ys-color-text-primary);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.period-current:hover:not(:disabled) {
+  background: var(--ys-color-surface-soft);
+}
+.period-current:focus-visible {
+  outline: none;
+  box-shadow: var(--ys-focus-ring);
+}
+.period-current strong {
+  font-size: var(--ys-text-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.period-current small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.period-presets {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--ys-radius-md);
+  background: var(--ys-color-surface-sunken);
+}
+.period-presets > button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ys-color-text-secondary);
+  font: inherit;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--ys-transition-fast),
+    color var(--ys-transition-fast);
+}
+.period-presets > button:hover:not(:disabled):not([aria-pressed='true']) {
+  color: var(--ys-color-text-primary);
+  background: rgba(255, 255, 255, 0.55);
+}
+.period-presets > button[aria-pressed='true'] {
+  background: var(--ys-color-surface-raised);
+  color: var(--ys-color-text-primary);
+  box-shadow:
+    0 1px 2px rgba(40, 28, 16, 0.1),
+    0 2px 6px rgba(40, 28, 16, 0.06);
+}
+.period-presets > button:focus-visible {
+  outline: none;
+  box-shadow: var(--ys-focus-ring);
+}
+.period-presets > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.period-custom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.period-custom label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+}
+.period-custom input {
+  width: 100%;
+  min-width: 0;
+}
+.period-custom > .ys-button {
+  grid-column: 1 / -1;
+}
+.period-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-status-danger-ink);
+}
+@media (min-width: 720px) {
+  .period-custom {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+  .period-custom > .ys-button {
+    grid-column: auto;
+  }
+}

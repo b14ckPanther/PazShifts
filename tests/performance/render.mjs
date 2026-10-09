@@ -32,8 +32,11 @@ const table = load('packages/ui/src/components/HoursTable.tsx', {
   '@yellowshifts/reports': h,
   './RateBreakdown': rates,
 });
+const icons = { DownloadIcon: () => null, RefreshIcon: () => null };
+const picker = { PeriodPicker: () => null, periodLabel: (from, to) => `${from} – ${to}` };
 const mocks = {
-  '@yellowshifts/ui': { ...rates, ...table },
+  '@yellowshifts/ui': { ...rates, ...table, ...picker },
+  '@yellowshifts/icons': icons,
   '@/app/lib/hours-report': h,
   'next/navigation': { useRouter: () => ({}) },
   '@/app/components/NavigationLink': {
@@ -44,6 +47,7 @@ if (!ref)
   mocks['./PersonHours'] = load('apps/admin/app/stations/[id]/reports/PersonHours.tsx', {
     '@yellowshifts/ui': { ...rates, ...table },
     '@yellowshifts/reports': h,
+    '@yellowshifts/icons': icons,
   });
 const { HoursReportClient } = load(
   'apps/admin/app/stations/[id]/reports/HoursReportClient.tsx',

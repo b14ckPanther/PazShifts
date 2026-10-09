@@ -1,151 +1,189 @@
+'use client';
+
+import { Fragment, useState } from 'react';
 import {
   addDays,
-  clock,
-  duration,
-  localDate,
+  hoursMinutes,
+  isCounted,
+  isManual,
+  payRates,
+  shortClock,
+  weekdayLabel,
   weekStart,
   type HoursReport,
+  type ReportEntry,
 } from '@yellowshifts/reports';
 import '../styles/hours-table.css';
-import { RateBreakdown } from './RateBreakdown';
 
-const WEEKDAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
-/** 2026-09-21 -> "ב׳ 21/09": the day/month format used across the product. */
-function dayLabel(date: string) {
-  const [y, m, d] = date.split('-');
-  const weekday = WEEKDAYS[new Date(Date.UTC(Number(y), Number(m) - 1, Number(d))).getUTCDay()];
-  return `${weekday} ${d}/${m}`;
-}
-function dateLabel(date: string) {
-  return date.split('-').reverse().join('/');
+const shortDate = (date: string) => date.slice(8, 10) + '/' + date.slice(5, 7);
+
+/** Premium buckets only (above the base rate) – the part worth noticing per shift. */
+function premiums(rates: Record<string, number> | undefined): [string, number][] {
+  return Object.entries(rates ?? {})
+    .filter(([rate, seconds]) => Number(rate) > 100 && seconds > 0)
+    .sort(([a], [b]) => Number(a) - Number(b));
 }
 
 export function HoursTable({ report }: { report: HoursReport }) {
-  const days: string[] = [];
-  for (let date = report.from; date <= report.to; date = addDays(date, 1)) days.push(date);
+  const [showEmpty, setShowEmpty] = useState(false);
+  const byDate = new Map<string, ReportEntry[]>();
+  for (const entry of report.entries)
+    byDate.set(entry.date, [...(byDate.get(entry.date) ?? []), entry]);
+  const allDays: string[] = [];
+  for (let date = report.from; date <= report.to; date = addDays(date, 1)) allDays.push(date);
+  const days = showEmpty ? allDays : allDays.filter((date) => byDate.has(date));
+  const emptyDays = allDays.length - allDays.filter((date) => byDate.has(date)).length;
+  const multiWeek = weekStart(report.from, 0) !== weekStart(report.to, 0);
+  const total = report.entries.reduce((sum, e) => sum + e.seconds, 0);
+  const rates = payRates(report.entries);
+
+  const weeks = new Map<string, string[]>();
+  for (const date of days) {
+    const week = weekStart(date, 0);
+    weeks.set(week, [...(weeks.get(week) ?? []), date]);
+  }
+
+  if (!report.entries.length && !showEmpty)
+    return (
+      <div className="hours-empty">
+        <p>לא נרשמו משמרות בתקופה זו.</p>
+      </div>
+    );
+
   return (
-    <div
-      className="hours-table-scroll"
-      tabIndex={0}
-      role="region"
-      aria-label="טבלת שעות — ניתן לגלול לרוחב"
-    >
-      <table className="hours-table" role="table">
-        <caption>שעות נוכחות לפי שעון התחנה</caption>
+    <div className="hours-table-wrap">
+      <table className="hours-table">
         <thead>
           <tr>
             <th scope="col">יום</th>
             <th scope="col">כניסה</th>
             <th scope="col">יציאה</th>
-            <th scope="col">משך</th>
-            <th scope="col">מצב</th>
+            <th scope="col">שעות</th>
           </tr>
         </thead>
         <tbody>
-          {days.map((date, index) => {
-            const entries = report.entries.filter((e) => e.date === date);
-            const week = weekStart(date, 0);
-            const last = index === days.length - 1 || weekStart(days[index + 1]!, 0) !== week;
-            return (
-              <HoursDay
-                key={date}
-                date={date}
-                report={report}
-                entries={entries}
-                weekTotal={
-                  last
-                    ? report.entries
-                        .filter((e) => weekStart(e.date, 0) === week)
-                        .reduce((s, e) => s + e.seconds, 0)
-                    : null
-                }
-              />
-            );
-          })}
+          {[...weeks].map(([week, dates]) => (
+            <Fragment key={week}>
+              {multiWeek && (
+                <tr className="hours-week">
+                  <th scope="rowgroup" colSpan={3}>
+                    שבוע{' '}
+                    <bdi>
+                      {shortDate(week < report.from ? report.from : week)}–
+                      {shortDate(addDays(week, 6) > report.to ? report.to : addDays(week, 6))}
+                    </bdi>
+                  </th>
+                  <td>
+                    <bdi>
+                      {hoursMinutes(
+                        report.entries
+                          .filter((e) => weekStart(e.date, 0) === week)
+                          .reduce((sum, e) => sum + e.seconds, 0)
+                      )}
+                    </bdi>
+                  </td>
+                </tr>
+              )}
+              {dates.map((date) => (
+                <Day
+                  key={date}
+                  date={date}
+                  entries={byDate.get(date) ?? []}
+                  report={report}
+                  rates={rates}
+                />
+              ))}
+            </Fragment>
+          ))}
         </tbody>
         <tfoot>
           <tr>
             <th scope="row" colSpan={3}>
-              סה״כ בתקופה
+              סה״כ
             </th>
-            <td dir="ltr">{duration(report.entries.reduce((s, e) => s + e.seconds, 0))}</td>
-            <td>שעות סגורות</td>
+            <td>
+              <bdi>{hoursMinutes(total)}</bdi>
+            </td>
           </tr>
         </tfoot>
       </table>
+      {emptyDays > 0 && (
+        <button
+          type="button"
+          className="hours-empty-toggle"
+          aria-pressed={showEmpty}
+          onClick={() => setShowEmpty((value) => !value)}
+        >
+          {showEmpty ? 'הסתרת ימים ללא משמרות' : `הצגת ימים ללא משמרות (${emptyDays})`}
+        </button>
+      )}
     </div>
   );
 }
-function HoursDay({
+
+function Day({
   date,
   entries,
   report,
-  weekTotal,
+  rates,
 }: {
   date: string;
-  entries: HoursReport['entries'];
+  entries: ReportEntry[];
   report: HoursReport;
-  weekTotal: number | null;
+  rates: Map<ReportEntry, Record<string, number>>;
 }) {
+  const label = (
+    <th scope="row" className="hours-day">
+      <span>{weekdayLabel(date)}</span>
+      <bdi>{shortDate(date)}</bdi>
+    </th>
+  );
+  if (!entries.length)
+    return (
+      <tr className="hours-row is-empty">
+        {label}
+        <td className="hours-none">ללא משמרת</td>
+      </tr>
+    );
   return (
     <>
-      {entries.length ? (
-        entries.map((e, index) => (
-          <tr key={`${e.id}-${index}`}>
-            <th scope="row">
-              <bdi>{dayLabel(date)}</bdi>
-            </th>
-            <td dir="ltr">{clock(e.start, report.timezone)}</td>
-            <td dir="ltr">
-              {clock(e.end, report.timezone)}
-              {e.end && localDate(new Date(e.end), report.timezone) !== e.date && (
-                <small dir="rtl">
-                  יציאה ב-<bdi>{dateLabel(localDate(new Date(e.end), report.timezone))}</bdi>
-                </small>
-              )}
+      {entries.map((entry, index) => {
+        const counted = isCounted(entry);
+        const extra = premiums(rates.get(entry));
+        const notes = !counted || isManual(entry) || extra.length > 0;
+        return (
+          <tr
+            key={`${entry.id}-${index}`}
+            className={`hours-row${counted ? '' : ' is-attention'}${index ? ' is-continued' : ''}${notes ? ' has-notes' : ''}`}
+          >
+            {index === 0 && label}
+            <td className="hours-in">
+              <bdi>{shortClock(entry.start, report.timezone)}</bdi>
             </td>
-            <td dir="ltr">{duration(e.seconds)}</td>
-            <td>
-              <span
-                className={`hours-status ${e.status === 'הושלמה' ? 'hours-status--done' : 'hours-table-warning hours-status--attention'}`}
-              >
-                {e.status}
-              </span>
-              <small>{e.source}</small>
-              <RateBreakdown entries={[e]} compact />
-              {e.reason && <small>תיקון: {e.reason}</small>}
+            <td className="hours-out">
+              <bdi>{shortClock(entry.end, report.timezone)}</bdi>
             </td>
+            <td className="hours-duration">
+              <bdi>{counted ? hoursMinutes(entry.seconds) : '—'}</bdi>
+            </td>
+            {notes && (
+              <td className="hours-notes">
+                {!counted && <span className="hours-flag">{entry.status} · לא נספרה</span>}
+                {isManual(entry) && (
+                  <span className="hours-tag" title={entry.reason || undefined}>
+                    עודכן ידנית
+                  </span>
+                )}
+                {extra.map(([rate, seconds]) => (
+                  <span key={rate} className="hours-tag hours-tag--rate">
+                    <bdi>{rate}%</bdi> <bdi>{hoursMinutes(seconds)}</bdi>
+                  </span>
+                ))}
+              </td>
+            )}
           </tr>
-        ))
-      ) : (
-        <tr>
-          <th scope="row">
-            <bdi>{dayLabel(date)}</bdi>
-          </th>
-          <td>—</td>
-          <td>—</td>
-          <td dir="ltr">00:00:00</td>
-          <td>ללא נוכחות</td>
-        </tr>
-      )}
-      {entries.length > 1 && (
-        <tr className="hours-table-subtotal">
-          <th scope="row" colSpan={3}>
-            סה״כ יומי
-          </th>
-          <td dir="ltr">{duration(entries.reduce((s, e) => s + e.seconds, 0))}</td>
-          <td />
-        </tr>
-      )}
-      {weekTotal !== null && (
-        <tr className="hours-table-week">
-          <th scope="row" colSpan={3}>
-            סיכום שבוע <bdi>{dateLabel(weekStart(date, 0))}</bdi>
-          </th>
-          <td dir="ltr">{duration(weekTotal)}</td>
-          <td />
-        </tr>
-      )}
+        );
+      })}
     </>
   );
 }

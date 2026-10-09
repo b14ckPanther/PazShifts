@@ -1,20 +1,25 @@
 'use client';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { RateBreakdown } from '@yellowshifts/ui';
+import { PeriodPicker, RateBreakdown, periodLabel } from '@yellowshifts/ui';
+import { DownloadIcon, RefreshIcon } from '@yellowshifts/icons';
 import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import {
+  decimalHours,
   hoursExportName,
-  addDays,
-  duration,
+  hoursMinutes,
+  hoursSummary,
+  payRateKeys,
+  payRates,
+  rateTotals,
   reportCsv,
   summaryCsv,
   weeklyCsv,
-  weekStart,
   type HoursReport,
+  type ReportPerson,
 } from '@/app/lib/hours-report';
 import './reports.css';
-import { PersonHours, WORKER_COLUMNS } from './PersonHours';
+import { PersonHours } from './PersonHours';
 
 function download(text: string, name: string) {
   const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
@@ -34,7 +39,8 @@ export function HoursReportClient({
   today: string;
 }) {
   const [personId, setPersonId] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [showIdle, setShowIdle] = useState(false);
+  const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -46,24 +52,54 @@ export function HoursReportClient({
     }),
     [report, personId]
   );
-  const total = filtered.entries.reduce((sum, e) => sum + e.seconds, 0);
-  const flagged = new Set(filtered.entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id))
-    .size;
-  const exportName = (kind: 'pdf' | 'daily' | 'weekly' | 'detail') =>
-    hoursExportName(filtered, kind, personId ? filtered.people[0]?.name || 'עובד' : undefined);
+  const byPerson = useMemo(() => {
+    const map = new Map<string, HoursReport['entries']>();
+    for (const entry of filtered.entries)
+      map.set(entry.personId, [...(map.get(entry.personId) ?? []), entry]);
+    return map;
+  }, [filtered.entries]);
+  const summary = hoursSummary(filtered.entries);
+  // One pass over the whole team: shared percent columns plus each worker's totals.
+  const { rates, personRates } = useMemo(() => {
+    const team: Record<string, number> = {};
+    const personRates = new Map<string, Record<string, number>>();
+    for (const [entry, split] of payRates(report.entries)) {
+      const own = personRates.get(entry.personId) ?? {};
+      for (const [rate, seconds] of Object.entries(split)) {
+        own[rate] = (own[rate] || 0) + seconds;
+        team[rate] = (team[rate] || 0) + seconds;
+      }
+      personRates.set(entry.personId, own);
+    }
+    return { rates: payRateKeys(report.entries, team), personRates };
+  }, [report.entries]);
+  const unclassified = rateTotals(filtered.entries).unclassified || 0;
+  const active = filtered.people.filter((p) => byPerson.has(p.id));
+  const idle = filtered.people.filter((p) => !byPerson.has(p.id));
+  const selected = personId ? filtered.people[0] : undefined;
+  const exportName = (kind: 'pdf' | 'daily' | 'weekly' | 'detail', person?: ReportPerson) =>
+    hoursExportName(filtered, kind, person ? person.name || 'עובד' : undefined);
+
   function navigate(from: string, to: string) {
     startTransition(() => router.push(`?from=${from}&to=${to}`));
   }
-  async function pdf() {
-    setBusy(true);
+  async function pdf(person?: ReportPerson) {
+    setBusy(person?.id ?? 'all');
     setError('');
     try {
       const { exportHoursPdf } = await import('@/app/lib/hours-pdf');
-      await exportHoursPdf(filtered, exportName('pdf'));
+      const scoped = person
+        ? {
+            ...filtered,
+            people: [person],
+            entries: filtered.entries.filter((e) => e.personId === person.id),
+          }
+        : filtered;
+      await exportHoursPdf(scoped, exportName('pdf', person ?? selected));
     } catch {
       setError('יצירת ה-PDF נכשלה. נסו שוב או הורידו CSV.');
     } finally {
-      setBusy(false);
+      setBusy('');
     }
   }
   return (
@@ -71,9 +107,8 @@ export function HoursReportClient({
       <div className="ys-page-header report-header">
         <div className="ys-page-header-text">
           <div className="ys-page-header-title">
-            <h1>דוח שעות עבודה</h1>
+            <h1>דוח שעות</h1>
           </div>
-          <p>סיכום הצוות, פירוט יומי וייצוא להנהלת חשבונות</p>
         </div>
       </div>
 
@@ -85,218 +120,205 @@ export function HoursReportClient({
       </nav>
 
       <section className="report-panel report-controls" aria-label="בחירת תקופה ועובד">
-        <form
-          key={`${report.from}-${report.to}`}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            navigate(String(data.get('from')), String(data.get('to')));
-          }}
-          className="admin-toolbar report-filters"
-        >
-          <div className="ys-form-field">
-            <label className="ys-label" htmlFor="report-from">
-              מתאריך
-            </label>
-            <input id="report-from" required type="date" name="from" defaultValue={report.from} />
-          </div>
-          <div className="ys-form-field">
-            <label className="ys-label" htmlFor="report-to">
-              עד תאריך
-            </label>
-            <input id="report-to" required type="date" name="to" defaultValue={report.to} />
-          </div>
-          <button
-            type="submit"
-            className="ys-button ys-button--primary"
-            disabled={pending}
-            aria-busy={pending || undefined}
+        <PeriodPicker
+          from={report.from}
+          to={report.to}
+          today={today}
+          pending={pending}
+          onChange={navigate}
+        />
+        <div className="ys-form-field report-person">
+          <label className="ys-label" htmlFor="report-person">
+            עובד
+          </label>
+          <select
+            id="report-person"
+            value={personId}
+            onChange={(event) => setPersonId(event.target.value)}
           >
-            {pending ? 'טוענים…' : 'הצגת דוח'}
-          </button>
-        </form>
-        <div className="admin-toolbar report-toolbar-row">
-          <div className="report-week-buttons" role="group" aria-label="מעבר מהיר בין שבועות">
-            <button
-              type="button"
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => navigate(addDays(report.from, -7), addDays(report.to, -7))}
-            >
-              שבוע קודם
-            </button>
-            <button
-              type="button"
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => navigate(weekStart(today, 0), addDays(weekStart(today, 0), 6))}
-            >
-              השבוע הנוכחי
-            </button>
-            <button
-              type="button"
-              className="ys-button ys-button--secondary"
-              disabled={pending}
-              onClick={() => navigate(addDays(report.from, 7), addDays(report.to, 7))}
-            >
-              שבוע הבא
-            </button>
-          </div>
-          <div className="ys-form-field report-person">
-            <label className="ys-label" htmlFor="report-person">
-              עובד / כל הצוות
-            </label>
-            <select
-              id="report-person"
-              value={personId}
-              onChange={(event) => setPersonId(event.target.value)}
-            >
-              <option value="">כל הצוות ({report.people.length})</option>
-              {report.people.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                  {p.code ? ` · ${p.code}` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+            <option value="">כל הצוות ({report.people.length})</option>
+            {report.people.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {p.code ? ` · ${p.code}` : ''}
+              </option>
+            ))}
+          </select>
         </div>
       </section>
 
       <section className="report-summary" aria-label="סיכום התקופה">
+        <div className="report-total">
+          <span>{selected ? selected.name : 'סה״כ שעות הצוות'}</span>
+          <strong>
+            <bdi>{hoursMinutes(summary.seconds)}</bdi>
+          </strong>
+          <small>
+            <bdi>{decimalHours(summary.seconds)}</bdi> שעות עשרוניות
+          </small>
+        </div>
         <dl className="report-facts">
-          <div className="report-fact is-primary">
-            <dt>שעות סגורות בתקופה</dt>
+          {!selected && (
+            <div>
+              <dt>עובדים עם שעות</dt>
+              <dd>
+                <bdi>{active.length}</bdi>
+                <small> / {filtered.people.length}</small>
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>ימי עבודה</dt>
             <dd>
-              <bdi className="ys-num" dir="ltr">
-                {duration(total)}
-              </bdi>
-              <small>
-                (<span className="ys-num">{(total / 3600).toFixed(2)}</span> שעות עשרוניות)
-              </small>
+              <bdi>{summary.days}</bdi>
             </dd>
           </div>
-          <div className="report-fact">
-            <dt>עובדים בדוח</dt>
+          <div>
+            <dt>משמרות</dt>
             <dd>
-              <span className="ys-num">{filtered.people.length}</span>
-              <small>כולל עובדים ללא שעות</small>
+              <bdi>{summary.shifts}</bdi>
             </dd>
           </div>
-          <div className={flagged ? 'report-fact is-attention' : 'report-fact'}>
-            <dt>רשומות לבדיקה</dt>
-            <dd>
-              <span className="ys-num">{flagged}</span>
-              <small>פתוחות / מסומנות / חופפות</small>
-            </dd>
-          </div>
+          {summary.attention > 0 && (
+            <div className="is-attention">
+              <dt>לא נספרו</dt>
+              <dd>
+                <bdi>{summary.attention}</bdi>
+              </dd>
+            </div>
+          )}
         </dl>
         <RateBreakdown entries={filtered.entries} compact />
-      </section>
-      <section className="report-panel report-export">
-        <div className="report-export-head">
-          <h2>ייצוא {personId ? 'העובד שנבחר' : 'כל הצוות'}</h2>
-          <p className="report-period">
-            <bdi className="ys-num">
-              {report.from} — {report.to}
-            </bdi>
-            <bdi>{report.timezone}</bdi>
+        {unclassified > 0 && (
+          <p className="report-rules-hint">
+            ללא כללי שעות לתחנה, החלוקה היא 8 שעות ביום ב־100%, 2 שעות ב־125% והשאר ב־150%.{' '}
+            <Link href={`/stations/${stationId}/reports/settings`}>הגדרת כללים</Link>
           </p>
-        </div>
-        <div className="report-exports">
+        )}
+      </section>
+
+      <section className="report-panel report-export" aria-label="ייצוא">
+        <div className="report-export-main">
           <button
             type="button"
             className="ys-button ys-button--primary"
-            disabled={busy || pending}
-            aria-busy={busy || undefined}
-            onClick={pdf}
+            disabled={!!busy || pending}
+            aria-busy={busy === 'all' || undefined}
+            onClick={() => pdf()}
           >
-            {busy ? 'מכינים PDF…' : 'הורדת PDF'}
+            <DownloadIcon size={18} aria-hidden="true" />
+            {busy === 'all' ? 'מכינים PDF…' : selected ? 'הורדת PDF לעובד' : 'הורדת PDF לכל הצוות'}
           </button>
-          <button
-            type="button"
-            className="ys-button ys-button--secondary"
-            disabled={pending}
-            onClick={() => download(summaryCsv(filtered), `${exportName('daily')}.csv`)}
-          >
-            CSV סיכום יומי
-          </button>
-          <button
-            type="button"
-            className="ys-button ys-button--secondary"
-            disabled={pending}
-            onClick={() => download(weeklyCsv(filtered), `${exportName('weekly')}.csv`)}
-          >
-            CSV סיכום שבועי
-          </button>
-          <button
-            type="button"
-            className="ys-button ys-button--secondary"
-            disabled={pending}
-            onClick={() => download(reportCsv(filtered), `${exportName('detail')}.csv`)}
-          >
-            CSV פירוט נוכחות
-          </button>
+          <p>
+            <bdi>{periodLabel(report.from, report.to)}</bdi>
+            {selected ? ` · ${selected.name}` : ''}
+          </p>
         </div>
         {error && (
           <p role="alert" className="admin-feedback admin-feedback--error">
             <span>{error}</span>
           </p>
         )}
-        <details className="report-explanation">
-          <summary>מה נכלל בדוח?</summary>
-          <p className="report-note">
-            שעות נוכחות וסיווג לפי כללי התחנה, ללא חישוב שכר כספי. ניכוי הפסקות מוצג בנפרד. רשומות
-            פתוחות, מסומנות וחופפות אינן נספרות. משמרת לילה מוצגת בשלמותה ביום הכניסה, לפי אזור הזמן
-            של התחנה. תיקונים ידניים כלולים ומסומנים.
-          </p>
-        </details>
-        <div className="report-updated">
-          <small>
-            הדוח נכון ל-
-            {new Date(report.generatedAt).toLocaleString('he-IL', {
-              timeZone: report.timezone,
-            })}
-            .
-          </small>
+        <div className="report-export-more">
+          <details>
+            <summary>קבצים לאקסל (CSV)</summary>
+            <div className="report-exports">
+              <button
+                type="button"
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() =>
+                  download(summaryCsv(filtered), `${exportName('daily', selected)}.csv`)
+                }
+              >
+                סיכום יומי
+              </button>
+              <button
+                type="button"
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() =>
+                  download(weeklyCsv(filtered), `${exportName('weekly', selected)}.csv`)
+                }
+              >
+                סיכום שבועי
+              </button>
+              <button
+                type="button"
+                className="ys-button ys-button--secondary ys-button--sm"
+                disabled={pending}
+                onClick={() =>
+                  download(reportCsv(filtered), `${exportName('detail', selected)}.csv`)
+                }
+              >
+                פירוט משמרות
+              </button>
+            </div>
+          </details>
           <button
             type="button"
-            className="ys-button ys-button--tertiary ys-button--sm"
+            className="ys-button ys-button--ghost ys-button--sm"
             disabled={pending}
+            title={`נכון ל־${new Date(report.generatedAt).toLocaleTimeString('he-IL', {
+              timeZone: report.timezone,
+              hour: '2-digit',
+              minute: '2-digit',
+            })}`}
             onClick={() => startTransition(() => router.refresh())}
           >
-            רענון נתונים
+            <RefreshIcon size={16} aria-hidden="true" />
+            {pending ? 'מרעננים…' : 'רענון'}
           </button>
         </div>
       </section>
-      <section aria-label="פירוט שעות עובדים" className="report-workers">
-        {filtered.people.length > 0 && (
+
+      <section
+        aria-label="שעות לפי עובד"
+        className="report-workers"
+        style={{ '--report-rates': rates.length } as CSSProperties}
+      >
+        {active.length > 0 && (
           <div className="report-worker-head" aria-hidden="true">
             <span>עובד</span>
-            {WORKER_COLUMNS.map((column) => (
-              <span key={column}>{column}</span>
+            <span>ימים</span>
+            <span>משמרות</span>
+            {rates.map((rate) => (
+              <span key={rate}>{rate}%</span>
             ))}
             <span>סה״כ</span>
             <span />
           </div>
         )}
-        {!filtered.people.length && (
+        {!active.length && (
           <div className="ys-empty admin-empty-panel">
-            <p className="ys-empty-title">אין עובדים להצגה בתקופה זו.</p>
+            <p className="ys-empty-title">
+              {selected ? 'לא נרשמו משמרות לעובד בתקופה זו.' : 'לא נרשמו משמרות בתקופה זו.'}
+            </p>
           </div>
         )}
-        {filtered.people.map((person) => {
-          const entries = filtered.entries.filter((e) => e.personId === person.id);
-          return (
-            <PersonHours
-              key={`${person.id}:${personId}:${report.from}:${report.to}`}
-              person={person}
-              initiallyOpen={!!personId}
-              report={{ ...filtered, people: [person], entries }}
-            />
-          );
-        })}
+        {[...active, ...(showIdle ? idle : [])].map((person) => (
+          <PersonHours
+            key={`${person.id}:${personId}:${report.from}:${report.to}`}
+            person={person}
+            rates={rates}
+            rateTotals={personRates.get(person.id)}
+            initiallyOpen={!!personId}
+            busy={busy === person.id}
+            onPdf={active.length > 1 || !personId ? () => pdf(person) : undefined}
+            report={{ ...filtered, people: [person], entries: byPerson.get(person.id) ?? [] }}
+          />
+        ))}
       </section>
+      {!selected && idle.length > 0 && (
+        <button
+          type="button"
+          className="report-idle-toggle"
+          aria-pressed={showIdle}
+          onClick={() => setShowIdle((value) => !value)}
+        >
+          {showIdle ? 'הסתרת עובדים ללא שעות' : `הצגת עובדים ללא שעות (${idle.length})`}
+        </button>
+      )}
     </div>
   );
 }
