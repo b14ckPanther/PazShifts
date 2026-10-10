@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { WorkerDock } from './components/WorkerDock';
 import type { Metadata, Viewport } from 'next';
 import { Heebo, Ubuntu } from 'next/font/google';
 import './globals.css';
@@ -57,9 +55,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Long enough for the full reveal plus a beat on the settled logo. */}
         <BrandSplash waitForContent showOnMount={false} content={<BrandReveal />} duration={1000} />
         {children}
-        <Suspense fallback={null}>
-          <WorkerDock />
-        </Suspense>
       </body>
     </html>
   );

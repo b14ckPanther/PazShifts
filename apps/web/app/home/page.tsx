@@ -4,7 +4,6 @@ import { getAvailabilityWeekStart, getWorkerWeeklyAvailability } from '@yellowsh
 import { Container } from '@yellowshifts/ui';
 import { getServerContext } from '../lib/server-context';
 import { WorkerHeader } from '../components/WorkerHeader';
-import { StationSelector } from '../components/StationSelector';
 import { WorkerHome } from './WorkerHome';
 import './home.css';
 
@@ -55,16 +54,11 @@ export default async function HomePage({
         profile={context.profile}
         role={membership.membership.role}
         isPlatformAdmin={context.isPlatformAdmin}
+        memberships={context.memberships}
         activeTab="home"
         pageTitle="ראשי"
       />
       <Container size="md">
-        {context.memberships.length > 1 && (
-          <StationSelector
-            memberships={context.memberships}
-            activeStationId={membership.station.id}
-          />
-        )}
         <WorkerHome
           key={`${context.user.id}:${membership.station.id}`}
           data={data}

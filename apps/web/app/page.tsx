@@ -21,7 +21,6 @@ import {
   getWeeklySchedule,
   configuredAppOrigin,
 } from '@yellowshifts/database';
-import { StationSelector } from './components/StationSelector';
 import { WorkerHeader } from './components/WorkerHeader';
 import { LogoutButton } from './components/LogoutButton';
 import { WorkerScheduleView } from './components/WorkerScheduleView';
@@ -154,14 +153,12 @@ export default async function WebHomePage({ searchParams }: PageProps) {
         profile={profile}
         role={activeContext.membership.role}
         isPlatformAdmin={isPlatformAdmin}
+        memberships={memberships}
         activeTab="shifts"
         pageTitle="המשמרות שלי"
       />
 
       <Container size="md">
-        {memberships.length > 1 && (
-          <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
-        )}
         <PageHeader
           title="המשמרות שלי"
           description={`המשמרות ששובצת אליהן בתחנת ${activeContext.station.name}, מתוך סידורי עבודה שפורסמו.`}

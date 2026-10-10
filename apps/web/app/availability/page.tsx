@@ -2,7 +2,6 @@ import { getServerContext } from '@/app/lib/server-context';
 import { redirect } from 'next/navigation';
 import { getAvailabilityWeekStart, getWorkerWeeklyAvailability } from '@yellowshifts/database';
 import { Container, PageHeader } from '@yellowshifts/ui';
-import { StationSelector } from '../components/StationSelector';
 import { WorkerHeader } from '../components/WorkerHeader';
 import { WeeklyAvailabilityForm } from '../components/WeeklyAvailabilityForm';
 
@@ -79,6 +78,7 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
         user={user}
         profile={profile}
         role={activeContext.membership.role}
+        memberships={memberships}
         activeTab="availability"
         pageTitle="הגשת זמינות שבועית"
       />
@@ -86,9 +86,6 @@ export default async function AvailabilityPage({ searchParams }: AvailabilityPag
       {/* Main Container */}
       <Container size="md">
         <div>
-          {memberships.length > 1 && (
-            <StationSelector memberships={memberships} activeStationId={activeContext.station.id} />
-          )}
           <PageHeader
             title="הגשת זמינות שבועית"
             description={`הגדר מתי אתה זמין לעבודה בתחנת ${activeContext.station.name}. מנהלי התחנה ישבצו אותך בהתאם להצהרה זו.`}

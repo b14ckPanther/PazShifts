@@ -11,10 +11,10 @@ import {
   type HoursReport,
 } from '@yellowshifts/reports';
 import { HoursTable, RateBreakdown, PageHeader, PeriodPicker, periodLabel } from '@yellowshifts/ui';
-import { DownloadIcon, RefreshIcon } from '@yellowshifts/icons';
+import { DocumentGlyph, RefreshGlyph, SheetGlyph, AlertGlyph } from '@yellowshifts/icons';
+import { PumpDigits } from '@/app/components/WorkerVisuals';
 import type { StationWithMembership } from '@yellowshifts/types';
 import { WorkerHeader } from '@/app/components/WorkerHeader';
-import { StationSelector } from '@/app/components/StationSelector';
 import './hours.css';
 
 function saveCsv(value: string, name: string) {
@@ -76,15 +76,13 @@ export function WorkerHoursClient({
           user={user}
           profile={profile}
           role={memberships?.find((m) => m.station.id === stationId)?.membership.role}
+          memberships={memberships}
           activeTab="hours"
           pageTitle="השעות שלי"
         />
       )}
       <main className="worker-hours" dir="rtl" aria-busy={pending}>
         <PageHeader title="השעות שלי" />
-        {memberships && memberships.length > 1 && (
-          <StationSelector memberships={memberships} activeStationId={stationId} />
-        )}
         {!memberships && stations.length > 1 && (
           <label className="worker-hours-station">
             תחנה
@@ -112,9 +110,9 @@ export function WorkerHoursClient({
 
         <section className="worker-hours-summary" aria-label="סיכום התקופה">
           <div className="worker-hours-total">
-            <span>סה״כ שעות</span>
+            <span>סה״כ שעות בתקופה</span>
             <strong>
-              <bdi>{hoursMinutes(summary.seconds)}</bdi>
+              <PumpDigits value={hoursMinutes(summary.seconds)} />
             </strong>
             <p>
               <span>
@@ -125,16 +123,17 @@ export function WorkerHoursClient({
                 <b>{summary.shifts}</b> משמרות
               </span>
             </p>
+            <RateBreakdown entries={report.entries} />
           </div>
           {summary.attention > 0 && (
             <p className="worker-hours-attention" role="status">
+              <AlertGlyph size={18} variant="duo" />
               {summary.attention === 1
                 ? 'משמרת אחת לא נספרה'
                 : `${summary.attention} משמרות לא נספרו`}{' '}
               – פתוחה או ממתינה לבדיקת המנהל.
             </p>
           )}
-          <RateBreakdown entries={report.entries} />
         </section>
 
         <section className="worker-hours-card" aria-labelledby="worker-shifts-title">
@@ -149,7 +148,7 @@ export function WorkerHoursClient({
             disabled={busy || pending}
             aria-busy={busy || undefined}
           >
-            <DownloadIcon size={18} aria-hidden="true" />
+            <DocumentGlyph size={20} variant="solid" />
             {busy ? 'מכינים PDF…' : 'הורדת דוח PDF'}
           </button>
           <p className="worker-hours-export-scope">{periodLabel(report.from, report.to)}</p>
@@ -159,7 +158,10 @@ export function WorkerHoursClient({
             </p>
           )}
           <details className="worker-hours-csv">
-            <summary>קבצים לאקסל (CSV)</summary>
+            <summary>
+              <SheetGlyph size={18} variant="duo" />
+              קבצים לאקסל (CSV)
+            </summary>
             <div>
               <button
                 className="ys-button ys-button--secondary ys-button--sm"
@@ -202,7 +204,7 @@ export function WorkerHoursClient({
               aria-busy={pending}
               onClick={() => startTransition(() => router.refresh())}
             >
-              <RefreshIcon size={16} aria-hidden="true" />
+              <RefreshGlyph size={16} />
               {pending ? 'מרעננים…' : 'רענון'}
             </button>
           </footer>
