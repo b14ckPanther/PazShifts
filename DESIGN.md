@@ -311,7 +311,7 @@ A hybrid: tonal layering does most of the work (sunken track < concrete ground <
 
 Softly rounded, never sharp and never blobby. Radii step 6 / 10 / 14 / 18 / 26px plus pill: 10px for buttons, fields and segments; 14px for large buttons, alerts, tracks and inner fact blocks; 18px for cards, lists and tables; 26px for dialogs, the login panel and the live panel; pill for badges, statuses, canopy tabs and the tab bar indicator. Bottom sheets round only their top corners; the assignment side sheet rounds only its inline-end corners.
 
-One geometric motif comes from the logomark: a 45-degree cut. It appears as the yellow band cut across the top of full-screen flows (`polygon(0 0, 100% 0, 100% 72%, 0 100%)`) and as one yellow triangle in the corner of the live shift panel. It appears nowhere else; the sticky header stays a flat band.
+One geometric motif comes from the logomark: a 45-degree cut. It appears as the yellow band cut across the top of full-screen flows (`polygon(0 0, 100% 0, 100% 72%, 0 100%)`) as the canopy that runs down from the header behind the worker home's greeting and hero, and as one yellow triangle in the corner of the live shift panel and of the worker hours total. It appears nowhere else; the sticky header itself stays a flat band.
 
 Status shape encodes kind: filled pill = live; outlined pill = upcoming; dashed border = pending or draft; muted pill = completed or offline; squarer 8px corners = attention (late, warning, rejected, error).
 
@@ -351,11 +351,10 @@ Confident and compact, with a small press-in.
 ### Navigation
 
 - **Canopy header (both apps):** `WorkerHeader` and `AdminHeader` (wrapped by `StationHeader` on station pages). Sticky, 60px, Canopy Yellow under the safe area, logomark in a white 40px tile, 1.0625rem 800 title with a yellow-ink subtitle, account avatar as a 38px warm-ink disc with yellow initials. The avatar opens an account menu: a white dropdown panel (18px radius, Dropdown shadow, 180ms entrance) with the person and role, station name and code, and the logout button.
-- **Desktop / tablet (768px and up):** section tabs sit in the canopy as pills on a translucent white track; the current tab is a white pill with ink 700 text and a yellow-ink tinted shadow. Labels hide to icons between 768 and 1023px. In the admin app the tabs appear on station pages for station admins and shift managers, and come from the same list as its phone tab bar (`station-nav.ts`).
-- **Phones (under 768px):** a white 64px bottom tab bar plus safe area with the Bar shadow; the current tab gets a 60 by 32px yellow pill that springs in behind its 24px icon and a bold ink label. A still-loading destination shows a half-opacity pill at once. The admin app shows the same bar (`StationDock`) on station pages.
-- **In-page switches:** one selection language: a white raised segment on a Concrete Sunken track (segmented controls, station section pills such as attendance / exceptions, the attendance tabs, the schedule day tabs, the login method switch).
-- **Back link (admin):** a 40px pill link in secondary ink above a page header, returning to the parent screen; it fills with Concrete Muted on hover.
-- **Week switcher (worker):** the selected week is the headline: a compact day/month range in Ubuntu numerals that never wraps, the year(s) in a muted caption below, and quiet previous / next arrows.
+- **Desktop / tablet (768px and up):** section tabs sit in the canopy row as pills on a translucent white track; the current tab is a white pill with ink 700 text and a yellow-ink tinted shadow. Labels hide to icons between 768 and 1023px. In the admin app the tabs appear on station pages for station admins and shift managers, and come from the same list as its phone tab bar (`station-nav.ts`).
+- **Phones (under 768px):** in the worker app, navigation sits at the top, never on Safari's collapsing bottom edge: the canopy has a brand row (logo, station, menu button) and under it a four-tab segmented track (white selected tab, solid glyph, short labels: ראשי / משמרות / זמינות / שעות). The selected tab moves the moment it is tapped. The admin app keeps the white 64px bottom tab bar (`StationDock`) with a yellow pill behind the current tab.
+- **Menu (worker):** the menu button (lines plus avatar) opens a drawer from the inline end over a dimmed page: the person and role, the station switcher (one row per station, the current one checked; with a single station it just shows the station and its code) and logout pinned to the bottom. Station switching lives only here, never in page bodies.
+- **Week switcher (worker):** the selected week is the headline: a compact day/month range in Ubuntu numerals that never wraps, the year(s) in a muted caption below, and round previous / next buttons. On the shifts screen a seven-day strip follows: today is a warm-ink tile with yellow numerals, a crimson dot marks a day with a shift and links to it.
 - **Navigation feedback:** a 3px yellow-crimson-yellow progress line under the safe area while a route loads. Admin route loading shows only this line plus a `RouteSkeleton` (title, subtitle and two card shapes, pulsing), never a splash.
 
 ### Dialogs and Sheets
@@ -368,9 +367,21 @@ Confident and compact, with a small press-in.
 
 Live state is written, not tiled. Under a page header, a single wrapping line of labelled facts (a crimson dot and crimson numeral for live counts, warning-ink for items needing attention). The admin station overview holds its live facts in one status strip: a single panel with three linked facts divided by hairlines, stacking under 760px. Profiles and panels use definition lists: 0.75rem muted `dt` over a 0.9375rem 600 `dd`, divided by hairlines.
 
+### Worker Glyphs
+
+The worker app draws its own icons (`packages/icons/src/glyphs.tsx`): 24px, 1.75 stroke, each built from a body, fixed strokes and inner details so one drawing serves three variants: `line` (navigation at rest), `duo` (body tinted at 20%, for inline and well icons) and `solid` (selected tabs and icon tiles; inner details are knocked out in `--glyph-knock`). Home is the forecourt canopy over a pump, shifts a roster clipboard, availability a week page with a check, hours a stopwatch. The admin app keeps the Lucide wrappers.
+
+### Pump Counter and Day Bar
+
+Running and total times (the live elapsed timer, the hours total) are set on rolling digit drums, like a pump display: each digit turns to its value with a small overshoot; the readable value is announced once. A 24-hour day bar places a shift on the day (sun at the start, moon at the end); overnight shifts wrap from midnight.
+
+### Shift Tickets
+
+A worker shift is a ticket: warm-ink date tile with yellow numerals, template name and day/night chip above a dashed tear line with two punched notches, the time range, day bar, notes and teammates (initial avatars) below. Today's ticket carries a crimson-subtle wash and a "היום" pill. Past shifts stay one quiet hairline list.
+
 ### Live Shift Panel (signature)
 
-The worker home's hero when on shift: a crimson field with 26px corners, one yellow 45-degree cut in the physical top-left corner, the live StatusBadge, the elapsed timer in Display numerals, then a fact block (check-in time, station) on translucent deep crimson. With no live shift, the next-shift panel takes the hero role with its time range at up to 3rem.
+The worker home's hero when on shift: a crimson field with 26px corners, one yellow 45-degree cut in the physical top-left corner, the live StatusBadge, the elapsed timer on the pump counter, a 28-tick fuel gauge filling in yellow toward the scheduled end with the time left, then a fact block (check-in time, station) on translucent deep crimson. With no live shift, the next-shift panel takes the hero role with its time range at up to 3rem.
 
 ### Empty and Loading States
 
@@ -403,6 +414,6 @@ In the worker app, moving between tabs raises the navigation splash (`BrandSplas
 - **Don't** build dashboards from equal metric tiles; write live facts as a labelled line.
 - **Don't** put a small label, eyebrow or kicker above headings, and don't uppercase or letter-space captions.
 - **Don't** use hard offset shadows, black shadows or glows.
-- **Don't** repeat the 45-degree cut beyond the full-screen canopy flows and the live panel.
+- **Don't** repeat the 45-degree cut beyond the full-screen canopy flows, the worker home canopy, the live panel and the hours total.
 - **Don't** redraw or replace the logomark, or use emoji; icons come from `@yellowshifts/icons`.
 - **Don't** stretch content past the 1240px cap on desktop.
