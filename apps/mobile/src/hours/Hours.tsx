@@ -456,10 +456,6 @@ export function HoursContent({
               {e.status !== 'הושלמה' && (
                 <Label>רשומה זו אינה כלולה בשעות שהושלמו. לבירור אפשר לפנות למנהל התחנה.</Label>
               )}
-              {(e.correctedAt || e.source !== 'NFC') && (
-                <Label bold>תיקון / דיווח ידני של מנהל</Label>
-              )}
-              {e.reason ? <Label>{e.reason}</Label> : null}
               <Rates entries={[e]} />
             </Surface>
           ))}

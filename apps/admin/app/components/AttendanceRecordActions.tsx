@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { Button } from '@yellowshifts/ui';
-import { EditIcon, PowerIcon, TrashIcon } from '@yellowshifts/icons';
+import { CircleCheckIcon, EditIcon, PowerIcon, TrashIcon } from '@yellowshifts/icons';
 import type { AttendanceRecordWithDetails } from '@yellowshifts/types';
 import { StaffDialog } from './StaffDialog';
 import { manageAttendanceRecordAction } from '../actions/attendance';
@@ -18,7 +18,7 @@ export function AttendanceRecordActions({
   /** `card`: full labels under a live card (short in the desktop list). `row`: short labels in a table row. */
   layout?: 'card' | 'row';
 }) {
-  const [action, setAction] = useState<'CLOSE' | 'DELETE' | null>(null);
+  const [action, setAction] = useState<'CLOSE' | 'DELETE' | 'CONFIRM' | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const locked = useRef(false);
@@ -37,6 +37,20 @@ export function AttendanceRecordActions({
               }}
             >
               סיום משמרת
+              <span className="ys-visually-hidden"> של {name}</span>
+            </Button>
+          )}
+          {record.status === 'FLAGGED' && (
+            <Button
+              variant="primary"
+              rightIcon={<CircleCheckIcon size={16} />}
+              onClick={() => {
+                setError('');
+                setAction('CONFIRM');
+              }}
+            >
+              <span className="att-label-long">אישור 12 שעות</span>
+              <span className="att-label-short">אישור</span>
               <span className="ys-visually-hidden"> של {name}</span>
             </Button>
           )}
@@ -66,7 +80,13 @@ export function AttendanceRecordActions({
 
       {action && (
         <StaffDialog
-          title={action === 'DELETE' ? 'מחיקת דיווח שגוי' : 'סיום משמרת'}
+          title={
+            action === 'DELETE'
+              ? 'מחיקת דיווח שגוי'
+              : action === 'CONFIRM'
+                ? 'אישור 12 שעות'
+                : 'סיום משמרת'
+          }
           busy={pending}
           onClose={() => setAction(null)}
         >
@@ -105,11 +125,13 @@ export function AttendanceRecordActions({
             <p className="manual-attendance-text">
               {action === 'DELETE'
                 ? 'הדיווח יוסר מהנוכחות ומדוחות השעות, והטווח יתפנה לדיווח מתוקן. עותק ביקורת והסיבה יישמרו. לא ניתן לבטל מחיקה דרך מסך זה.'
-                : 'המשמרת תסתיים לפי שעת השרת הנוכחית. לעריכת שעת יציאה אחרת השתמשו בעריכת זמנים.'}
+                : action === 'CONFIRM'
+                  ? 'לא דווחה יציאה, והמשמרת נעצרה אוטומטית אחרי 12 שעות. אישור ישמור את שעת הסיום הזו ויספור את המשמרת בדוחות. אם העובד יצא בשעה אחרת, השתמשו בעריכת זמנים.'
+                  : 'המשמרת תסתיים לפי שעת השרת הנוכחית. לעריכת שעת יציאה אחרת השתמשו בעריכת זמנים.'}
             </p>
             <label>
-              סיבה
-              <textarea name="reason" required maxLength={1000} rows={3} disabled={pending} />
+              סיבה (אופציונלי)
+              <textarea name="reason" maxLength={1000} rows={3} disabled={pending} />
             </label>
             {error && (
               <p role="alert" className="admin-feedback admin-feedback--error">
@@ -122,7 +144,11 @@ export function AttendanceRecordActions({
                 variant={action === 'DELETE' ? 'destructive' : 'primary'}
                 isLoading={pending}
               >
-                {action === 'DELETE' ? 'אישור מחיקת הדיווח' : 'אישור סיום משמרת'}
+                {action === 'DELETE'
+                  ? 'אישור מחיקת הדיווח'
+                  : action === 'CONFIRM'
+                    ? 'אישור 12 שעות'
+                    : 'אישור סיום משמרת'}
               </Button>
               <Button
                 type="button"

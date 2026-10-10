@@ -22,10 +22,6 @@ function harness(role = 'SHIFT_MANAGER', status = 'ACTIVE', platform = false) {
         writes.push('rotate');
         return { success: true };
       },
-      adminCorrectAttendance: async () => {
-        writes.push('correct');
-        return { success: true };
-      },
     },
   };
   const load = (path) => {
@@ -82,7 +78,15 @@ test('attendance administration is denied to shift managers and suspended statio
     const h = harness(role, status);
     assert.equal((await h.attendance.rotateNfcTokenAction('station')).success, false);
     assert.equal(
-      (await h.attendance.adminCorrectAttendanceAction({ stationId: 'station' })).success,
+      (
+        await h.attendance.manageAttendanceRecordAction({
+          stationId: 'station',
+          recordId: 'record',
+          action: 'CONFIRM',
+          reason: '',
+          expectedUpdatedAt: 'now',
+        })
+      ).success,
       false
     );
     assert.equal(h.writes.length, 0);

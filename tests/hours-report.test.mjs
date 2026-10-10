@@ -93,6 +93,18 @@ test('open, flagged, future and overlapping records never inflate totals', () =>
     0
   );
 });
+test('a record capped at 12 hours waits for admin review and is not counted', () => {
+  const [entry] = helpers.buildEntries(
+    [record({ status: 'FLAGGED', clock_out_at: '2026-09-08T08:00:00Z', clock_out_source: null })],
+    '2026-09-07',
+    '2026-09-08',
+    'Asia/Jerusalem',
+    Date.parse('2026-10-01')
+  );
+  assert.equal(entry.status, 'ממתינה לאישור מנהל');
+  assert.equal(helpers.isCounted(entry), false);
+  assert.equal(helpers.entryNote(entry), 'ממתינה לאישור · לא נספרה');
+});
 test('CSV is Excel UTF-8, escapes formulas/quotes and keeps only PDF-level detail', () => {
   const report = {
     station: 'תחנה',

@@ -340,21 +340,6 @@
   justify-items: start;
   gap: 4px;
 }
-.attendance-correction {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: var(--ys-radius-xs);
-  background: var(--ys-color-status-warning-subtle);
-  color: var(--ys-color-status-warning-ink);
-  font-size: var(--ys-text-xs);
-  line-height: 1.5;
-}
-.attendance-correction > svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
 @media (max-width: 720px) {
   .attendance-history .ys-table td {
     align-items: center;
@@ -534,6 +519,14 @@
 }
 .ys-form-grid.manual-attendance-times {
   gap: 16px 12px;
+  align-items: start;
+}
+/* Both fields keep one height; the hint under "יציאה" never stretches "כניסה". */
+.manual-attendance-times > label {
+  align-content: start;
+}
+.manual-attendance-times input {
+  height: 50px;
 }
 
 @media (max-width: 640px) {

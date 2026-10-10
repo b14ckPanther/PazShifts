@@ -242,9 +242,11 @@ export function buildEntries(
         ? 'חפיפה — לבדיקה'
         : record.status === 'ACTIVE'
           ? 'משמרת פתוחה'
-          : !valid
-            ? 'לבדיקה — לא נספר'
-            : 'הושלמה';
+          : record.status === 'FLAGGED'
+            ? 'ממתינה לאישור מנהל'
+            : !valid
+              ? 'לבדיקה — לא נספר'
+              : 'הושלמה';
       const common = {
         id: record.id,
         personId: record.station_membership_id,
@@ -376,6 +378,7 @@ export function entryNote(entry: Pick<ReportEntry, 'status'>): string {
   if (isCounted(entry)) return '';
   if (entry.status === 'משמרת פתוחה') return 'משמרת פתוחה · לא נספרה';
   if (entry.status.startsWith('חפיפה')) return 'חפיפה · לא נספרה';
+  if (entry.status === 'ממתינה לאישור מנהל') return 'ממתינה לאישור · לא נספרה';
   return 'לבדיקה · לא נספרה';
 }
 export function reportCsv(report: HoursReport): string {

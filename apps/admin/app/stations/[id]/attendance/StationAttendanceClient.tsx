@@ -8,7 +8,6 @@ import {
   CardDescription,
   CardContent,
   Button,
-  Badge,
   Alert,
   Dialog,
   EmptyState,
@@ -26,7 +25,6 @@ import {
   PlusIcon,
   RefreshIcon,
   RotateCcwIcon,
-  ShieldAlertIcon,
   WarningIcon,
 } from '@yellowshifts/icons';
 import { refreshStationAttendanceAction, rotateNfcTokenAction } from '../../../actions/attendance';
@@ -181,6 +179,9 @@ export function StationAttendanceClient({
         };
       }
     }
+    if (record.status === 'FLAGGED') {
+      return { label: 'חרגה מ-12 שעות', tone: 'danger', detail: 'לא נספרה עד לאישור מנהל' };
+    }
 
     if (!record.scheduled_shift) {
       return { label: 'לא מתוכננת', tone: 'info', detail: null };
@@ -296,13 +297,15 @@ export function StationAttendanceClient({
   // Status strip: derived only from the records already on the page.
   const todayKey = stationDateKey(Date.now());
   const completedToday = completedRecords.filter(
-    (record) => stationDateKey(record.clock_in_at) === todayKey
+    (record) => record.status === 'COMPLETED' && stationDateKey(record.clock_in_at) === todayKey
   );
-  const openIssues = [...activeRecords, ...completedToday].filter((record) => {
-    if (record.status === 'FLAGGED') return true;
-    const tone = getRecordDeviation(record).tone;
-    return tone === 'danger' || tone === 'warning';
-  }).length;
+  const cappedCount = completedRecords.filter((record) => record.status === 'FLAGGED').length;
+  const openIssues =
+    cappedCount +
+    [...activeRecords, ...completedToday].filter((record) => {
+      const tone = getRecordDeviation(record).tone;
+      return tone === 'danger' || tone === 'warning';
+    }).length;
 
   const openEdit = (record: AttendanceRecordWithDetails) => {
     setSelectedRecord(record);
@@ -358,7 +361,7 @@ export function StationAttendanceClient({
         </span>
         <span
           className={`att-fact${openIssues > 0 ? ' att-fact--attention' : ''}`}
-          title="איחור, יציאה מוקדמת או משמרת פתוחה"
+          title="איחור, יציאה מוקדמת, משמרת פתוחה או משמרת שנעצרה אחרי 12 שעות"
         >
           {openIssues > 0 ? (
             <WarningIcon size={16} aria-hidden="true" />
@@ -409,6 +412,16 @@ export function StationAttendanceClient({
       {successMessage && (
         <Alert variant="success" title="הצלחה">
           {successMessage}
+        </Alert>
+      )}
+
+      {cappedCount > 0 && activeTab !== 'COMPLETED' && (
+        <Alert variant="warning" title="משמרות שנעצרו אחרי 12 שעות">
+          <span className="ys-num">{cappedCount}</span> דיווחים ממתינים לאישור מנהל ולא נספרים בשעות
+          עד לאישור.{' '}
+          <Button variant="secondary" onClick={() => setActiveTab('COMPLETED')}>
+            מעבר לדיווחים
+          </Button>
         </Alert>
       )}
 
@@ -547,11 +560,13 @@ export function StationAttendanceClient({
                           <span className="attendance-history-badges">
                             {record.status === 'COMPLETED' ? (
                               <StatusBadge status="completed" label="הושלמה" />
+                            ) : record.status === 'FLAGGED' ? (
+                              <StatusBadge
+                                status="warning"
+                                label="נעצרה אחרי 12 שעות · ממתינה לאישור"
+                              />
                             ) : (
                               <StatusBadge status="error" label="סומנה לביקורת" />
-                            )}
-                            {record.clock_out_source === 'MANUAL_ADMIN' && (
-                              <Badge variant="brandCrimson">סגירה מנהלית</Badge>
                             )}
                           </span>
                           <span className="attendance-history-shift">
@@ -559,15 +574,6 @@ export function StationAttendanceClient({
                               ? `משמרת מתוכננת: ${record.scheduled_shift.shift_template?.name || 'שיבוץ שבועי'}`
                               : 'ללא שיבוץ מוקדם'}
                           </span>
-                          {record.corrected_by && (
-                            <span className="attendance-correction">
-                              <ShieldAlertIcon size={14} aria-hidden="true" />
-                              <span>
-                                תוקן מנהלית ע״י: {record.corrector?.full_name || 'מנהל'} | סיבה:{' '}
-                                {record.correction_reason}
-                              </span>
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td data-label="כניסה">

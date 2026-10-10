@@ -92,15 +92,6 @@ export interface ClockOutResult {
   error?: string;
 }
 
-export interface AdminAttendanceCorrectionInput {
-  attendanceRecordId: string;
-  stationId: string;
-  adminUserId: string;
-  action: 'CLOSE' | 'FLAG';
-  reason: string;
-  clockOutAt?: string;
-}
-
 // --- Phase 9: Attendance Exceptions ---
 
 export type AttendanceDeviation =
@@ -110,7 +101,8 @@ export type AttendanceDeviation =
   | 'LATE_AND_EARLY_LEAVE'
   | 'NO_SHOW'
   | 'UNSCHEDULED'
-  | 'LEFT_OPEN';
+  | 'LEFT_OPEN'
+  | 'CAPPED';
 
 export interface StationTolerances {
   allowedLateMinutes: number;

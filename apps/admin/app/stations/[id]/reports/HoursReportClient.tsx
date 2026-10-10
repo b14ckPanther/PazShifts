@@ -191,7 +191,7 @@ export function HoursReportClient({
         <RateBreakdown entries={filtered.entries} compact />
         {unclassified > 0 && (
           <p className="report-rules-hint">
-            ללא כללי שעות לתחנה, החלוקה היא 8 שעות ביום ב־100%, 2 שעות ב־125% והשאר ב־150%.{' '}
+            ללא כללי שעות לתחנה, החלוקה היא 8 שעות ביום ב-100%, 2 שעות ב-125% והשאר ב-150%.{' '}
             <Link href={`/stations/${stationId}/reports/settings`}>הגדרת כללים</Link>
           </p>
         )}
@@ -259,7 +259,7 @@ export function HoursReportClient({
             type="button"
             className="ys-button ys-button--ghost ys-button--sm"
             disabled={pending}
-            title={`נכון ל־${new Date(report.generatedAt).toLocaleTimeString('he-IL', {
+            title={`נכון ל-${new Date(report.generatedAt).toLocaleTimeString('he-IL', {
               timeZone: report.timezone,
               hour: '2-digit',
               minute: '2-digit',

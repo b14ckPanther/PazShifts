@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache';
 import {
   createServerSupabaseClient,
   getAuthenticatedUserContext,
-  adminCorrectAttendance,
   rotateStationNfcToken,
 } from '@yellowshifts/database';
 import type { TypedSupabaseClient } from '@yellowshifts/database';
@@ -21,48 +20,6 @@ export interface RotateTokenResult {
   success: boolean;
   newToken?: string;
   error?: string;
-}
-
-export async function adminCorrectAttendanceAction(input: {
-  attendanceRecordId: string;
-  stationId: string;
-  action: 'CLOSE' | 'FLAG';
-  reason: string;
-  clockOutAt?: string;
-}): Promise<AdminCorrectionResult> {
-  const cookieStore = await cookies();
-  const supabase = createServerSupabaseClient(cookieStore);
-
-  const context = await getAuthenticatedUserContext(supabase);
-  if (!context) {
-    return { success: false, error: 'המשתמש אינו מחובר' };
-  }
-
-  const isPlatformAdmin = context.isPlatformAdmin;
-  const isStationAdmin = context.memberships.some(
-    (m) =>
-      m.station.id === input.stationId &&
-      m.membership.role === 'ADMIN' &&
-      m.membership.status === 'ACTIVE'
-  );
-
-  if (!isPlatformAdmin && !isStationAdmin) {
-    return {
-      success: false,
-      error: 'הרשאה נדחתה: רק מנהל תחנה או מנהל מערכת ראשי רשאים לבצע תיקון מנהלי ברשומות נוכחות.',
-    };
-  }
-
-  const result = await adminCorrectAttendance(supabase, {
-    ...input,
-    adminUserId: context.user.id,
-  });
-
-  if (result.success) {
-    revalidatePath(`/stations/${input.stationId}/attendance`);
-  }
-
-  return result;
 }
 
 export async function rotateNfcTokenAction(stationId: string): Promise<RotateTokenResult> {
@@ -121,8 +78,8 @@ export async function saveManualAttendanceAction(input: {
       ))
   )
     return { success: false, error: 'אין הרשאה לעריכת נוכחות בתחנה זו.' };
-  if (!input.reason.trim() || input.reason.length > 1000)
-    return { success: false, error: 'יש להזין סיבת תיקון (עד 1,000 תווים).' };
+  if (input.reason.length > 1000)
+    return { success: false, error: 'סיבת התיקון ארוכה מדי (עד 1,000 תווים).' };
   const { data, error } = await supabase.rpc('save_manual_attendance', {
     p_station_id: input.stationId,
     p_membership_id: input.membershipId,
@@ -174,7 +131,7 @@ export async function refreshStationAttendanceAction(stationId: string) {
 export async function manageAttendanceRecordAction(input: {
   stationId: string;
   recordId: string;
-  action: 'CLOSE' | 'DELETE';
+  action: 'CLOSE' | 'DELETE' | 'CONFIRM';
   reason: string;
   expectedUpdatedAt: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -191,12 +148,8 @@ export async function manageAttendanceRecordAction(input: {
       ))
   )
     return { success: false, error: 'אין הרשאה לניהול נוכחות בתחנה זו.' };
-  if (
-    !['CLOSE', 'DELETE'].includes(input.action) ||
-    !input.reason.trim() ||
-    input.reason.length > 1000
-  )
-    return { success: false, error: 'יש לבחור פעולה ולהזין סיבה (עד 1,000 תווים).' };
+  if (!['CLOSE', 'DELETE', 'CONFIRM'].includes(input.action) || input.reason.length > 1000)
+    return { success: false, error: 'יש לבחור פעולה תקינה (סיבה עד 1,000 תווים).' };
   const { error } = await supabase.rpc('manage_attendance_record', {
     p_station_id: input.stationId,
     p_record_id: input.recordId,

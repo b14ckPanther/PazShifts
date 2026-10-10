@@ -353,7 +353,6 @@ export const en = {
     actionFlag: 'Flag Record for Audit',
     submitCorrection: 'Save Correction',
     correctionSaved: 'Attendance record updated and audited successfully',
-    correctedByBadge: 'Admin Corrected',
   },
   statusCallouts: {
     systemReady: 'System foundation is ready',

@@ -346,7 +346,6 @@ export const he = {
     actionFlag: 'סימון רשומה לחקירה וביקורת',
     submitCorrection: 'אישור תיקון מנהלי',
     correctionSaved: 'הרשומה עודכנה בהצלחה ונרשמה ביומן הביקורת',
-    correctedByBadge: 'תוקן מנהלית',
   },
   statusCallouts: {
     systemReady: 'תשתית המערכת מוכנה לפעולה',

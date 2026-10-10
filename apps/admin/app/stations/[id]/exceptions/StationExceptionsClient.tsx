@@ -34,6 +34,7 @@ const DEVIATION_LABELS: Record<AttendanceDeviation, string> = {
   NO_SHOW: 'אי-הגעה',
   UNSCHEDULED: 'משמרת לא מתוכננת',
   LEFT_OPEN: 'משמרת לא נסגרה',
+  CAPPED: 'חרגה מ-12 שעות',
 };
 
 type DeviationTone = 'danger' | 'warning' | 'info' | 'success';
@@ -46,12 +47,14 @@ const DEVIATION_TONES: Record<AttendanceDeviation, DeviationTone> = {
   NO_SHOW: 'danger',
   UNSCHEDULED: 'info',
   LEFT_OPEN: 'danger',
+  CAPPED: 'danger',
 };
 
 type FilterType = 'ALL' | AttendanceDeviation;
 
 const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
   { value: 'ALL', label: 'כל החריגות' },
+  { value: 'CAPPED', label: 'חרגו מ-12 שעות' },
   { value: 'LEFT_OPEN', label: 'משמרות לא נסגרו' },
   { value: 'NO_SHOW', label: 'אי-הגעות' },
   { value: 'LATE', label: 'איחורים' },
@@ -75,6 +78,7 @@ function formatTime(isoString: string | null, timezone: string): string {
 
 function getDeviationIcon(deviation: AttendanceDeviation, size: number = 16) {
   switch (deviation) {
+    case 'CAPPED':
     case 'LEFT_OPEN':
     case 'NO_SHOW':
     case 'LATE_AND_EARLY_LEAVE':
@@ -262,6 +266,7 @@ function ExceptionRow({
   const hasLate = exception.lateMinutes !== null && exception.lateMinutes > 0;
   const hasEarly = exception.earlyLeaveMinutes !== null && exception.earlyLeaveMinutes > 0;
   const hasOpen = exception.openHours !== null;
+  const capped = exception.deviation === 'CAPPED';
 
   return (
     <tr>
@@ -303,6 +308,7 @@ function ExceptionRow({
               {exception.actualClockOut ? `–${formatTime(exception.actualClockOut, timezone)}` : ''}
             </bdi>
             {!exception.actualClockOut && <span className="exceptions-muted">(פעיל)</span>}
+            {capped && <span className="exceptions-muted">(נעצרה אוטומטית)</span>}
           </span>
         ) : (
           <span className="exceptions-missing">לא הגיע</span>
@@ -310,7 +316,11 @@ function ExceptionRow({
       </td>
 
       <td data-label="פירוט">
-        {hasLate || hasEarly || hasOpen ? (
+        {capped ? (
+          <span className="exceptions-detail">
+            <span>ממתינה לאישור מנהל · לא נספרה</span>
+          </span>
+        ) : hasLate || hasEarly || hasOpen ? (
           <span className="exceptions-detail">
             {hasLate && (
               <span>
@@ -339,7 +349,7 @@ function ExceptionRow({
             href={`/stations/${stationId}/attendance`}
             className="ys-button ys-button--secondary"
           >
-            צפייה
+            {capped ? 'לאישור' : 'צפייה'}
             <span className="ys-visually-hidden">
               {' '}
               ברשומת הנוכחות של {exception.worker.fullName}

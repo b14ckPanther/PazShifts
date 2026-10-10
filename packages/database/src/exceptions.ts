@@ -122,6 +122,16 @@ export function computeAttendanceDeviation(
     }
   }
 
+  // CAPPED: stopped automatically at 12 hours, waiting for admin review
+  if (record.status === 'FLAGGED') {
+    return {
+      deviation: 'CAPPED',
+      lateMinutes: null,
+      earlyLeaveMinutes: null,
+      openHours: null,
+    };
+  }
+
   // UNSCHEDULED: No linked scheduled shift
   if (!record.scheduled_shift_id || !scheduledShift) {
     return {
@@ -195,6 +205,7 @@ export function computeAttendanceDeviation(
  * 1. Deviation analysis on all attendance records for the date
  * 2. No-show detection for published assigned shifts with no attendance
  * 3. Left-open detection for ACTIVE records exceeding threshold
+ * 4. Capped (FLAGGED) records waiting for admin review, from any earlier day
  */
 export async function getStationExceptionsForDate(
   supabase: TypedSupabaseClient,
@@ -204,7 +215,7 @@ export async function getStationExceptionsForDate(
   const dateStart = `${date}T00:00:00Z`;
   const dateEnd = `${date}T23:59:59Z`;
 
-  // 1. Fetch all attendance records for the date (including ACTIVE left-open from earlier)
+  // 1. Fetch all attendance records for the date (including ACTIVE / FLAGGED from earlier)
   const attendanceQuery = supabase
     .from('attendance_records')
     .select(
@@ -239,7 +250,7 @@ export async function getStationExceptionsForDate(
     `
     )
     .eq('station_id', stationId)
-    .or(`clock_in_at.gte.${dateStart},status.eq.ACTIVE`)
+    .or(`clock_in_at.gte.${dateStart},status.in.(ACTIVE,FLAGGED)`)
     .lte('clock_in_at', dateEnd)
     .order('clock_in_at', { ascending: true });
 
@@ -467,15 +478,16 @@ export async function getStationExceptionsForDate(
     });
   }
 
-  // 5. Sort exceptions by severity: LEFT_OPEN > NO_SHOW > LATE_AND_EARLY_LEAVE > LATE > EARLY_LEAVE > UNSCHEDULED
+  // 5. Sort exceptions by severity: CAPPED > LEFT_OPEN > NO_SHOW > LATE_AND_EARLY_LEAVE > LATE > EARLY_LEAVE > UNSCHEDULED
   const severityOrder: Record<AttendanceDeviation, number> = {
-    LEFT_OPEN: 0,
-    NO_SHOW: 1,
-    LATE_AND_EARLY_LEAVE: 2,
-    LATE: 3,
-    EARLY_LEAVE: 4,
-    UNSCHEDULED: 5,
-    ON_TIME: 6,
+    CAPPED: 0,
+    LEFT_OPEN: 1,
+    NO_SHOW: 2,
+    LATE_AND_EARLY_LEAVE: 3,
+    LATE: 4,
+    EARLY_LEAVE: 5,
+    UNSCHEDULED: 6,
+    ON_TIME: 7,
   };
 
   exceptions.sort((a, b) => severityOrder[a.deviation] - severityOrder[b.deviation]);

@@ -118,10 +118,9 @@ export function ManualAttendanceDialog({
           </label>
         </div>
         <label>
-          סיבת הדיווח או התיקון
+          סיבת הדיווח או התיקון (אופציונלי)
           <textarea
             name="reason"
-            required
             maxLength={1000}
             rows={2}
             disabled={pending}

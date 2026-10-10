@@ -1,5 +1,4 @@
 import type {
-  Database,
   AttendanceRecord,
   AttendanceRecordWithDetails,
   ResolvedNfcStation,
@@ -7,7 +6,6 @@ import type {
   ClockInResult,
   ClockOutInput,
   ClockOutResult,
-  AdminAttendanceCorrectionInput,
 } from '@yellowshifts/types';
 import type { TypedSupabaseClient } from './auth';
 
@@ -451,12 +449,61 @@ export async function listStationAttendance(
       .lte('clock_in_at', `${options.date}T23:59:59Z`);
   }
 
-  const [{ data: activeData, error: activeErr }, { data: completedData, error: completedErr }] =
-    await Promise.all([activeQuery, completedQuery]);
+  // Records capped at 12 hours stay listed until an admin resolves them.
+  const flaggedQuery = options?.date
+    ? null
+    : supabase
+        .from('attendance_records')
+        .select(
+          `
+      *,
+      profiles:user_id (
+        id,
+        full_name,
+        phone
+      ),
+      station_memberships:station_membership_id (
+        id,
+        role,
+        employee_code
+      ),
+      scheduled_shifts:scheduled_shift_id (
+        id,
+        shift_date,
+        start_at,
+        end_at,
+        notes,
+        shift_templates:shift_template_id (
+          name,
+          start_time,
+          end_time
+        )
+      ),
+      corrector:corrected_by (
+        id,
+        full_name
+      )
+    `
+        )
+        .eq('station_id', stationId)
+        .eq('status', 'FLAGGED')
+        .order('clock_in_at', { ascending: false })
+        .limit(200);
+
+  const [
+    { data: activeData, error: activeErr },
+    { data: completedData, error: completedErr },
+    flaggedResult,
+  ] = await Promise.all([activeQuery, completedQuery, flaggedQuery]);
   if (activeErr) throw new Error('Unable to load station attendance');
-  if (completedErr) {
+  if (completedErr || flaggedResult?.error) {
     throw new Error('Unable to load station attendance history');
   }
+  const seen = new Set((completedData || []).map((item) => item.id));
+  const historyData = [
+    ...(completedData || []),
+    ...(flaggedResult?.data || []).filter((item) => !seen.has(item.id)),
+  ].sort((a, b) => b.clock_in_at.localeCompare(a.clock_in_at));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRecord = (item: any): AttendanceRecordWithDetails => {
@@ -517,73 +564,7 @@ export async function listStationAttendance(
 
   return {
     activeRecords: (activeData || []).map(mapRecord),
-    completedRecords: (completedData || []).map(mapRecord),
-  };
-}
-
-/**
- * Minimal auditable admin correction for an attendance record.
- * Allowed actions:
- * - 'CLOSE': manually close an accidentally left-open attendance record
- * - 'FLAG': flag an attendance record for audit review
- */
-export async function adminCorrectAttendance(
-  supabase: TypedSupabaseClient,
-  input: AdminAttendanceCorrectionInput
-): Promise<{ success: boolean; record?: AttendanceRecord; error?: string }> {
-  const { attendanceRecordId, stationId, adminUserId, action, reason, clockOutAt } = input;
-
-  if (!reason || !reason.trim()) {
-    return {
-      success: false,
-      error: 'יש להזין סיבת תיקון מנהלי מפורשת לצורכי ביקורת.',
-    };
-  }
-
-  const nowIso = new Date().toISOString();
-  const updatePayload: Database['public']['Tables']['attendance_records']['Update'] = {
-    corrected_by: adminUserId,
-    correction_reason: reason.trim(),
-    corrected_at: nowIso,
-    updated_at: nowIso,
-  };
-
-  if (action === 'CLOSE') {
-    const { data: existing } = await supabase
-      .from('attendance_records')
-      .select('clock_in_at')
-      .eq('id', attendanceRecordId)
-      .maybeSingle();
-
-    const minTimeMs = existing?.clock_in_at ? new Date(existing.clock_in_at).getTime() : Date.now();
-    const desiredOutMs = clockOutAt ? new Date(clockOutAt).getTime() : Date.now();
-    const safeOutIso = new Date(Math.max(desiredOutMs, minTimeMs)).toISOString();
-
-    updatePayload.status = 'COMPLETED';
-    updatePayload.clock_out_at = safeOutIso;
-    updatePayload.clock_out_source = 'MANUAL_ADMIN';
-  } else if (action === 'FLAG') {
-    updatePayload.status = 'FLAGGED';
-  }
-
-  const { data, error } = await supabase
-    .from('attendance_records')
-    .update(updatePayload)
-    .eq('id', attendanceRecordId)
-    .eq('station_id', stationId)
-    .select('*')
-    .single();
-
-  if (error || !data) {
-    return {
-      success: false,
-      error: `נכשל בתיקון רשומת נוכחות: ${error?.message || 'שגיאה'}`,
-    };
-  }
-
-  return {
-    success: true,
-    record: data as AttendanceRecord,
+    completedRecords: historyData.map(mapRecord),
   };
 }
 

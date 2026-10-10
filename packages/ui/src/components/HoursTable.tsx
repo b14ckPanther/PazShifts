@@ -5,7 +5,6 @@ import {
   addDays,
   hoursMinutes,
   isCounted,
-  isManual,
   payRates,
   shortClock,
   weekdayLabel,
@@ -150,7 +149,7 @@ function Day({
       {entries.map((entry, index) => {
         const counted = isCounted(entry);
         const extra = premiums(rates.get(entry));
-        const notes = !counted || isManual(entry) || extra.length > 0;
+        const notes = !counted || extra.length > 0;
         return (
           <tr
             key={`${entry.id}-${index}`}
@@ -169,11 +168,6 @@ function Day({
             {notes && (
               <td className="hours-notes">
                 {!counted && <span className="hours-flag">{entry.status} · לא נספרה</span>}
-                {isManual(entry) && (
-                  <span className="hours-tag" title={entry.reason || undefined}>
-                    עודכן ידנית
-                  </span>
-                )}
                 {extra.map(([rate, seconds]) => (
                   <span key={rate} className="hours-tag hours-tag--rate">
                     <bdi>{rate}%</bdi> <bdi>{hoursMinutes(seconds)}</bdi>
