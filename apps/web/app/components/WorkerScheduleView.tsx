@@ -8,13 +8,13 @@ import { NavigationLink as Link } from '@/app/components/NavigationLink';
 import type { WeeklyScheduleDetails, ScheduledShiftWithDetails } from '@yellowshifts/types';
 import { EmptyState, StatusBadge } from '@yellowshifts/ui';
 import {
-  CalendarIcon,
-  ClockIcon,
-  UsersIcon,
-  MoonIcon,
-  SunIcon,
-  BriefcaseIcon,
+  AvailabilityGlyph,
+  MoonGlyph,
+  RosterGlyph,
+  SunGlyph,
+  TeamGlyph,
 } from '@yellowshifts/icons';
+import { DayBar, minutesOfWallTime } from './WorkerVisuals';
 
 interface WorkerScheduleViewProps {
   stationId: string;
@@ -27,6 +27,12 @@ interface WorkerScheduleViewProps {
 }
 
 const HEBREW_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const DAY_LETTERS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return (parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '') || '?';
+}
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(`${dateStr.slice(0, 10)}T00:00:00Z`);
@@ -94,12 +100,56 @@ export function WorkerScheduleView({
   const ordered = orderWorkerShifts(myShifts, timezone, now);
   const remaining = ordered.filter((item) => !item.past).length;
 
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(now);
+  const strip = Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(selectedWeekStart, i);
+    return {
+      date,
+      letter: DAY_LETTERS[i],
+      day: Number(date.slice(8, 10)),
+      shift: myShifts.some((s) => s.shiftDate.slice(0, 10) === date),
+      today: date === today,
+      past: date < today,
+    };
+  });
+
   const roleLabel = (role: string) =>
     role === 'ADMIN' ? 'מנהל תחנה' : role === 'SHIFT_MANAGER' ? 'אחמ״ש' : 'עובד';
 
   return (
     <div className="worker-details">
-      <WeekNavigator start={selectedWeekStart} end={weekEnd} onNavigate={navigateWeek}>
+      <WeekNavigator
+        start={selectedWeekStart}
+        end={weekEnd}
+        onNavigate={navigateWeek}
+        days={
+          <ol className="worker-week-strip" aria-label="ימי השבוע">
+            {strip.map((d) => (
+              <li
+                key={d.date}
+                data-today={d.today || undefined}
+                data-past={d.past || undefined}
+                data-shift={d.shift || undefined}
+              >
+                {d.shift ? (
+                  <a href={`#shift-${d.date}`}>
+                    <span>{d.letter}</span>
+                    <strong className="ys-num">{d.day}</strong>
+                    <i aria-hidden="true" />
+                    <span className="ys-visually-hidden">יש משמרת</span>
+                  </a>
+                ) : (
+                  <span>
+                    <span>{d.letter}</span>
+                    <strong className="ys-num">{d.day}</strong>
+                    <i aria-hidden="true" />
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        }
+      >
         {schedule?.status === 'PUBLISHED' ? (
           <StatusBadge status="published" label="סידור העבודה פורסם" />
         ) : (
@@ -110,7 +160,7 @@ export function WorkerScheduleView({
       {myShifts.length === 0 ? (
         <div className="ys-card">
           <EmptyState
-            icon={<BriefcaseIcon size={24} />}
+            icon={<RosterGlyph size={26} variant="duo" />}
             title="אין משמרות משובצות עבורך בשבוע זה"
             description="יתכן שטרם שובצת למשמרות בשבוע זה, או שסידור העבודה השבועי נמצא עדיין בשלבי עריכה ולא פורסם רשמית."
             action={
@@ -118,7 +168,7 @@ export function WorkerScheduleView({
                 href={`/availability?week=${selectedWeekStart}&stationId=${stationId}`}
                 className="ys-button ys-button--primary"
               >
-                <CalendarIcon size={18} aria-hidden="true" />
+                <AvailabilityGlyph size={18} />
                 <span>הגשת זמינות לשבוע זה</span>
               </Link>
             }
@@ -151,7 +201,12 @@ export function WorkerScheduleView({
               const coworkers = shift.assignments.filter((a) => a.user.id !== workerUserId);
 
               return (
-                <article key={shift.id} className="worker-shift-card">
+                <article
+                  key={shift.id}
+                  id={`shift-${shift.shiftDate.slice(0, 10)}`}
+                  className="worker-shift-card"
+                  data-today={shift.shiftDate.slice(0, 10) === today || undefined}
+                >
                   <header className="worker-shift-heading">
                     <div className="worker-card-date-tile">
                       <span>{getHebrewDayName(shift.shiftDate)}</span>
@@ -160,26 +215,30 @@ export function WorkerScheduleView({
                     <div className="worker-shift-identity">
                       <h3>{shift.templateName || 'משמרת'}</h3>
                       <time className="ys-num" dateTime={shift.shiftDate}>
+                        {shift.shiftDate.slice(0, 10) === today && (
+                          <span className="worker-shift-today">היום</span>
+                        )}
                         {formatDateDisplay(shift.shiftDate)}
                       </time>
                     </div>
-                    <span className="worker-shift-period">
+                    <span className="worker-shift-period" data-period={overnight ? 'night' : 'day'}>
                       {overnight ? (
-                        <MoonIcon size={14} aria-hidden="true" />
+                        <MoonGlyph size={14} variant="duo" />
                       ) : (
-                        <SunIcon size={14} aria-hidden="true" />
+                        <SunGlyph size={14} variant="duo" />
                       )}
                       {overnight ? 'לילה' : 'יום'}
                     </span>
                   </header>
+                  <div className="worker-shift-tear" aria-hidden="true" />
                   <div className="worker-shift-body">
                     <div className="worker-shift-time">
-                      <ClockIcon size={20} aria-hidden="true" />
                       <strong className="ys-num" dir="ltr">
                         {sTime} <span>–</span> {eTime}
                       </strong>
                       {overnight && <span className="worker-shift-overnight">עד למחרת</span>}
                     </div>
+                    <DayBar start={minutesOfWallTime(sTime)} end={minutesOfWallTime(eTime)} />
 
                     {shift.notes && (
                       <p className="worker-shift-notes">
@@ -189,7 +248,7 @@ export function WorkerScheduleView({
 
                     <div className="worker-shift-team">
                       <p className="worker-shift-team-title">
-                        <UsersIcon size={15} aria-hidden="true" />
+                        <TeamGlyph size={16} variant="duo" />
                         <span>צוות נוסף במשמרת ({coworkers.length}):</span>
                       </p>
                       {coworkers.length === 0 ? (
@@ -200,6 +259,9 @@ export function WorkerScheduleView({
                         <ul className="worker-shift-team-list">
                           {coworkers.map((c) => (
                             <li key={c.id}>
+                              <span className="worker-shift-team-avatar" aria-hidden="true">
+                                {initials(c.user.fullName || '')}
+                              </span>
                               <span className="worker-shift-team-name">{c.user.fullName}</span>
                               <span className="worker-shift-team-role">
                                 {roleLabel(c.membership.role)}

@@ -12,13 +12,15 @@ import type {
 import { saveWorkerAvailabilityAction } from '../actions/availability';
 import { Alert, Button, Badge, StatusBadge } from '@yellowshifts/ui';
 import {
-  CheckIcon,
-  SendIcon,
-  WarningIcon,
-  SuccessIcon,
-  CloseIcon,
-  MoonIcon,
-  SunIcon,
+  AlertGlyph,
+  CheckCircleGlyph,
+  CheckGlyph,
+  CloseGlyph,
+  MoonGlyph,
+  SendGlyph,
+  SunGlyph,
+  UnavailableGlyph,
+  WindowGlyph,
 } from '@yellowshifts/icons';
 
 interface WeeklyAvailabilityFormProps {
@@ -270,23 +272,6 @@ export function WeeklyAvailabilityForm({
         )}
       </WeekNavigator>
 
-      {feedback && (
-        <div
-          className={`worker-feedback worker-feedback--${feedback.type}`}
-          role={feedback.type === 'success' ? 'status' : 'alert'}
-        >
-          {feedback.type === 'success' ? (
-            <SuccessIcon size={20} aria-hidden="true" />
-          ) : (
-            <WarningIcon size={20} aria-hidden="true" />
-          )}
-          <span>{feedback.text}</span>
-          <button type="button" onClick={() => setFeedback(null)} aria-label="סגירת ההודעה">
-            <CloseIcon size={18} />
-          </button>
-        </div>
-      )}
-
       {isClosedWeek && (
         <Alert variant="info">
           {weekStartDate < activeCurrentWeekStart
@@ -318,10 +303,24 @@ export function WeeklyAvailabilityForm({
             >
               <header className="worker-availability-heading">
                 <div className="worker-availability-day">
-                  <h3 id={`${fieldId}-title`}>
-                    {day.name}
-                    <span className="ys-num">{formatDateDisplay(state.date)}</span>
-                  </h3>
+                  <span className="worker-availability-date" aria-hidden="true">
+                    <span>{day.short}</span>
+                    <strong>{Number(state.date.slice(8, 10))}</strong>
+                  </span>
+                  <div className="worker-availability-day-text">
+                    <h3 id={`${fieldId}-title`}>{day.name}</h3>
+                    <span>
+                      <span className="ys-num">{formatDateDisplay(state.date)}</span>
+                      {' · '}
+                      {state.availabilityType === 'ALL_DAY_AVAILABLE'
+                        ? 'זמין לכל משמרת'
+                        : state.availabilityType === 'ALL_DAY_UNAVAILABLE'
+                          ? 'לא פנוי למשמרות'
+                          : state.startTime && state.endTime
+                            ? `זמין ${state.startTime}–${state.endTime}`
+                            : 'חלון שעות'}
+                    </span>
+                  </div>
                   {isPastDay ? (
                     <Badge variant="neutral">עבר</Badge>
                   ) : isToday ? (
@@ -335,6 +334,13 @@ export function WeeklyAvailabilityForm({
                   className="ys-segmented worker-availability-options"
                   role="group"
                   aria-label={`זמינות ל${day.name}`}
+                  data-value={
+                    state.availabilityType === 'ALL_DAY_AVAILABLE'
+                      ? 'available'
+                      : state.availabilityType === 'ALL_DAY_UNAVAILABLE'
+                        ? 'unavailable'
+                        : 'window'
+                  }
                 >
                   <button
                     type="button"
@@ -343,6 +349,7 @@ export function WeeklyAvailabilityForm({
                     aria-pressed={state.availabilityType === 'ALL_DAY_AVAILABLE'}
                     data-option="available"
                   >
+                    <CheckCircleGlyph size={16} variant="duo" />
                     זמין כל היום
                   </button>
                   <button
@@ -352,6 +359,7 @@ export function WeeklyAvailabilityForm({
                     aria-pressed={state.availabilityType === 'ALL_DAY_UNAVAILABLE'}
                     data-option="unavailable"
                   >
+                    <UnavailableGlyph size={16} variant="duo" />
                     לא זמין
                   </button>
                   <button
@@ -361,6 +369,10 @@ export function WeeklyAvailabilityForm({
                     aria-pressed={state.availabilityType === 'TIME_WINDOW'}
                     data-option="window"
                   >
+                    <WindowGlyph
+                      size={16}
+                      variant={state.availabilityType === 'TIME_WINDOW' ? 'solid' : 'duo'}
+                    />
                     חלון שעות
                   </button>
                 </div>
@@ -388,15 +400,8 @@ export function WeeklyAvailabilityForm({
                   </p>
                 ) : (
                   <>
-                    {state.availabilityType === 'ALL_DAY_AVAILABLE' && (
-                      <p className="worker-availability-summary">זמין לכל משמרת ביום הזה.</p>
-                    )}
-
                     {state.availabilityType === 'ALL_DAY_UNAVAILABLE' && (
                       <div className="worker-availability-fields">
-                        <p className="worker-availability-summary is-unavailable">
-                          לא פנוי למשמרות ביום הזה.
-                        </p>
                         <label className="ys-form-field" htmlFor={`${fieldId}-note`}>
                           <span className="ys-label">סיבה או הערה למנהל (אופציונלי)</span>
                           <input
@@ -441,12 +446,12 @@ export function WeeklyAvailabilityForm({
                         </div>
                         {overnightFlag ? (
                           <Badge variant="warning">
-                            <MoonIcon size={13} aria-hidden="true" />
+                            <MoonGlyph size={13} variant="duo" />
                             חלון לילה (חוצה חצות)
                           </Badge>
                         ) : (
                           <Badge variant="neutral">
-                            <SunIcon size={13} aria-hidden="true" />
+                            <SunGlyph size={13} variant="duo" />
                             חלון יום
                           </Badge>
                         )}
@@ -488,6 +493,23 @@ export function WeeklyAvailabilityForm({
         </label>
       </div>
 
+      {feedback && (
+        <div
+          className={`worker-feedback worker-feedback--${feedback.type}`}
+          role={feedback.type === 'success' ? 'status' : 'alert'}
+        >
+          {feedback.type === 'success' ? (
+            <CheckCircleGlyph size={22} variant="duo" />
+          ) : (
+            <AlertGlyph size={22} variant="duo" />
+          )}
+          <span>{feedback.text}</span>
+          <button type="button" onClick={() => setFeedback(null)} aria-label="סגירת ההודעה">
+            <CloseGlyph size={18} />
+          </button>
+        </div>
+      )}
+
       {!isClosedWeek && (
         <div className="worker-save-bar">
           <p>
@@ -511,7 +533,7 @@ export function WeeklyAvailabilityForm({
             variant="primary"
             onClick={handleSave}
             disabled={isPending}
-            rightIcon={submitted ? <CheckIcon size={18} /> : <SendIcon size={18} />}
+            rightIcon={submitted ? <CheckGlyph size={18} /> : <SendGlyph size={18} variant="duo" />}
           >
             {submitted ? 'עדכון' : 'שליחה'}
           </Button>

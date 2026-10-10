@@ -1,11 +1,12 @@
-/* Worker data surfaces: shift entries, availability days, feedback and save bar. */
+/* Worker data surfaces: shift tickets, availability days, feedback and save bar. */
 
 /* ---------- Shift list ---------- */
 .worker-shift-list {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 .worker-shift-summary {
+  padding-inline: 2px;
   font-size: var(--ys-text-md);
   font-weight: 600;
   color: var(--ys-color-text-secondary);
@@ -14,40 +15,75 @@
   color: var(--ys-color-text-primary);
   font-size: var(--ys-text-lg);
 }
+
+/* A shift is a ticket: identity above the tear line, the time and the team below. */
 .worker-shift-card {
-  overflow: hidden;
-  border-radius: var(--ys-radius-lg);
+  --ticket-notch: 11px;
+  position: relative;
+  scroll-margin-top: 88px;
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
-  box-shadow: var(--ys-shadow-card);
-  animation: worker-card-in 260ms var(--ys-ease-out) both;
+  box-shadow:
+    0 0 0 1px rgba(40, 28, 16, 0.05),
+    0 1px 2px rgba(40, 28, 16, 0.05),
+    0 10px 24px -10px rgba(40, 28, 16, 0.18);
+}
+/* Two notches punched where the tear line meets the edges. */
+.worker-shift-card::before,
+.worker-shift-card::after {
+  content: '';
+  position: absolute;
+  top: calc(96px - var(--ticket-notch));
+  width: calc(var(--ticket-notch) * 2);
+  height: calc(var(--ticket-notch) * 2);
+  border-radius: 50%;
+  background: var(--ys-color-surface-base);
+}
+.worker-shift-card::before {
+  left: calc(var(--ticket-notch) * -1);
+  clip-path: inset(0 0 0 50%);
+}
+.worker-shift-card::after {
+  right: calc(var(--ticket-notch) * -1);
+  clip-path: inset(0 50% 0 0);
+}
+.worker-shift-card[data-today] {
+  background:
+    linear-gradient(180deg, var(--ys-color-brand-crimson-subtle), transparent 96px),
+    var(--ys-color-surface-raised);
 }
 .worker-shift-heading {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 16px 0;
+  height: 96px;
+  padding: 0 18px;
 }
 .worker-card-date-tile {
   display: grid;
   justify-items: center;
   align-content: center;
-  min-width: 58px;
-  height: 58px;
-  padding-inline: 4px;
+  min-width: 60px;
+  height: 64px;
+  padding-inline: 6px;
   flex-shrink: 0;
-  border-radius: var(--ys-radius-md);
-  background: var(--ys-color-text-primary);
-  color: #fff;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #2a2420, var(--ys-color-text-primary));
+  color: var(--ys-color-brand-yellow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 14px -6px rgba(28, 23, 20, 0.6);
 }
 .worker-card-date-tile span {
-  font-size: var(--ys-text-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1.2;
+  color: rgba(255, 244, 204, 0.75);
 }
 .worker-card-date-tile strong {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--ys-font-numeric);
+  font-size: 1.625rem;
+  font-weight: 500;
   line-height: 1.1;
 }
 .worker-shift-identity {
@@ -61,38 +97,56 @@
   overflow-wrap: anywhere;
 }
 .worker-shift-identity time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--ys-text-sm);
   color: var(--ys-color-text-muted);
+}
+.worker-shift-today {
+  padding: 1px 8px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--ys-color-brand-crimson);
+  color: #fff;
+  font-family: var(--ys-font-ui);
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
 }
 .worker-shift-period {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  padding: 4px 10px;
+  padding: 5px 10px;
   border-radius: var(--ys-radius-pill);
-  border: 1px solid var(--ys-color-border-medium);
+  background: var(--ys-color-brand-yellow-subtle);
+  color: var(--ys-color-brand-yellow-ink);
   font-size: var(--ys-text-xs);
   font-weight: 700;
-  color: var(--ys-color-text-secondary);
+}
+.worker-shift-period[data-period='night'] {
+  background: #ece9f6;
+  color: #3c3470;
+}
+.worker-shift-tear {
+  margin-inline: calc(var(--ticket-notch) + 6px);
+  border-top: 2px dashed var(--ys-color-border-subtle);
 }
 .worker-shift-body {
   display: grid;
   gap: 14px;
-  padding: 14px 16px 16px;
+  padding: 16px 18px 18px;
 }
 .worker-shift-time {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  color: var(--ys-color-brand-crimson);
 }
 .worker-shift-time strong {
-  font-size: clamp(1.75rem, 8vw, 2.125rem);
+  font-size: clamp(1.875rem, 9vw, 2.375rem);
   font-weight: 500;
-  line-height: 1.15;
-  color: var(--ys-color-text-primary);
+  line-height: 1.1;
   white-space: nowrap;
 }
 .worker-shift-time strong span {
@@ -109,7 +163,7 @@
 }
 .worker-shift-notes {
   padding: 10px 12px;
-  border-radius: var(--ys-radius-sm);
+  border-radius: 12px;
   background: var(--ys-color-brand-yellow-subtle);
   color: var(--ys-color-brand-yellow-ink);
   font-size: var(--ys-text-sm);
@@ -117,8 +171,8 @@
 }
 .worker-shift-team {
   display: grid;
-  gap: 8px;
-  padding-top: 12px;
+  gap: 10px;
+  padding-top: 14px;
   border-top: 1px solid var(--ys-color-border-subtle);
 }
 .worker-shift-team-title {
@@ -126,6 +180,7 @@
   align-items: center;
   gap: 6px;
   font-size: var(--ys-text-sm);
+  font-weight: 600;
   color: var(--ys-color-text-secondary);
 }
 .worker-shift-team-empty {
@@ -140,22 +195,44 @@
 }
 .worker-shift-team-list li {
   display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 7px;
   max-width: 100%;
-  padding: 5px 10px;
+  padding: 4px 12px 4px 4px;
+  padding-inline: 4px 12px;
   border-radius: var(--ys-radius-pill);
   background: var(--ys-color-surface-base);
   font-size: var(--ys-text-sm);
 }
+.worker-shift-team-avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--ys-color-brand-yellow);
+  color: var(--ys-color-text-primary);
+  font-size: 0.6875rem;
+  font-weight: 800;
+}
+.worker-shift-team-list li:nth-child(3n + 2) .worker-shift-team-avatar {
+  background: var(--ys-color-text-primary);
+  color: var(--ys-color-brand-yellow);
+}
+.worker-shift-team-list li:nth-child(3n + 3) .worker-shift-team-avatar {
+  background: var(--ys-color-brand-crimson);
+  color: #fff;
+}
 .worker-shift-team-name {
   font-weight: 700;
-  overflow-wrap: anywhere;
 }
 .worker-shift-team-role {
   font-size: var(--ys-text-xs);
   color: var(--ys-color-text-muted);
 }
+
+/* Past shifts recede into one quiet list: hairline rows, no per-shift tickets. */
 .worker-past {
   display: grid;
   gap: 8px;
@@ -167,7 +244,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 .worker-past-heading h3 {
   font-size: var(--ys-text-md);
@@ -178,13 +255,12 @@
   font-size: var(--ys-text-xs);
   color: var(--ys-color-text-muted);
 }
-/* Past shifts recede into one quiet list: hairline rows, no per-shift cards. */
 .worker-past-list {
   list-style: none;
-  border-radius: var(--ys-radius-lg);
-  border: 1px solid var(--ys-color-border-subtle);
-  background: color-mix(in srgb, var(--ys-color-surface-raised) 55%, transparent);
   overflow: hidden;
+  border-radius: var(--ys-radius-xl);
+  border: 1px solid var(--ys-color-border-subtle);
+  background: color-mix(in srgb, var(--ys-color-surface-raised) 60%, transparent);
 }
 .worker-past-list > li {
   display: flex;
@@ -236,88 +312,201 @@
 /* ---------- Availability ---------- */
 .worker-availability-days {
   display: grid;
-  gap: 10px;
-}
-.worker-availability-card {
   overflow: hidden;
-  border-radius: var(--ys-radius-lg);
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
+  border: 1px solid rgba(40, 28, 16, 0.06);
   box-shadow: var(--ys-shadow-card);
-  transition: border-color var(--ys-transition-fast);
+}
+/* All seven days live in one grouped panel, divided by hairlines. */
+.worker-availability-card {
+  position: relative;
+  transition: background-color var(--ys-transition-fast);
+}
+.worker-availability-card + .worker-availability-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 16px;
+  border-top: 1px solid var(--ys-color-border-subtle);
 }
 .worker-availability-card[data-disabled='true'] {
-  background: transparent;
-  box-shadow: none;
+  background: var(--ys-color-surface-soft);
 }
 .worker-availability-heading {
   display: grid;
   gap: 12px;
-  padding: 14px 14px 12px;
+  padding: 14px 16px;
 }
 .worker-availability-day {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  min-width: 0;
+}
+.worker-availability-date {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  width: 44px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: var(--ys-color-surface-base);
+}
+.worker-availability-date span {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ys-color-text-muted);
+}
+.worker-availability-date strong {
+  font-family: var(--ys-font-numeric);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.worker-availability-card[data-type='ALL_DAY_AVAILABLE'] .worker-availability-date {
+  background: var(--ys-color-status-success-subtle);
+  color: var(--ys-color-status-success-ink);
+}
+.worker-availability-card[data-type='ALL_DAY_UNAVAILABLE'] .worker-availability-date {
+  background: var(--ys-color-status-danger-subtle);
+  color: var(--ys-color-status-danger-ink);
+}
+.worker-availability-card[data-type='TIME_WINDOW'] .worker-availability-date {
+  background: var(--ys-color-brand-yellow);
+  color: var(--ys-color-text-primary);
+}
+.worker-availability-card[data-type] .worker-availability-date span {
+  color: inherit;
+  opacity: 0.75;
+}
+.worker-availability-card[data-disabled='true'] .worker-availability-date {
+  background: var(--ys-color-surface-muted);
+  color: var(--ys-color-text-muted);
+}
+.worker-availability-day-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
 }
 .worker-availability-day h3 {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
   font-size: var(--ys-text-md);
   font-weight: 800;
 }
-.worker-availability-day h3 .ys-num {
+.worker-availability-day-text > span {
   font-size: var(--ys-text-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ys-color-text-muted);
+}
+.worker-availability-card[data-type='ALL_DAY_AVAILABLE'] .worker-availability-day-text > span {
+  color: var(--ys-color-status-success-ink);
+}
+.worker-availability-card[data-type='ALL_DAY_UNAVAILABLE'] .worker-availability-day-text > span {
+  color: var(--ys-color-status-danger-ink);
+}
+.worker-availability-card[data-type='TIME_WINDOW'] .worker-availability-day-text > span {
+  color: var(--ys-color-brand-yellow-ink);
 }
 .worker-availability-card[data-disabled='true'] .worker-availability-day h3 {
   color: var(--ys-color-text-secondary);
 }
+
+/* Native segmented control: one thumb slides to the chosen option. */
+.worker-availability-options.ys-segmented {
+  position: relative;
+  isolation: isolate;
+  gap: 0;
+  padding: 3px;
+  border-radius: 13px;
+  background: var(--ys-color-surface-sunken);
+}
+.worker-availability-options::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-block: 3px;
+  inset-inline-start: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 10px;
+  background: var(--seg-fill, #fff);
+  box-shadow:
+    0 1px 2px rgba(40, 28, 16, 0.12),
+    0 3px 8px rgba(40, 28, 16, 0.08);
+  transform: translateX(calc(var(--seg-index, 0) * -100%));
+  transition:
+    transform 380ms cubic-bezier(0.34, 1.3, 0.5, 1),
+    background-color 200ms var(--ys-ease-standard);
+}
+[dir='ltr'] .worker-availability-options::before {
+  transform: translateX(calc(var(--seg-index, 0) * 100%));
+}
+.worker-availability-options[data-value='available'] {
+  --seg-index: 0;
+  --seg-fill: #fff;
+}
+.worker-availability-options[data-value='unavailable'] {
+  --seg-index: 1;
+  --seg-fill: #fff;
+}
+.worker-availability-options[data-value='window'] {
+  --seg-index: 2;
+  --seg-fill: var(--ys-color-brand-yellow);
+}
+.worker-availability-options.ys-segmented > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 6px;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 200ms var(--ys-ease-standard),
+    transform 140ms var(--ys-ease-standard);
+}
+.worker-availability-options.ys-segmented > button:hover:not(:disabled):not([aria-pressed='true']) {
+  background: transparent;
+}
+.worker-availability-options.ys-segmented > button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.worker-availability-options.ys-segmented > button > svg {
+  flex-shrink: 0;
+}
+.worker-availability-options.ys-segmented > button[aria-pressed='true'] {
+  background: transparent;
+  box-shadow: none;
+  font-weight: 700;
+}
 .worker-availability-options > button[aria-pressed='true'][data-option='available'] {
-  background: var(--ys-color-status-success-subtle);
   color: var(--ys-color-status-success-ink);
 }
 .worker-availability-options > button[aria-pressed='true'][data-option='unavailable'] {
-  background: var(--ys-color-status-danger-subtle);
   color: var(--ys-color-status-danger-ink);
 }
 .worker-availability-options > button[aria-pressed='true'][data-option='window'] {
-  background: var(--ys-color-brand-yellow);
+  --glyph-knock: var(--ys-color-brand-yellow);
   color: var(--ys-color-text-primary);
 }
-.worker-availability-options > button[aria-pressed='true']::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-inline-end: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  vertical-align: middle;
-}
 .worker-availability-body {
-  padding: 0 14px 14px;
+  padding: 0 16px 16px;
 }
 .worker-availability-body:empty {
   display: none;
 }
-.worker-availability-summary {
-  font-size: var(--ys-text-sm);
-  color: var(--ys-color-status-success-ink);
-  font-weight: 600;
-}
-.worker-availability-summary.is-unavailable {
-  color: var(--ys-color-status-danger-ink);
-}
 .worker-availability-fields {
   display: grid;
   gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--ys-color-border-subtle);
-  animation: worker-card-in 200ms var(--ys-ease-out);
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--ys-color-surface-base);
+  animation: worker-reveal 260ms var(--ys-ease-out);
 }
 .worker-availability-fields > .ys-badge {
   justify-self: start;
@@ -326,6 +515,9 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+.worker-availability-fields input {
+  border-radius: 12px;
 }
 .worker-availability-locked {
   display: flex;
@@ -339,18 +531,23 @@
 }
 .worker-availability-notes {
   padding: 16px;
+  border-radius: var(--ys-radius-xl);
+}
+.worker-availability-notes textarea {
+  border-radius: 14px;
 }
 
-/* ---------- Feedback and sticky save ---------- */
+/* ---------- Feedback and save ---------- */
 .worker-feedback {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 8px 12px 14px;
-  border-radius: var(--ys-radius-md);
+  padding-inline: 14px 8px;
+  border-radius: 16px;
   font-size: var(--ys-text-md);
   font-weight: 600;
-  animation: worker-card-in 220ms var(--ys-ease-out);
+  animation: worker-reveal 260ms var(--ys-ease-out);
 }
 .worker-feedback > span {
   flex: 1;
@@ -366,7 +563,7 @@
   height: 36px;
   flex-shrink: 0;
   border: 0;
-  border-radius: var(--ys-radius-sm);
+  border-radius: 50%;
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -383,33 +580,24 @@
   color: var(--ys-color-status-danger-ink);
 }
 .worker-save-bar {
-  position: sticky;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 10px 10px 16px;
-  border-radius: var(--ys-radius-lg);
-  background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
-  box-shadow: var(--ys-shadow-dropdown);
+  display: grid;
+  gap: 8px;
+  padding-bottom: 8px;
 }
 .worker-save-bar p {
   min-width: 0;
+  text-align: center;
   font-size: var(--ys-text-sm);
+  font-weight: 600;
   color: var(--ys-color-text-secondary);
 }
+/* In the page flow, right under the notes; nothing pinned to Safari's bottom edge. */
 .worker-save-bar .ys-button {
-  flex-shrink: 0;
-  min-width: 120px;
-}
-@media (max-width: 767px) {
-  /* Sits above the fixed tab bar instead of behind it. */
-  .worker-save-bar {
-    bottom: calc(var(--ys-tabbar-height) + env(safe-area-inset-bottom, 0px) + 10px);
-  }
+  order: -1;
+  width: 100%;
+  min-height: 54px;
+  border-radius: 18px;
+  font-size: var(--ys-text-lg);
 }
 
 /* ---------- No station ---------- */
@@ -439,30 +627,33 @@
 .worker-no-station-facts dd {
   font-weight: 700;
   text-align: end;
-  min-width: 0;
   overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 @media (max-width: 359px) {
-  .worker-availability-options > button {
-    padding-inline: 4px;
+  .worker-availability-options.ys-segmented > button {
+    padding-inline: 2px;
     font-size: 12px;
   }
-  .worker-availability-options > button[aria-pressed='true']::before {
+  .worker-availability-options.ys-segmented > button > svg {
     display: none;
   }
 }
 
-@keyframes worker-card-in {
+@keyframes worker-reveal {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(-4px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .worker-shift-card,
   .worker-availability-fields,
   .worker-feedback {
     animation: none;
+  }
+  .worker-availability-options::before,
+  .worker-availability-options.ys-segmented > button {
+    transition: none;
   }
 }

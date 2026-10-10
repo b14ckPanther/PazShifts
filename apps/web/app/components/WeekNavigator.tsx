@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@yellowshifts/icons';
+import { ChevronEndGlyph, ChevronStartGlyph } from '@yellowshifts/icons';
 
 export function WeekNavigator({
   start,
@@ -10,6 +10,7 @@ export function WeekNavigator({
   previousDisabled = false,
   nextDisabled = false,
   label = 'השבוע הנבחר',
+  days,
   children,
 }: {
   start: string;
@@ -18,6 +19,8 @@ export function WeekNavigator({
   previousDisabled?: boolean;
   nextDisabled?: boolean;
   label?: string;
+  /** Optional day strip under the range. */
+  days?: ReactNode;
   children?: ReactNode;
 }) {
   // Compact range ("27/09 – 03/10") with the year(s) underneath, so it never wraps mid-range.
@@ -43,7 +46,7 @@ export function WeekNavigator({
           onClick={() => onNavigate(-7)}
           disabled={previousDisabled}
         >
-          <ChevronRightIcon size={18} aria-hidden="true" />
+          <ChevronStartGlyph size={20} strokeWidth={2} />
           <span>שבוע קודם</span>
         </button>
         <button
@@ -53,9 +56,10 @@ export function WeekNavigator({
           disabled={nextDisabled}
         >
           <span>שבוע הבא</span>
-          <ChevronLeftIcon size={18} aria-hidden="true" />
+          <ChevronEndGlyph size={20} strokeWidth={2} />
         </button>
       </nav>
+      {days}
       {children && <div className="worker-week-status">{children}</div>}
     </section>
   );
