@@ -284,156 +284,150 @@ export function buildEntries(
     })
     .sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
 }
+/** Hundredths of an hour as printed in exports: 7.50 h -> 750. */
+export function hundredths(seconds: number): number {
+  return Math.round(seconds / 36);
+}
+export function printedHours(value: number): string {
+  return (value / 100).toFixed(2);
+}
+/**
+ * Per-shift rate cells in hundredths, rounded so they add up to the printed hours (unless a
+ * break deduction makes them intentionally smaller); the rounding remainder goes to the top rate.
+ */
+export function printedRates(entries: ReportEntry[]): Map<ReportEntry, Record<string, number>> {
+  const result = new Map<ReportEntry, Record<string, number>>();
+  for (const [entry, rates] of payRates(entries)) {
+    const row: Record<string, number> = {};
+    const keys = Object.keys(rates).sort((a, b) => Number(a) - Number(b));
+    for (const key of keys) row[key] = hundredths(rates[key]!);
+    const top = keys.filter((key) => row[key]! > 0).pop();
+    if (top && !entry.breakSeconds)
+      row[top]! += hundredths(entry.seconds) - keys.reduce((sum, key) => sum + row[key]!, 0);
+    result.set(entry, row);
+  }
+  return result;
+}
 export function csvCell(value: string | number): string {
   let text = String(value);
   // eslint-disable-next-line no-control-regex -- Prevent formulas hidden behind leading ASCII controls.
   if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"', '""') + '"';
 }
-export function reportCsv(report: HoursReport): string {
-  const keys = rateKeys(report);
-  const rows: (string | number)[][] = [
+/** 01/09, or 01/09/26 when the period spans years. */
+export function shortDate(date: string, period: Pick<HoursReport, 'from' | 'to'>): string {
+  const [y, m, d] = date.split('-');
+  return period.from.slice(0, 4) !== period.to.slice(0, 4)
+    ? `${d}/${m}/${y!.slice(2)}`
+    : `${d}/${m}`;
+}
+function groupBy(entries: ReportEntry[], key: (entry: ReportEntry) => string) {
+  const groups = new Map<string, ReportEntry[]>();
+  for (const entry of entries) {
+    const group = groups.get(key(entry));
+    if (group) group.push(entry);
+    else groups.set(key(entry), [entry]);
+  }
+  return groups;
+}
+type CsvRow = { cells: (string | number)[]; entries: ReportEntry[]; hours?: string; note?: string };
+/** Same numbers as the PDF: totals are sums of the printed per-shift values. */
+function hoursCsv(
+  report: HoursReport,
+  columns: string[],
+  rows: (entries: ReportEntry[]) => CsvRow[],
+  total: (entries: ReportEntry[]) => (string | number)[],
+  notes = false
+): string {
+  const keys = payRateKeys(report.entries);
+  const rates = printedRates(report.entries);
+  const multi = report.people.length > 1;
+  const hours = (entries: ReportEntry[]) =>
+    printedHours(entries.reduce((sum, e) => sum + hundredths(e.seconds), 0));
+  const rate = (entries: ReportEntry[], key: string) => {
+    const value = entries.reduce((sum, e) => sum + (rates.get(e)?.[key] || 0), 0);
+    return value > 0 ? printedHours(value) : '';
+  };
+  const out: (string | number)[][] = [
     [
-      'תחנה',
-      'שם',
-      'קוד עובד',
-      'מזהה שיוך',
-      'תאריך',
-      'תחילת שבוע',
-      'כניסה למשמרת',
-      'יציאה מהמשמרת',
-      'משך HH:mm:ss',
-      'שעות עשרוניות',
-      'סטטוס',
-      'מקור',
-      'סיבת תיקון',
-      'מועד תיקון',
-      'מזהה נוכחות',
-      'אזור זמן',
-      ...rateHeaders(keys),
+      ...(multi ? ['עובד'] : []),
+      ...columns,
+      'שעות',
+      ...keys.map((key) => `${key}%`),
+      ...(notes ? ['הערה'] : []),
     ],
   ];
   for (const person of report.people) {
     const entries = report.entries.filter((e) => e.personId === person.id);
-    if (!entries.length)
-      rows.push([
-        report.station,
-        person.name,
-        person.code,
-        person.id,
-        '',
-        '',
-        '',
-        '',
-        duration(0),
-        '0.00',
-        'ללא נוכחות',
-        '',
-        '',
-        '',
-        '',
-        report.timezone,
-        ...rateValues([], keys),
-      ]);
-    for (const e of entries)
-      rows.push([
-        report.station,
-        person.name,
-        person.code,
-        person.id,
-        e.date,
-        weekStart(e.date, 0),
-        e.start,
-        e.end || '',
-        duration(e.seconds),
-        (e.seconds / 3600).toFixed(4),
-        e.status,
-        e.source,
-        e.reason,
-        e.correctedAt || '',
-        e.id,
-        report.timezone,
-        ...rateValues([e], keys),
+    if (multi && !entries.length) continue;
+    const name = multi ? [person.name] : [];
+    for (const row of [...rows(entries), { cells: total(entries), entries }] as CsvRow[])
+      out.push([
+        ...name,
+        ...row.cells,
+        row.hours ?? hours(row.entries),
+        ...keys.map((key) => rate(row.entries, key)),
+        ...(notes ? [row.note ?? ''] : []),
       ]);
   }
-  return '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  return '\ufeff' + out.map((row) => row.map(csvCell).join(',')).join('\r\n');
+}
+export function entryNote(entry: Pick<ReportEntry, 'status'>): string {
+  if (isCounted(entry)) return '';
+  if (entry.status === 'משמרת פתוחה') return 'משמרת פתוחה · לא נספרה';
+  if (entry.status.startsWith('חפיפה')) return 'חפיפה · לא נספרה';
+  return 'לבדיקה · לא נספרה';
+}
+export function reportCsv(report: HoursReport): string {
+  return hoursCsv(
+    report,
+    ['תאריך', 'יום', 'כניסה', 'יציאה'],
+    (entries) =>
+      entries.map((e) => ({
+        cells: [
+          displayDate(e.date),
+          weekdayLabel(e.date),
+          shortClock(e.start, report.timezone),
+          shortClock(e.end, report.timezone),
+        ],
+        entries: [e],
+        hours: isCounted(e) ? printedHours(hundredths(e.seconds)) : '—',
+        note: entryNote(e),
+      })),
+    () => ['סה״כ', '', '', ''],
+    true
+  );
 }
 export function summaryCsv(report: HoursReport): string {
-  const keys = rateKeys(report);
-  const rows: (string | number)[][] = [
-    [
-      'תחנה',
-      'שם',
-      'קוד עובד',
-      'מזהה שיוך',
-      'תחילת שבוע',
-      'תאריך',
-      'שעות HH:mm:ss',
-      'שעות עשרוניות',
-      'רשומות לבדיקה',
-      'אזור זמן',
-      ...rateHeaders(keys),
-    ],
-  ];
-  for (const person of report.people)
-    for (let date = report.from; date <= report.to; date = addDays(date, 1)) {
-      const entries = report.entries.filter((e) => e.personId === person.id && e.date === date);
-      const seconds = entries.reduce((sum, e) => sum + e.seconds, 0);
-      rows.push([
-        report.station,
-        person.name,
-        person.code,
-        person.id,
-        weekStart(date, 0),
-        date,
-        duration(seconds),
-        (seconds / 3600).toFixed(4),
-        entries.filter((e) => e.status !== 'הושלמה').length,
-        report.timezone,
-        ...rateValues(entries, keys),
-      ]);
-    }
-  return '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  return hoursCsv(
+    report,
+    ['תאריך', 'יום'],
+    (entries) =>
+      [...groupBy(entries, (e) => e.date)].map(([date, own]) => ({
+        cells: [displayDate(date), weekdayLabel(date)],
+        entries: own,
+      })),
+    () => ['סה״כ', '']
+  );
 }
-
 export function weeklyCsv(report: HoursReport): string {
-  const keys = rateKeys(report);
-  const rows: (string | number)[][] = [
-    [
-      'תחנה',
-      'שם',
-      'קוד עובד',
-      'מזהה שיוך',
-      'תחילת שבוע',
-      'שעות HH:mm:ss',
-      'שעות עשרוניות',
-      'רשומות לבדיקה',
-      'מתאריך',
-      'עד תאריך',
-      ...rateHeaders(keys),
-    ],
-  ];
-  for (const person of report.people)
-    for (let week = weekStart(report.from, 0); week <= report.to; week = addDays(week, 7)) {
-      const entries = report.entries.filter(
-        (e) => e.personId === person.id && weekStart(e.date, 0) === week
-      );
-      const seconds = entries.reduce((sum, e) => sum + e.seconds, 0);
-      rows.push([
-        report.station,
-        person.name,
-        person.code,
-        person.id,
-        week,
-        duration(seconds),
-        (seconds / 3600).toFixed(4),
-        new Set(entries.filter((e) => e.status !== 'הושלמה').map((e) => e.id)).size,
-        report.from,
-        report.to,
-        ...rateValues(entries, keys),
-      ]);
-    }
-  return '\ufeff' + rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  const counts = (entries: ReportEntry[]) => {
+    const summary = hoursSummary(entries);
+    return [summary.days, summary.shifts];
+  };
+  return hoursCsv(
+    report,
+    ['שבוע', 'ימי עבודה', 'משמרות'],
+    (entries) =>
+      [...groupBy(entries, (e) => weekStart(e.date, 0))].map(([week, own]) => ({
+        cells: [
+          `${shortDate(week, report)}–${shortDate(addDays(week, 6), report)}`,
+          ...counts(own),
+        ],
+        entries: own,
+      })),
+    (entries) => ['סה״כ', ...counts(entries)]
+  );
 }
 
 export function rateTotals(entries: ReportEntry[]): Record<string, number> {
@@ -444,43 +438,4 @@ export function rateTotals(entries: ReportEntry[]): Record<string, number> {
     ))
       totals[rate] = (Math.round((totals[rate] || 0) * 1000) + Math.round(seconds * 1000)) / 1000;
   return totals;
-}
-export function rateKeys(report: HoursReport): string[] {
-  return [
-    ...new Set([
-      '100',
-      '125',
-      '150',
-      ...Object.keys(rateTotals(report.entries)).filter((k) => k !== 'unclassified'),
-    ]),
-  ].sort((a, b) => Number(a) - Number(b));
-}
-export function rateText(entries: ReportEntry[]): string {
-  const totals = rateTotals(entries);
-  const parts = Object.entries(totals)
-    .filter(([, seconds]) => seconds > 0)
-    .map(
-      ([rate, seconds]) =>
-        `${rate === 'unclassified' ? 'ללא כללים' : rate + '%'}: ${duration(seconds)}`
-    );
-  const breaks = entries.reduce((s, e) => s + (e.breakSeconds || 0), 0);
-  if (breaks) parts.push(`ניכוי הפסקות: ${duration(breaks)}`);
-  return parts.join(' · ') || 'ללא שעות לסיווג';
-}
-function rateHeaders(keys: string[]): string[] {
-  return [
-    ...keys.map((k) => `${k}% HH:mm:ss`),
-    'ללא כללים HH:mm:ss',
-    'ניכוי הפסקות HH:mm:ss',
-    'גרסאות כללים',
-  ];
-}
-function rateValues(entries: ReportEntry[], keys: string[]): string[] {
-  const totals = rateTotals(entries);
-  return [
-    ...keys.map((k) => duration(totals[k] || 0)),
-    duration(totals.unclassified || 0),
-    duration(entries.reduce((s, e) => s + (e.breakSeconds || 0), 0)),
-    [...new Set(entries.map((e) => e.policyId).filter(Boolean))].join(';'),
-  ];
 }

@@ -93,25 +93,60 @@ test('open, flagged, future and overlapping records never inflate totals', () =>
     0
   );
 });
-test('CSV is Excel UTF-8, escapes formulas/quotes and retains duplicate worker identities and zero hours', () => {
+test('CSV is Excel UTF-8, escapes formulas/quotes and keeps only PDF-level detail', () => {
   const report = {
     station: 'תחנה',
     timezone: 'Asia/Jerusalem',
     from: '2026-09-07',
     to: '2026-09-07',
-    people: [
-      { id: 'one', name: '=SUM(A1)', code: '"code"' },
-      { id: 'two', name: '=SUM(A1)', code: '' },
-    ],
+    people: [{ id: 'one', name: '=SUM(A1)', code: '"code"' }],
     entries: [],
   };
   const csv = helpers.reportCsv(report);
   assert(csv.startsWith('\ufeff'));
-  assert(csv.includes('"\'=SUM(A1)"'));
-  assert(csv.includes('""code""'));
-  assert(csv.includes('"one"'));
-  assert(csv.includes('"two"'));
-  assert.equal(helpers.summaryCsv(report).split('\r\n').length, 3);
+  assert.deepEqual(csv.slice(1).split('\r\n'), [
+    '"תאריך","יום","כניסה","יציאה","שעות","100%","125%","150%","הערה"',
+    '"סה״כ","","","","0.00","","","",""',
+  ]);
+  const team = {
+    ...report,
+    people: [...report.people, { id: 'two', name: 'לוי "הקטן"', code: '' }],
+    entries: helpers.buildEntries(
+      [
+        record({ station_membership_id: 'one' }),
+        record({
+          id: 'r2',
+          user_id: 'v',
+          station_membership_id: 'two',
+          status: 'ACTIVE',
+          clock_out_at: null,
+        }),
+      ],
+      '2026-09-07',
+      '2026-09-08',
+      'Asia/Jerusalem',
+      Date.parse('2026-10-01')
+    ),
+    to: '2026-09-08',
+  };
+  const detail = helpers.reportCsv(team).slice(1).split('\r\n');
+  assert.deepEqual(detail, [
+    '"עובד","תאריך","יום","כניסה","יציאה","שעות","100%","125%","150%","הערה"',
+    '"\'=SUM(A1)","07/09/2026","ב׳","23:00","00:00","1.00","1.00","","",""',
+    '"\'=SUM(A1)","08/09/2026","ג׳","00:00","05:00","5.00","5.00","","",""',
+    '"\'=SUM(A1)","סה״כ","","","","6.00","6.00","","",""',
+    '"לוי ""הקטן""","07/09/2026","ב׳","23:00","—","—","","","","משמרת פתוחה · לא נספרה"',
+    '"לוי ""הקטן""","סה״כ","","","","0.00","","","",""',
+  ]);
+  assert(!/code|one|two|Asia|NFC|T\d\d:/.test(detail.join()));
+  assert.deepEqual(helpers.summaryCsv(team).slice(1).split('\r\n'), [
+    '"עובד","תאריך","יום","שעות","100%","125%","150%"',
+    '"\'=SUM(A1)","07/09/2026","ב׳","1.00","1.00","",""',
+    '"\'=SUM(A1)","08/09/2026","ג׳","5.00","5.00","",""',
+    '"\'=SUM(A1)","סה״כ","","6.00","6.00","",""',
+    '"לוי ""הקטן""","07/09/2026","ב׳","0.00","","",""',
+    '"לוי ""הקטן""","סה״כ","","0.00","","",""',
+  ]);
 });
 test('report pagination fetches all rows past Supabase default 1000 and scopes every query', async () => {
   const { readReportAttendance } = load('../packages/database/src/hours-query.ts');
@@ -217,10 +252,11 @@ test('weekly totals keep corrections, distinct memberships and partial weeks con
     ],
     entries,
   };
-  const csv = helpers.weeklyCsv(report);
-  assert(csv.includes('"06:00:00"'));
-  assert(csv.includes('"00:00:00"'));
-  assert.equal(csv.split('\r\n').length, 3);
+  assert.deepEqual(helpers.weeklyCsv(report).slice(1).split('\r\n'), [
+    '"עובד","שבוע","ימי עבודה","משמרות","שעות","100%","125%","150%"',
+    '"כהן","06/09–12/09","1","1","6.00","6.00","",""',
+    '"כהן","סה״כ","1","1","6.00","6.00","",""',
+  ]);
 });
 test('station report authorization accepts own active admin/platform and denies other station/inactive', async () => {
   for (const [platform, role, status, station, allowed] of [

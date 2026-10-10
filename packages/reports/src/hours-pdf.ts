@@ -2,11 +2,15 @@ import { jsPDF } from 'jspdf';
 import {
   decimalHours,
   displayDate,
+  entryNote,
   hoursSummary,
+  hundredths,
   isCounted,
   payRateKeys,
-  payRates,
+  printedHours,
+  printedRates,
   shortClock,
+  shortDate,
   weekdayLabel,
   type HoursReport,
   type ReportEntry,
@@ -46,11 +50,6 @@ export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
   doc.setFont('Heebo', 'normal');
   doc.setLineHeightFactor(1);
 
-  const years = report.from.slice(0, 4) !== report.to.slice(0, 4);
-  const shortDate = (date: string) => {
-    const [y, m, d] = date.split('-');
-    return years ? `${d}/${m}/${y!.slice(2)}` : `${d}/${m}`;
-  };
   const period = `${displayDate(report.from)} – ${displayDate(report.to)}`;
   let y = 0;
 
@@ -165,43 +164,19 @@ export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
   }
 
   // 100/125/150 are always printed; station rules may add other percentages.
-  const split = payRates(report.entries);
   const rateKeys = payRateKeys;
   // Totals are sums of the printed per-shift values, so every column adds up on paper.
-  const hundredths = (seconds: number) => Math.round(seconds / 36);
-  const printed = (value: number) => (value / 100).toFixed(2);
+  const printed = printedHours;
   const sumHours = (entries: ReportEntry[]) =>
     entries.reduce((sum, e) => sum + hundredths(e.seconds), 0);
-  // Per shift, rate cells are rounded so they add up to the printed hours (unless a break
-  // deduction makes them intentionally smaller); the rounding remainder goes to the top rate.
-  const rowCache = new Map<ReportEntry, Record<string, number>>();
-  function rowRates(entry: ReportEntry) {
-    let row = rowCache.get(entry);
-    if (row) return row;
-    row = {};
-    const keys = Object.keys(split.get(entry) ?? {}).sort((a, b) => Number(a) - Number(b));
-    for (const key of keys) row[key] = hundredths(split.get(entry)![key]!);
-    const top = keys.filter((key) => row![key]! > 0).pop();
-    if (top && !entry.breakSeconds)
-      row[top]! += hundredths(entry.seconds) - keys.reduce((sum, key) => sum + row![key]!, 0);
-    rowCache.set(entry, row);
-    return row;
-  }
+  const rows = printedRates(report.entries);
+  const rowRates = (entry: ReportEntry) => rows.get(entry) ?? {};
   const sumRate = (entries: ReportEntry[], rate: string) =>
     entries.reduce((sum, e) => sum + (rowRates(e)[rate] || 0), 0);
   const rateValue = (entries: ReportEntry[], rate: string) => {
     const value = sumRate(entries, rate);
     return value > 0 ? printed(value) : '';
   };
-
-  function note(entry: ReportEntry): string {
-    if (!isCounted(entry)) {
-      if (entry.status === 'משמרת פתוחה') return 'משמרת פתוחה · לא נספרה';
-      if (entry.status.startsWith('חפיפה')) return 'חפיפה · לא נספרה';
-      return 'לבדיקה · לא נספרה';
-    }
-    return '';
-  }
 
   function personPage(person: ReportPerson, entries: ReportEntry[]) {
     const title = person.name;
@@ -220,7 +195,7 @@ export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
     }
     stats(items);
 
-    const notes = entries.some((e) => note(e));
+    const notes = entries.some((e) => entryNote(e));
     const fixed = 22 + 10 + 19 + 24 + 19 + rates.length * 17;
     const spare = CONTENT - fixed;
     const columns = columnsAt([
@@ -249,7 +224,7 @@ export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
       const counted = isCounted(entry);
       const dimmed = counted ? INK : MUTED;
       if (entry.date !== previousDate) {
-        cell(shortDate(entry.date), columns[0]!, middle);
+        cell(shortDate(entry.date, report), columns[0]!, middle);
         cell(weekdayLabel(entry.date), columns[1]!, middle, { color: MUTED });
       }
       previousDate = entry.date;
@@ -263,7 +238,7 @@ export function createHoursPdf(report: HoursReport, assets: PdfAssets) {
         cell(rateValue([entry], rate), columns[5 + i]!, middle, { color: dimmed })
       );
       if (notes) {
-        const value = note(entry);
+        const value = entryNote(entry);
         cell(value, columns[columns.length - 1]!, middle, {
           size: 8,
           color: counted ? MUTED : WARNING,

@@ -132,10 +132,12 @@ test('overnight shifts share one break and configured Sunday weeks appear in CSV
     entries,
     rateWeekStartsOn: 0,
   };
-  const csv = h.weeklyCsv(report);
-  assert(csv.includes('2026-09-06'));
-  assert(csv.includes('125% HH:mm:ss'));
-  assert(csv.includes('00:30:00'));
+  // Rate cells exclude the 30-minute break, so they are intentionally below the hours.
+  assert.deepEqual(h.weeklyCsv(report).slice(1).split('\r\n'), [
+    '"שבוע","ימי עבודה","משמרות","שעות","100%","125%","150%"',
+    '"06/09–12/09","2","2","10.00","9.50","",""',
+    '"סה״כ","2","2","10.00","9.50","",""',
+  ]);
 });
 test('zero thresholds terminate and flagged records receive no paid classification', () => {
   assert.deepEqual(
