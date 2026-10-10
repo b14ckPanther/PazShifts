@@ -27,3 +27,69 @@
     white-space: normal;
   }
 }
+
+/* Map picker */
+.station-map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.station-map-search {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.station-map-search .ys-input {
+  padding-inline-end: 48px;
+}
+.station-map-icon-button {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ys-color-surface-sunken);
+  color: var(--ys-color-text-primary);
+  cursor: pointer;
+}
+.station-map-tools > .ys-button {
+  flex: 0 0 auto;
+}
+.station-map {
+  position: relative;
+  z-index: 0;
+  height: clamp(260px, 52vw, 380px);
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--ys-color-border-subtle);
+  background: var(--ys-color-surface-muted);
+  /* Leaflet lays out left to right; keep its controls and tiles in LTR. */
+  direction: ltr;
+}
+.station-map .leaflet-control-zoom a {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+}
+.station-pin {
+  background: none;
+  border: 0;
+  filter: drop-shadow(0 4px 6px rgba(28, 23, 20, 0.35));
+}
+.station-map-status {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: var(--ys-text-xs);
+  color: var(--ys-color-text-secondary);
+}
+@media (max-width: 520px) {
+  .station-map-tools > .ys-button {
+    flex: 1 1 100%;
+  }
+}
+.station-map-status:empty {
+  display: none;
+}
