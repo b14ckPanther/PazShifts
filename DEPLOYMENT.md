@@ -70,6 +70,8 @@ Configure these variables in the **Production** environment:
 | `NEXT_PUBLIC_NFC_APP_URL`                                                                  | Do not set                     | Optional, see Production origins                |
 | `APPLE_APP_IDS`, `ANDROID_APP_LINKS_PACKAGE`, `ANDROID_APP_LINKS_SHA256`                   | Native app links, see below    | Do not set                                      |
 | `NOTIFICATIONS_ENABLED`, `NOTIFICATIONS_CRON_SECRET`, `EXPO_ACCESS_TOKEN` (optional)       | Do not set                     | Push dispatcher, server-only, see below         |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                    | Do not set                     | Web Push for the worker PWA, server-only, below |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`                                                             | Same value as `VAPID_PUBLIC_KEY` | Do not set                                    |
 | `STATION_LEADS_RATE_SECRET`, `STATION_LEADS_EMAIL`, `STATION_LEADS_FROM`, `RESEND_API_KEY` | Do not set                     | Station-interest intake, server-only, see below |
 
 The last three rows belong to features added after this preparation; leave them unset until that feature is rolled out. `turbo.json` declares the server-only variables under `tasks.build.env`; add any new server variable there too.
@@ -389,6 +391,25 @@ The same secret must be stored in Supabase Vault as
 which targets `https://admin.paz.darb.co.il`. Setup, pause, monitoring and the
 2026-09-15 activation record are in
 [`scripts/sql/NOTIFICATION-SCHEDULER.md`](scripts/sql/NOTIFICATION-SCHEDULER.md).
+
+### Worker notifications v2 and the 12-hour cap — migration 26
+
+Migration 26 adds PWA Web Push next to the Expo channel, fixed shift reminders (2 hours and
+10 minutes before), availability reminders (Thursday 18:00, Friday 12:00, Saturday 08:00 station
+time, until next week is submitted), a checkout reminder 10 minutes after a scheduled shift ends,
+and a 12-hour cap on a single check-in. A capped record becomes `FLAGGED` with its end at
+check-in + 12 hours; it is not counted until an admin confirms it (`manage_attendance_record`
+action `CONFIRM`) or corrects its times.
+
+1. Generate a key pair once: `npx web-push generate-vapid-keys`.
+2. Admin project: set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`
+   (`mailto:` address). Worker project: set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` to the same public key.
+   Without them the worker app hides the notification switch and the dispatcher skips Web Push.
+3. Everything runs from the existing every-minute scheduler call, so `NOTIFICATIONS_ENABLED=true`
+   is required. The cap also runs on every NFC scan for that worker, so a scan after 12 hours always
+   starts a fresh check-in even if the scheduler is paused.
+4. On iPhone, Web Push works only after the worker adds the app to the home screen (iOS 16.4+);
+   the app explains this in the menu and on home.
 
 ### Station-interest intake — migration 24
 

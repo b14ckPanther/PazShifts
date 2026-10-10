@@ -18,14 +18,18 @@
     "@yellowshifts/reports": "workspace:*",
     "@yellowshifts/types": "workspace:*",
     "@yellowshifts/ui": "workspace:*",
+    "leaflet": "^1.9.4",
     "next": "^16.3.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.13.8",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/web-push": "^3.6.4",
     "@yellowshifts/config": "workspace:*",
     "eslint": "^9.21.0",
     "eslint-config-next": "^16.3.4",

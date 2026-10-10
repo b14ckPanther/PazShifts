@@ -93,6 +93,8 @@ test('dispatcher rejects missing/wrong credentials and dispatches only authorize
           return { claimed: 0 };
         },
       },
+      'web-push': { sendNotification: async () => ({}) },
+      '../../lib/web-push-delivery': { dispatchWebPush: async () => ({ claimed: 0 }) },
     },
     { process: { env }, console: { info() {}, error() {} } }
   );
