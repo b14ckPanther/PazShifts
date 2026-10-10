@@ -242,6 +242,11 @@ export const LogoutGlyph = glyph('LogoutGlyph', {
   ),
 });
 
+export const BellGlyph = glyph('BellGlyph', {
+  base: <path d="M6 9.75a6 6 0 0 1 12 0v3.4l1.6 2.65a1 1 0 0 1-.86 1.5H5.26a1 1 0 0 1-.86-1.5L6 13.15Z" />,
+  line: <path d="M9.75 20a2.4 2.4 0 0 0 4.5 0" />,
+});
+
 export const MenuGlyph = glyph('MenuGlyph', {
   line: <path d="M4 7h16M4 12h10M4 17h16" />,
 });

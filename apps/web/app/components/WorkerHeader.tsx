@@ -14,6 +14,7 @@ import {
 } from '@yellowshifts/icons';
 import { NavigationLink as Link } from './NavigationLink';
 import { LogoutButton } from './LogoutButton';
+import { NotificationSetting } from './PushNotifications';
 import './worker-header.css';
 
 type Tab = 'home' | 'shifts' | 'availability' | 'hours';
@@ -255,6 +256,8 @@ export const WorkerHeader: React.FC<WorkerHeaderProps> = ({
               </div>
             </section>
           )}
+
+          <NotificationSetting />
 
           <div className="worker-menu-foot">
             <LogoutButton variant="secondary" />

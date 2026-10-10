@@ -15,6 +15,7 @@ import {
 } from '@yellowshifts/icons';
 import { NavigationLink as Link } from '../components/NavigationLink';
 import { DayBar, PumpDigits, minutesInZone } from '../components/WorkerVisuals';
+import { NotificationPrompt } from '../components/PushNotifications';
 import { elapsedClock, nextHomeShift } from './home-view';
 
 const WEEKDAY_LETTERS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
@@ -77,7 +78,10 @@ export function WorkerHome({
     };
   }, [router]);
   const zone = data?.timezone ?? 'Asia/Jerusalem';
-  const clock = data?.active ? elapsedClock(data.active.clock_in_at, now) : null;
+  // A single check-in stops at 12 hours (the server caps it); never count past that here.
+  const clock = data?.active
+    ? elapsedClock(data.active.clock_in_at, Math.min(now, Date.parse(data.active.clock_in_at) + 12 * 3600000))
+    : null;
   const stale = data && now - data.fetchedAt > 90000;
   const next = data ? nextHomeShift(data, now) : null;
   const time = (value: string, tz: string) =>
@@ -159,7 +163,7 @@ export function WorkerHome({
       </p>
     </>
   ) : (
-    <p className="home-ticket-none">אין משמרת קרובה שפורסמה ב־28 הימים הקרובים.</p>
+    <p className="home-ticket-none">אין משמרת קרובה שפורסמה ב-28 הימים הקרובים.</p>
   );
 
   return (
@@ -335,6 +339,7 @@ export function WorkerHome({
           </section>
         </>
       )}
+      <NotificationPrompt />
       {nextSteps?.availabilitySubmitted === false && (
         <Link href={nextSteps.availabilityHref} className="home-nudge">
           <span className="home-tile home-tile--yellow" aria-hidden="true">

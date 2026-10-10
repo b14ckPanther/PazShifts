@@ -1,0 +1,97 @@
+/* Notifications: one switch in the menu drawer, one dismissible ask on home. */
+.push-setting,
+.push-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.push-setting {
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: var(--ys-color-surface-raised);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  box-shadow: var(--ys-shadow-card);
+}
+.push-setting-icon,
+.push-prompt-icon {
+  --glyph-knock: var(--ys-color-brand-yellow);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--ys-color-brand-yellow-subtle);
+  color: var(--ys-color-brand-yellow-ink);
+}
+.push-setting-text,
+.push-prompt-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.push-setting-text strong,
+.push-prompt-text strong {
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+}
+.push-setting-text small,
+.push-prompt-text small {
+  font-size: var(--ys-text-xs);
+  line-height: 1.45;
+  color: var(--ys-color-text-secondary);
+}
+.push-setting .ys-switch {
+  flex-shrink: 0;
+}
+
+.push-prompt {
+  padding: 12px 8px 12px 14px;
+  padding-inline: 14px 8px;
+  border-radius: var(--ys-radius-xl);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  box-shadow: var(--ys-shadow-card);
+}
+.push-prompt-icon {
+  background: var(--ys-color-text-primary);
+  color: var(--ys-color-brand-yellow);
+  --glyph-knock: var(--ys-color-text-primary);
+}
+.push-prompt-action {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--ys-radius-pill);
+  background: var(--ys-color-brand-crimson);
+  color: #fff;
+  font-size: var(--ys-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms var(--ys-ease-standard);
+}
+.push-prompt-action:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.push-prompt-action:disabled {
+  opacity: 0.6;
+}
+.push-prompt-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ys-color-text-muted);
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .push-prompt-action {
+    transition: none;
+  }
+}
