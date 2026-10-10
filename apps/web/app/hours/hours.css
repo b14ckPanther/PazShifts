@@ -1,4 +1,4 @@
-/* Worker hours: pick a period, read the total, scan the shifts, download. */
+/* Worker hours: pick a period, read the total off the pump display, scan the shifts, download. */
 .worker-hours {
   width: 100%;
   max-width: calc(760px + 2 * var(--ys-gutter));
@@ -6,19 +6,22 @@
   padding: 0 var(--ys-gutter) 32px;
   min-width: 0;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 .worker-hours h2 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--ys-text-md);
   font-weight: 800;
+}
+.worker-hours .ys-page-header {
+  margin-bottom: 0;
 }
 .worker-hours-card {
   min-width: 0;
   padding: clamp(14px, 3.2vw, 20px);
-  border-radius: var(--ys-radius-lg);
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
+  border: 1px solid rgba(40, 28, 16, 0.06);
   box-shadow: var(--ys-shadow-card);
 }
 .worker-hours-station {
@@ -28,60 +31,137 @@
   font-weight: 600;
 }
 
-/* Summary: one number carries the page. */
+/* Period picker: round steppers, presets as a native segmented control. */
+.worker-hours .period-step {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ys-color-surface-base);
+  transition: transform 140ms var(--ys-ease-standard);
+}
+.worker-hours .period-step:active:not(:disabled) {
+  transform: scale(0.9);
+}
+.worker-hours .period-current strong {
+  font-family: var(--ys-font-numeric);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.worker-hours .period-presets {
+  padding: 3px;
+  border-radius: 13px;
+  background: var(--ys-color-surface-sunken);
+}
+.worker-hours .period-presets > button {
+  border-radius: 10px;
+}
+.worker-hours .period-presets > button[aria-pressed='true'] {
+  font-weight: 700;
+}
+
+/* Summary: the period total on a pump display, its rate split underneath. */
 .worker-hours-summary {
   display: grid;
   gap: 10px;
   min-width: 0;
 }
 .worker-hours-total {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
-  gap: 2px;
-  padding: 18px 20px;
-  border-radius: var(--ys-radius-lg);
-  background: var(--ys-color-text-primary);
+  gap: 4px;
+  padding: 20px 20px 18px;
+  border-radius: var(--ys-radius-xl);
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(252, 188, 0, 0.16), transparent 55%),
+    linear-gradient(170deg, #2b2420 0%, #17120f 100%);
   color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px -14px rgba(28, 23, 20, 0.6);
+}
+/* The canopy cut, the same corner as the live shift panel. */
+.worker-hours-total::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #ffd23f, var(--ys-color-brand-yellow));
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  z-index: -1;
 }
 .worker-hours-total > span {
   font-size: var(--ys-text-sm);
   font-weight: 600;
-  color: #d8d2cb;
+  color: rgba(255, 244, 204, 0.7);
 }
 .worker-hours-total strong {
-  font-family: var(--ys-font-numeric);
-  font-size: clamp(2.5rem, 13vw, 3.25rem);
+  justify-self: start;
+  font-size: clamp(3rem, 16vw, 4rem);
   font-weight: 500;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-}
-.worker-hours-total strong bdi {
-  direction: ltr;
+  color: var(--ys-color-brand-yellow);
+  filter: drop-shadow(0 0 18px rgba(252, 188, 0, 0.28));
 }
 .worker-hours-total p {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 6px 0 0;
+  margin: 2px 0 0;
   font-size: var(--ys-text-sm);
-  color: #d8d2cb;
+  color: rgba(255, 255, 255, 0.7);
 }
 .worker-hours-total p b {
   font-family: var(--ys-font-numeric);
   font-weight: 700;
   color: #fff;
 }
+.worker-hours-total .hour-rates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 12px 0 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.worker-hours-total .hour-rates > span {
+  flex: 1 1 84px;
+  min-width: 0;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 0;
+  background: rgba(23, 18, 15, 0.55);
+  font-size: var(--ys-text-xs);
+}
+.worker-hours-total .hour-rates strong {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  text-shadow: none;
+}
+.worker-hours-total .hour-rates bdi {
+  font-size: var(--ys-text-lg);
+  font-weight: 500;
+}
 .worker-hours-attention {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  padding: 10px 14px;
-  border-radius: var(--ys-radius-md);
+  padding: 12px 14px;
+  border-radius: 16px;
   background: var(--ys-color-status-warning-subtle);
   color: var(--ys-color-status-warning-ink);
   font-size: var(--ys-text-sm);
   font-weight: 600;
 }
-.worker-hours-summary .hour-rates {
-  margin: 0;
+.worker-hours-attention svg {
+  flex-shrink: 0;
 }
 
 /* Export: one obvious action, spreadsheets on request. */
@@ -90,7 +170,11 @@
   gap: 8px;
 }
 .worker-hours-export > .ys-button {
+  --glyph-knock: var(--ys-color-brand-crimson);
   width: 100%;
+  min-height: 54px;
+  border-radius: 18px;
+  font-size: var(--ys-text-lg);
 }
 .worker-hours-export-scope {
   margin: 0;
@@ -101,14 +185,39 @@
 }
 .worker-hours-csv {
   border-top: 1px solid var(--ys-color-border-subtle);
-  padding-top: 6px;
+  padding-top: 4px;
 }
 .worker-hours-csv summary {
-  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
   font-size: var(--ys-text-sm);
   font-weight: 600;
   color: var(--ys-color-text-secondary);
   cursor: pointer;
+  list-style: none;
+}
+.worker-hours-csv summary::-webkit-details-marker {
+  display: none;
+}
+.worker-hours-csv summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-inline-start: auto;
+  margin-top: -4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 200ms var(--ys-ease-out);
+}
+.worker-hours-csv[open] summary::after {
+  margin-top: 4px;
+  transform: rotate(-135deg);
+}
+.worker-hours-csv summary svg {
+  color: var(--ys-color-status-success);
 }
 .worker-hours-csv > div {
   display: grid;
@@ -116,10 +225,13 @@
   gap: 8px;
   padding-bottom: 4px;
 }
+.worker-hours-csv > div .ys-button {
+  border-radius: 14px;
+}
 .worker-hours-error {
   margin: 0;
   padding: 10px 14px;
-  border-radius: var(--ys-radius-md);
+  border-radius: 14px;
   background: var(--ys-color-status-danger-subtle);
   color: var(--ys-color-status-danger-ink);
   font-size: var(--ys-text-sm);
@@ -136,4 +248,10 @@
 .worker-hours-refresh small {
   font-size: var(--ys-text-xs);
   color: var(--ys-color-text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .worker-hours .period-step,
+  .worker-hours-csv summary::after {
+    transition: none;
+  }
 }

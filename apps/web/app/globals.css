@@ -11,7 +11,7 @@ body {
 .attendance-panel {
   width: min(100%, 420px);
   padding: clamp(22px, 5.5vw, 32px);
-  border-radius: var(--ys-radius-xl);
+  border-radius: 32px;
   background: var(--ys-color-surface-raised);
   border: 1px solid rgba(40, 28, 16, 0.06);
   box-shadow:
@@ -52,15 +52,79 @@ body {
   font-weight: 700;
 }
 .attendance-symbol {
+  --ring: var(--ys-color-status-success);
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
-  width: 88px;
-  height: 88px;
-  margin: 28px auto 18px;
+  width: 92px;
+  height: 92px;
+  margin: 32px auto 22px;
   border-radius: 50%;
-  background: var(--ys-color-status-success);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.28), transparent 60%),
+    var(--ys-color-status-success);
   color: #fff;
-  box-shadow: 0 0 0 10px var(--ys-color-status-success-subtle);
+  box-shadow:
+    0 0 0 10px var(--ys-color-status-success-subtle),
+    0 16px 30px -10px rgba(31, 138, 76, 0.55);
+}
+/* Rings leave the symbol like the tag's field: looping while checking, one burst on success. */
+.attendance-rings {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.attendance-rings > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--ring);
+  opacity: 0;
+}
+.attendance-symbol:not(.scan-processing):not(.attendance-warning):not(.attendance-neutral)
+  .attendance-rings
+  > i {
+  animation: attendance-burst 1100ms var(--ys-ease-out) forwards;
+}
+.attendance-symbol:not(.scan-processing) .attendance-rings > i:nth-child(2) {
+  animation-delay: 140ms;
+}
+.attendance-symbol:not(.scan-processing) .attendance-rings > i:nth-child(3) {
+  animation-delay: 280ms;
+}
+.scan-processing .attendance-rings > i {
+  animation: attendance-field 2100ms cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+}
+.scan-processing .attendance-rings > i:nth-child(2) {
+  animation-delay: 700ms;
+}
+.scan-processing .attendance-rings > i:nth-child(3) {
+  animation-delay: 1400ms;
+}
+.attendance-confirmation .attendance-rings > i {
+  animation: none !important;
+}
+@keyframes attendance-field {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+@keyframes attendance-burst {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 .attendance-symbol:not(.scan-processing):not(.attendance-warning):not(.attendance-neutral)
   svg
@@ -71,7 +135,9 @@ body {
 }
 .attendance-warning {
   background: var(--ys-color-status-warning);
-  box-shadow: 0 0 0 10px var(--ys-color-status-warning-subtle);
+  box-shadow:
+    0 0 0 10px var(--ys-color-status-warning-subtle),
+    0 16px 30px -10px rgba(217, 122, 0, 0.5);
 }
 .attendance-neutral {
   background: var(--ys-color-surface-muted);
@@ -79,9 +145,14 @@ body {
   box-shadow: 0 0 0 10px var(--ys-color-surface-base);
 }
 .scan-processing {
-  background: var(--ys-color-brand-yellow);
+  --ring: var(--ys-color-brand-yellow);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.4), transparent 60%),
+    var(--ys-color-brand-yellow);
   color: var(--ys-color-text-primary);
-  box-shadow: 0 0 0 10px var(--ys-color-brand-yellow-subtle);
+  box-shadow:
+    0 0 0 10px var(--ys-color-brand-yellow-subtle),
+    0 16px 30px -10px rgba(252, 188, 0, 0.7);
   animation: scan-pulse 1.4s ease-in-out infinite;
 }
 .attendance-confirmation .attendance-symbol {
@@ -230,8 +301,9 @@ body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scan-processing {
-    animation: none;
+  .scan-processing,
+  .attendance-rings > i {
+    animation: none !important;
   }
   .attendance-symbol svg path {
     animation: none !important;
@@ -262,12 +334,71 @@ body {
   min-width: 0;
 }
 
-/* Week switcher: the selected week is the headline, arrows are quiet. */
+/* Large titles: the page name reads like a native screen title. */
+.worker-page .ys-page-header,
+.worker-hours .ys-page-header {
+  margin: 20px 0 14px;
+  padding-inline: 2px;
+}
+.worker-page .ys-page-header h1,
+.worker-hours .ys-page-header h1 {
+  font-size: clamp(1.625rem, 7vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.worker-page .ys-page-header p {
+  max-width: 52ch;
+  margin-top: 4px;
+  font-size: var(--ys-text-md);
+  line-height: 1.5;
+  color: var(--ys-color-text-secondary);
+}
+
+@media (max-width: 520px) {
+  .worker-page .ys-page-header,
+  .worker-hours .ys-page-header {
+    margin: 16px 0 12px;
+  }
+  .worker-page .ys-page-header h1,
+  .worker-hours .ys-page-header h1 {
+    font-size: 1.5rem;
+  }
+  .worker-page .ys-page-header p {
+    font-size: var(--ys-text-sm);
+  }
+}
+
+/* Native press feedback on every control in the worker app. */
+.app-shell .ys-button {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+.app-shell .ys-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.app-shell .ys-card {
+  border-radius: var(--ys-radius-xl);
+}
+.app-shell .ys-empty-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffd23f, var(--ys-color-brand-yellow));
+  color: var(--ys-color-text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 8px 18px -8px rgba(252, 188, 0, 0.8);
+}
+
+/* Week switcher: the selected week is the headline, arrows are round and quiet. */
 .worker-week {
+  display: grid;
+  gap: 14px;
   padding: 14px;
-  border-radius: var(--ys-radius-lg);
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
+  border: 1px solid rgba(40, 28, 16, 0.06);
   box-shadow: var(--ys-shadow-card);
 }
 .worker-week-nav {
@@ -280,7 +411,7 @@ body {
   grid-column: 2;
   grid-row: 1;
   display: grid;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
   text-align: center;
 }
@@ -294,10 +425,10 @@ body {
   justify-content: center;
   gap: 8px;
   font-family: var(--ys-font-numeric);
-  font-size: clamp(1.125rem, 5.2vw, 1.375rem);
+  font-size: clamp(1.25rem, 6vw, 1.5rem);
   white-space: nowrap;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
   font-variant-numeric: tabular-nums;
 }
 .worker-week-date strong > span {
@@ -320,29 +451,30 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-height: var(--ys-control-md);
-  min-width: var(--ys-control-md);
-  padding: 0 10px;
-  border: 1px solid var(--ys-color-border-subtle);
-  border-radius: var(--ys-radius-md);
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--ys-radius-pill);
   background: var(--ys-color-surface-base);
   color: var(--ys-color-text-primary);
   font-size: var(--ys-text-sm);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--ys-transition-fast),
-    transform 120ms var(--ys-ease-standard);
+    transform 140ms var(--ys-ease-standard);
 }
 .worker-week-nav button:hover:not(:disabled) {
   background: var(--ys-color-surface-muted);
 }
 .worker-week-nav button:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.9);
 }
 .worker-week-nav button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 @media (max-width: 420px) {
@@ -357,20 +489,79 @@ body {
     padding: 0;
   }
 }
+
+/* Day strip under the range: a dot marks each day with a shift. */
+.worker-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  list-style: none;
+}
+.worker-week-strip li > a,
+.worker-week-strip li > span {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 7px 0 8px;
+  border-radius: 14px;
+  color: var(--ys-color-text-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+.worker-week-strip li > a:active {
+  background: var(--ys-color-surface-muted);
+}
+.worker-week-strip li span > span:first-child,
+.worker-week-strip li a > span:first-child {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.worker-week-strip strong {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.worker-week-strip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.worker-week-strip li[data-shift] i {
+  background: var(--ys-color-brand-crimson);
+}
+.worker-week-strip li[data-past] {
+  opacity: 0.45;
+}
+.worker-week-strip li[data-today] > * {
+  background: var(--ys-color-text-primary);
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(28, 23, 20, 0.6);
+}
+.worker-week-strip li[data-today] strong {
+  color: var(--ys-color-brand-yellow);
+}
+.worker-week-strip li[data-today] span > span:first-child,
+.worker-week-strip li[data-today] a > span:first-child {
+  color: rgba(255, 255, 255, 0.7);
+}
+.worker-week-strip li[data-today][data-shift] i {
+  background: var(--ys-color-brand-yellow);
+}
 .worker-week-status {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--ys-color-border-subtle);
 }
 @media (prefers-reduced-motion: reduce) {
-  .worker-week-nav button {
+  .worker-week-nav button,
+  .app-shell .ys-button {
     transition: none;
   }
-  .worker-week-nav button:active:not(:disabled) {
+  .worker-week-nav button:active:not(:disabled),
+  .app-shell .ys-button:active:not(:disabled) {
     transform: none;
   }
 }

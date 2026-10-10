@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { BrandMark } from '@yellowshifts/ui';
-import { CheckIcon, NfcIcon, WarningIcon } from '@yellowshifts/icons';
+import { AlertGlyph, CheckIcon, TapGlyph } from '@yellowshifts/icons';
 import { processNfcScanAction } from '../../actions/attendance';
 import type { NfcScanResult, ResolvedNfcStation } from '@yellowshifts/types';
 
@@ -190,17 +190,22 @@ export function NfcAttendanceClient({
           <small>{workerName}</small>
         </span>
         <span className="scan-chip">
-          <NfcIcon size={14} /> NFC
+          <TapGlyph size={14} strokeWidth={2} /> NFC
         </span>
       </div>
       <div
         className={`attendance-symbol ${pending ? 'scan-processing' : error ? 'attendance-warning' : ''}`}
         aria-hidden="true"
       >
+        <span className="attendance-rings">
+          <i />
+          <i />
+          <i />
+        </span>
         {pending || confirmCheckout ? (
-          <NfcIcon size={38} />
+          <TapGlyph size={40} strokeWidth={2} variant="duo" />
         ) : error ? (
-          <WarningIcon size={38} />
+          <AlertGlyph size={40} strokeWidth={2} variant="duo" />
         ) : (
           <CheckIcon size={42} strokeWidth={2.6} />
         )}
@@ -250,7 +255,7 @@ export function NfcAttendanceClient({
             </div>
           </dl>
           <div className="scan-instruction" hidden={confirmCheckout}>
-            <NfcIcon size={24} />
+            <TapGlyph size={24} variant="duo" />
             <span>
               {confirmCheckout
                 ? 'הסריקה נקלטה. המשמרת תסתיים רק לאחר האישור שלך.'
