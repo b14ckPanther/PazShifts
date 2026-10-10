@@ -22,8 +22,15 @@ DO $$ BEGIN
 END $$;
 RESET ROLE;
 INSERT INTO public.schedules(id,station_id,week_start_date) VALUES('00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',(current_date-extract(dow FROM current_date)::int));
-INSERT INTO public.scheduled_shifts(id,schedule_id,station_id,shift_date,start_at,end_at) VALUES('00000000-0000-4000-8000-000000020000','00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',current_date,((now()+interval '20 minutes') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC',((now()+interval '8 hours') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC');
+INSERT INTO public.scheduled_shifts(id,schedule_id,station_id,shift_date,start_at,end_at) VALUES('00000000-0000-4000-8000-000000020000','00000000-0000-4000-8000-000000010000','00000000-0000-4000-8000-000000000010',current_date,((now()+interval '60 minutes') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC',((now()+interval '8 hours') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC');
 INSERT INTO public.shift_assignments(scheduled_shift_id,station_id,station_membership_id) VALUES('00000000-0000-4000-8000-000000020000','00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000100');
+-- Next week already submitted, so the availability reminder (time-of-week dependent) stays out of these counts.
+INSERT INTO public.availability_weeks(station_id,station_membership_id,week_start_date)
+ SELECT '00000000-0000-4000-8000-000000000010',m,(now() AT TIME ZONE 'Asia/Jerusalem')::date+(7-extract(dow FROM now() AT TIME ZONE 'Asia/Jerusalem')::int)
+ FROM unnest(ARRAY['00000000-0000-4000-8000-000000000100','00000000-0000-4000-8000-000000000200']::uuid[]) m;
+INSERT INTO public.availability_entries(availability_week_id,date,availability_type)
+ SELECT w.id,w.week_start_date+d,'ALL_DAY_AVAILABLE' FROM public.availability_weeks w,generate_series(0,6) d
+ WHERE w.station_id='00000000-0000-4000-8000-000000000010';
 UPDATE public.schedules SET status='PUBLISHED';
 UPDATE public.schedules SET status='DRAFT';
 UPDATE public.schedules SET status='PUBLISHED';
@@ -32,14 +39,15 @@ DO $$ DECLARE batch jsonb; BEGIN
  batch:=public.claim_worker_notifications();
  IF jsonb_array_length(batch)<>4 THEN RAISE EXCEPTION '2 events x 2 devices, got %',batch; END IF;
  IF jsonb_array_length(public.claim_worker_notifications())<>0 THEN RAISE EXCEPTION 'duplicate claims'; END IF;
- IF (SELECT count(*) FROM public.worker_notifications WHERE type='SHIFT_REMINDER')<>1 THEN RAISE EXCEPTION 'reminder missing'; END IF;
+ IF (SELECT count(*) FROM public.worker_notifications WHERE type IN ('SHIFT_TODAY','SHIFT_SOON'))<>1 THEN RAISE EXCEPTION 'reminder missing'; END IF;
 END $$;
+-- Shift reminders are fixed: 2 hours before (SHIFT_TODAY) and 10 minutes before (SHIFT_SOON).
 -- Edits invalidate pending reminders; no stale push is eligible.
 UPDATE public.worker_notification_deliveries SET state='pending';
-UPDATE public.scheduled_shifts SET start_at=((now()+interval '2 hours') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC';
+UPDATE public.scheduled_shifts SET start_at=((now()+interval '3 hours') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC';
 DO $$ BEGIN
  PERFORM public.claim_worker_notifications();
- IF EXISTS(SELECT 1 FROM public.worker_notification_deliveries d JOIN public.worker_notifications n ON n.id=d.notification_id WHERE n.type='SHIFT_REMINDER' AND d.state<>'cancelled') THEN RAISE EXCEPTION 'stale reminder'; END IF;
+ IF EXISTS(SELECT 1 FROM public.worker_notification_deliveries d JOIN public.worker_notifications n ON n.id=d.notification_id WHERE n.type IN ('SHIFT_TODAY','SHIFT_SOON') AND d.state<>'cancelled') THEN RAISE EXCEPTION 'stale reminder'; END IF;
 END $$;
 SET LOCAL ROLE authenticated;
 DO $$ BEGIN
@@ -61,7 +69,7 @@ UPDATE public.worker_notification_preferences SET reminder_minutes=0;
 UPDATE public.scheduled_shifts SET start_at=((now()+interval '10 minutes') AT TIME ZONE 'Asia/Jerusalem') AT TIME ZONE 'UTC';
 DO $$ BEGIN
  PERFORM public.claim_worker_notifications();
- IF (SELECT count(*) FROM public.worker_notifications WHERE type='SHIFT_REMINDER')<>1 THEN RAISE EXCEPTION 'disabled preference generated reminder'; END IF;
+ IF (SELECT count(*) FROM public.worker_notifications WHERE type IN ('SHIFT_TODAY','SHIFT_SOON'))<>1 THEN RAISE EXCEPTION 'disabled preference generated reminder'; END IF;
 END $$;
 UPDATE public.station_memberships SET status='INACTIVE';
 DO $$ BEGIN

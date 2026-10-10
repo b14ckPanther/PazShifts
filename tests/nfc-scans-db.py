@@ -38,6 +38,8 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         print('PASS: existing atomic availability rollback/authorization SQL regressions')
         sql((ROOT / 'tests/sql/worker-notifications.sql').read_text())
         print('PASS: existing notification SQL/RLS/device/queue regressions')
+        sql((ROOT / 'tests/sql/worker-notifications-v2.sql').read_text())
+        print('PASS: web push subscriptions/queue, 2h/10min reminders, checkout reminder, availability eligibility, capped-shift confirmation')
         uid = lambda n: f'00000000-0000-0000-0000-{n:012d}'
         sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(1)}','worker@example.com'),('{uid(2)}','other@example.com');
         INSERT INTO public.stations(id,code,name,nfc_public_token) VALUES ('{uid(101)}','NFC-A','Test A','token-a'),('{uid(102)}','NFC-B','Test B','token-b');
@@ -158,7 +160,8 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         sql(f"SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','{uid(1)}',false); SELECT public.read_native_nfc_receipt('token-a','{native_id}');", fails=True)
         sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(3)}','left-open@example.test');
         INSERT INTO public.station_memberships(id,station_id,user_id) VALUES ('{uid(203)}','{uid(101)}','{uid(3)}');
-        INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status) VALUES ('{uid(403)}','{uid(101)}','{uid(203)}','{uid(3)}',now()-interval '13 hours','ACTIVE');
+        UPDATE public.stations SET left_open_warning_hours=6 WHERE id='{uid(101)}';
+        INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status) VALUES ('{uid(403)}','{uid(101)}','{uid(203)}','{uid(3)}',now()-interval '7 hours','ACTIVE');
         SET ROLE service_role; SELECT public.claim_worker_notifications(); RESET ROLE;""")
         assert sql("SELECT count(*) FROM public.worker_notifications WHERE type='LEFT_OPEN';").strip()=='1'
         sql('SET ROLE service_role; SELECT public.claim_worker_notifications(); RESET ROLE;')
@@ -170,6 +173,15 @@ with tempfile.TemporaryDirectory(prefix='ys-nfc-db-') as temporary:
         assert sql("SELECT public.worker_notification_current(n) FROM public.worker_notifications n WHERE type='LEFT_OPEN';").strip()=='f'
         sql('SET ROLE authenticated; SELECT public.claim_worker_notifications();',fails=True)
         print('PASS: LEFT_OPEN server queue, deduplication, disabled preference, completed-record cancellation and privileged dispatch')
+        sql(f"""INSERT INTO auth.users(id,email) VALUES ('{uid(4)}','cap@example.test');
+        INSERT INTO public.station_memberships(id,station_id,user_id) VALUES ('{uid(204)}','{uid(101)}','{uid(4)}');
+        INSERT INTO public.attendance_records(id,station_id,station_membership_id,user_id,clock_in_at,status) VALUES ('{uid(404)}','{uid(101)}','{uid(204)}','{uid(4)}',now()-interval '13 hours','ACTIVE');
+        SET ROLE service_role; SELECT public.claim_worker_notifications(); SELECT public.claim_worker_notifications(); RESET ROLE;""")
+        assert sql(f"SELECT status||'|'||(clock_out_at-clock_in_at) FROM public.attendance_records WHERE id='{uid(404)}';").strip()=='FLAGGED|12:00:00'
+        assert sql("SELECT count(*) FROM public.worker_notifications WHERE type='SHIFT_CAPPED';").strip()=='1'
+        assert sql("SELECT public.worker_notification_current(n) FROM public.worker_notifications n WHERE type='SHIFT_CAPPED';").strip()=='t'
+        assert sql("SELECT count(*) FROM public.worker_notifications WHERE type='LEFT_OPEN' AND data->>'attendanceId'='"+uid(404)+"';").strip()=='0'
+        print('PASS: 12-hour cap flags the record at exactly 12h for review, notifies once, never as left open')
         print('PASS: native expected action, location denial, six concurrent confirmations, receipt recovery, revoked session, membership isolation')
         print('PASS: automatic clock-in; confirmed checkout; cancel/replay; concurrent confirmations; stale/expired denial; legacy calls cannot auto-checkout; auth-profile sync; station/membership isolation; direct-write denial')
     finally:

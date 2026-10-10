@@ -122,7 +122,7 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         attempt(2, manual(205), True)
         attempt(2, manual(start='2099-01-01 08:00'), True)
         attempt(2, manual(end='2020-01-02 07:00'), True)
-        attempt(2, manual(reason=''), True)
+        attempt(2, manual(reason='x' * 1001), True)
         attempt(2, manual() + ';' + manual(), True)  # overlap
         attempt(2, f"UPDATE public.station_memberships SET status='INACTIVE' WHERE id='{user(203)}';" + manual(203), True)
         output = attempt(2, manual() + "; SELECT count(*) FROM public.attendance_manual_audit")
@@ -151,7 +151,7 @@ with tempfile.TemporaryDirectory(prefix='ys-staff-db-') as temporary:
         manage = f"SELECT public.manage_attendance_record('{station}','{user(601)}','DELETE','Mistaken test',(SELECT updated_at FROM public.attendance_records WHERE id='{user(601)}'))"
         for actor in [4,5,6]: attempt(actor,manage,True)
         attempt(2,manage.replace(station,other),True)
-        attempt(2,manage.replace("'Mistaken test'","''"),True)
+        attempt(2,manage.replace("'Mistaken test'","repeat('x',1001)"),True)
         attempt(2,manage.replace("(SELECT updated_at FROM public.attendance_records WHERE id='"+user(601)+"')","'1990-01-01'"),True)
         for actor in [1,2]:
             result=attempt(actor,manage+f"; SELECT count(*) FROM public.attendance_removals WHERE attendance_record_id='{user(601)}'")
