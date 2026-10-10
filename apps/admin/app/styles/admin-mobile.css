@@ -1,0 +1,348 @@
+/* Admin, phone first: the same native feel as the worker app, applied to the shared controls
+   and the heavier admin screens. Loaded last; admin only (the worker app never imports it). */
+
+/* ---------- Fields: taller targets, softer corners, glyph affordances ---------- */
+@media (pointer: coarse) {
+  .ys-input,
+  :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='hidden']), select) {
+    min-height: 50px;
+    border-radius: 14px;
+  }
+  :where(textarea) {
+    border-radius: 14px;
+  }
+  .ys-button {
+    min-height: 48px;
+    border-radius: 14px;
+  }
+  .ys-button--sm {
+    min-height: 42px;
+    border-radius: 12px;
+  }
+}
+select,
+select.ys-input {
+  padding-inline-end: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%231c1714' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E");
+  background-position: left 14px center;
+  font-weight: 600;
+}
+[dir='ltr'] select {
+  background-position: right 14px center;
+}
+/* Date and time values read left to right in every locale; the glyph sits on the right and a tap
+   anywhere opens the phone's own picker. High specificity: field wrappers set their own padding. */
+html body input[type='date'],
+html body input[type='datetime-local'],
+html body input[type='time'] {
+  position: relative;
+  direction: ltr;
+  text-align: left;
+  padding-right: 44px;
+  padding-left: 14px;
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  font-weight: 500;
+}
+html body input[type='date']::-webkit-date-and-time-value,
+html body input[type='datetime-local']::-webkit-date-and-time-value,
+html body input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+}
+html body input[type='date'],
+html body input[type='datetime-local'] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23d10040' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.25' y='5' width='17.5' height='15.75' rx='3.5'/%3E%3Cpath d='M8 3v3.5M16 3v3.5M3.5 10h17'/%3E%3C/svg%3E");
+}
+html body input[type='time'] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23d10040' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.75'/%3E%3Cpath d='M12 7.5V12l3 2'/%3E%3C/svg%3E");
+}
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  cursor: pointer;
+}
+.ys-label,
+.ys-form-field > span:first-child {
+  font-weight: 600;
+}
+
+/* ---------- Surfaces ---------- */
+.ys-card,
+.admin-section,
+.station-hero-section {
+  border-radius: var(--ys-radius-xl);
+}
+.ys-alert,
+.admin-feedback {
+  border-radius: 16px;
+}
+.ys-segmented {
+  padding: 3px;
+  border-radius: 13px;
+}
+.ys-segmented > button {
+  min-height: 42px;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.ys-segmented > button[aria-pressed='true'],
+.ys-segmented > button[aria-selected='true'] {
+  font-weight: 700;
+}
+
+/* ---------- Sheets ---------- */
+@media (max-width: 640px) {
+  .ys-dialog,
+  .ys-dialog--lg {
+    border-radius: 28px 28px 0 0;
+  }
+  .ys-dialog-header::before {
+    width: 40px;
+    height: 5px;
+  }
+  .ys-dialog-title {
+    font-size: 1.25rem;
+  }
+  .ys-dialog-footer {
+    gap: 10px;
+  }
+  .ys-dialog-footer > .ys-button {
+    min-height: 50px;
+    border-radius: 16px;
+  }
+}
+
+/* ---------- Page chrome on phones ---------- */
+@media (max-width: 767px) {
+  .admin-page .ys-page-header {
+    padding: 14px 2px 12px;
+  }
+  .admin-page .ys-page-header h1 {
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+  }
+  .admin-page .ys-page-header p {
+    font-size: var(--ys-text-sm);
+  }
+  .admin-back-link {
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: var(--ys-radius-pill);
+    background: var(--ys-color-surface-sunken);
+    font-size: var(--ys-text-sm);
+  }
+
+  /* Tables folded into cards: one rounded card per row with breathing room. */
+  .ys-table-wrap--stack {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .ys-table-wrap--stack tbody tr {
+    margin-bottom: 10px;
+    border-radius: 20px;
+    background: var(--ys-color-surface-raised);
+    border: 1px solid rgba(40, 28, 16, 0.06);
+    box-shadow: var(--ys-shadow-card);
+  }
+
+  /* Schedule week switcher: round arrows around the dates, actions full width. */
+  .schedule-week-top {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    grid-template-areas:
+      'prev head next'
+      'today today today';
+    align-items: center;
+    gap: 6px 8px;
+  }
+  .schedule-week-heading {
+    grid-area: head;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: 0;
+    text-align: center;
+  }
+  .schedule-week-range {
+    font-family: var(--ys-font-numeric);
+    font-size: clamp(1rem, 4.6vw, 1.25rem);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .schedule-week-status {
+    justify-content: center;
+  }
+  .schedule-week-status > span:first-child {
+    display: none;
+  }
+  .schedule-week-nav {
+    display: contents;
+  }
+  .schedule-week-nav > .ys-button {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ys-color-surface-base);
+    box-shadow: none;
+    font-size: 0;
+  }
+  .schedule-week-nav > .ys-button:first-child {
+    grid-area: prev;
+  }
+  .schedule-week-nav > .ys-button:last-child {
+    grid-area: next;
+  }
+  .schedule-week-nav > .schedule-week-today {
+    grid-area: today;
+    justify-self: center;
+    width: auto;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: var(--ys-radius-pill);
+    font-size: var(--ys-text-sm);
+  }
+  .schedule-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .schedule-actions > .ys-button {
+    width: 100%;
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Section switches (attendance / exceptions, report / rules): full width ---------- */
+@media (max-width: 767px) {
+  .station-nav-pills {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    justify-self: stretch;
+    width: 100%;
+    margin: 0;
+    padding: 4px;
+    overflow: visible;
+  }
+  .station-nav-pills > * {
+    justify-content: center;
+    min-width: 0;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Hours report: the total on a pump display, facts as one strip ---------- */
+.report-total {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--ys-radius-xl);
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(252, 188, 0, 0.16), transparent 55%),
+    linear-gradient(170deg, #2b2420 0%, #17120f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px -14px rgba(28, 23, 20, 0.6);
+}
+.report-total::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #ffd23f, var(--ys-color-brand-yellow));
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  z-index: -1;
+}
+.report-total > span,
+.report-total small {
+  color: rgba(255, 244, 204, 0.72);
+}
+.report-total strong {
+  color: var(--ys-color-brand-yellow);
+  filter: drop-shadow(0 0 18px rgba(252, 188, 0, 0.28));
+}
+.report-summary .report-facts {
+  gap: 0;
+  overflow: hidden;
+  border-radius: var(--ys-radius-xl);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  box-shadow: var(--ys-shadow-card);
+}
+.report-summary .report-facts > div {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.report-summary .report-facts > div + div {
+  border-inline-start: 1px solid var(--ys-color-border-subtle);
+}
+.hours-report .report-panel {
+  border-radius: var(--ys-radius-xl);
+}
+
+/* ---------- Period picker: round steppers, numeral range ---------- */
+.admin-page .period-step {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ys-color-surface-base);
+  transition: transform 140ms var(--ys-ease-standard);
+}
+.admin-page .period-step:active:not(:disabled) {
+  transform: scale(0.9);
+}
+.admin-page .period-current strong {
+  font-family: var(--ys-font-numeric);
+  font-weight: 500;
+}
+.admin-page .period-presets {
+  padding: 3px;
+  border-radius: 13px;
+}
+.admin-page .period-presets > button {
+  border-radius: 10px;
+}
+
+/* ---------- Staff directory: tighter rows, actions side by side ---------- */
+@media (max-width: 767px) {
+  .staff-rows > * {
+    padding-block: 12px;
+  }
+  .staff-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-page .period-step {
+    transition: none;
+  }
+}
+
+/* Side-by-side fields share one height: a hint under one field never stretches its neighbour. */
+.ys-form-grid {
+  align-items: start;
+}
+.ys-form-grid > label,
+.ys-form-grid > .ys-form-field {
+  align-content: start;
+}

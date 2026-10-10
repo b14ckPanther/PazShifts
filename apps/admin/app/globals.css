@@ -6,6 +6,7 @@
 @import './styles/admin-staff.css';
 @import './styles/admin-schedule.css';
 @import './styles/admin-attendance.css';
+@import './styles/admin-mobile.css';
 
 body {
   min-width: 0;
