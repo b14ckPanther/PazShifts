@@ -1,6 +1,31 @@
-/* Worker home: the current state is the largest thing on screen. */
+/* Worker home: the canopy runs down into the page and the current state sits under it. */
 .worker-home-page {
+  /* Phone canopy: brand row + tab track, then the greeting and the top of the hero. */
+  --home-canopy: calc(env(safe-area-inset-top, 0px) + 124px + 150px);
+  position: relative;
+  isolation: isolate;
   min-height: 100dvh;
+}
+@media (min-width: 768px) {
+  .worker-home-page {
+    --home-canopy: calc(env(safe-area-inset-top, 0px) + 60px + 160px);
+  }
+}
+.worker-home-page .worker-header-root {
+  box-shadow: none;
+}
+/* The canopy runs down from the header, cut on the logomark's 45-degree angle behind the hero. */
+.worker-home-page::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  inset-inline: 0;
+  height: var(--home-canopy);
+  background:
+    radial-gradient(120% 60% at 85% 0%, rgba(255, 226, 120, 0.9), transparent 60%),
+    var(--ys-color-brand-yellow);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 64px), 0 100%);
 }
 .worker-home-content {
   display: grid;
@@ -8,50 +33,84 @@
   width: 100%;
   max-width: 600px;
   margin-inline: auto;
-  padding: 20px 0 28px;
+  padding: 6px 0 28px;
 }
-.worker-home-welcome {
+/* ---------- Greeting ---------- */
+.home-hello {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 14px;
+  padding: 8px 2px 4px;
 }
-.worker-home-welcome h1 {
+.home-hello > div {
   min-width: 0;
-  font-size: 1.625rem;
+}
+.home-hello-date {
+  font-size: var(--ys-text-sm);
+  font-weight: 600;
+  color: var(--ys-color-brand-yellow-ink);
+}
+.home-hello h1 {
+  font-size: clamp(1.5rem, 6.4vw, 1.875rem);
   font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--ys-color-text-primary);
+}
+.home-refresh {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ys-color-text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(92, 67, 0, 0.16);
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ys-ease-standard),
+    background-color var(--ys-transition-fast);
+}
+.home-refresh:active:not(:disabled) {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.8);
 }
 .worker-home-spin {
   animation: ys-spin 0.9s linear infinite;
 }
 
-/* Live shift: crimson field, the elapsed time as a price-board numeral. */
+/* ---------- Live shift: crimson field, a pump counter for the elapsed time ---------- */
 .worker-live {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   display: grid;
-  gap: 18px;
-  padding: 18px 20px 20px;
+  gap: 16px;
+  padding: 18px 20px 18px;
   border-radius: var(--ys-radius-xl);
-  background: var(--ys-color-brand-crimson);
+  background:
+    radial-gradient(130% 90% at 100% 0%, #ea1458 0%, transparent 55%),
+    linear-gradient(160deg, #d10040 0%, #b50038 100%);
   color: #fff;
   box-shadow:
-    0 2px 4px rgba(40, 28, 16, 0.1),
-    0 12px 28px rgba(40, 28, 16, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 2px 4px rgba(143, 0, 43, 0.18),
+    0 18px 40px -8px rgba(143, 0, 43, 0.45);
 }
 /* One cut on the logomark's angle; the only decorative mark on the screen. */
 .worker-live::before {
   content: '';
   position: absolute;
-  /* Physical corner opposite the reading start; stays clear of the timer at 320px. */
   top: 0;
   left: 0;
-  width: 88px;
-  height: 88px;
-  background: var(--ys-color-brand-yellow);
+  width: 92px;
+  height: 92px;
+  background: linear-gradient(135deg, #ffd23f, var(--ys-color-brand-yellow));
   clip-path: polygon(0 0, 100% 0, 0 100%);
   z-index: -1;
 }
@@ -63,27 +122,57 @@
   padding-inline-end: 64px;
 }
 .worker-live-status {
-  background: rgba(0, 0, 0, 0.22);
-}
-.worker-live-caption {
-  font-size: var(--ys-text-xs);
-  color: #ffd9e3;
+  background: rgba(60, 0, 18, 0.32);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 .worker-live-clock {
   display: grid;
   gap: 2px;
+  margin-bottom: -6px;
 }
 .worker-live-clock > span {
   font-size: var(--ys-text-sm);
+  font-weight: 500;
   color: #ffd9e3;
 }
 .worker-live-clock strong {
-  font-size: clamp(3rem, 15vw, 4rem);
-  font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: 0;
-  text-align: start;
   justify-self: start;
+  font-size: clamp(3.25rem, 17vw, 4.5rem);
+  font-weight: 500;
+  filter: drop-shadow(0 2px 10px rgba(90, 0, 26, 0.35));
+}
+
+/* Fuel-gauge ticks toward the scheduled end. */
+.worker-live-gauge {
+  display: grid;
+  gap: 8px;
+}
+.worker-live-ticks {
+  display: grid;
+  grid-template-columns: repeat(28, minmax(0, 1fr));
+  gap: 3px;
+  height: 14px;
+}
+.worker-live-ticks > span {
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background-color 400ms var(--ys-ease-out);
+}
+.worker-live-ticks > span[data-on] {
+  background: var(--ys-color-brand-yellow);
+  box-shadow: 0 0 8px rgba(252, 188, 0, 0.45);
+}
+.worker-live-gauge p {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--ys-text-sm);
+  color: #ffd9e3;
+}
+.worker-live-gauge b {
+  font-weight: 700;
+  color: #fff;
 }
 .worker-live-facts {
   display: grid;
@@ -91,14 +180,14 @@
   gap: 1px;
   overflow: hidden;
   border-radius: var(--ys-radius-md);
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.16);
 }
 .worker-live-facts > div {
   display: grid;
   gap: 2px;
-  padding: 10px 14px;
-  background: rgba(120, 0, 36, 0.35);
   min-width: 0;
+  padding: 10px 14px;
+  background: rgba(100, 0, 30, 0.38);
 }
 .worker-live-facts dt {
   font-size: var(--ys-text-xs);
@@ -111,117 +200,135 @@
 }
 .worker-live-hint {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   font-size: var(--ys-text-sm);
   line-height: 1.5;
   color: #ffe9ee;
 }
 .worker-live-hint svg {
   flex-shrink: 0;
-  margin-top: 1px;
   color: var(--ys-color-brand-yellow);
 }
 
-/* Panels */
-.worker-home-panel {
+/* ---------- Panels ---------- */
+.home-panel {
   display: grid;
-  gap: 6px;
-  padding: 18px 20px;
-  border-radius: var(--ys-radius-lg);
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
-  box-shadow: var(--ys-shadow-card);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  box-shadow:
+    0 1px 2px rgba(40, 28, 16, 0.05),
+    0 10px 30px -10px rgba(40, 28, 16, 0.18);
 }
-.worker-home-section-title {
+.home-panel-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
-  color: var(--ys-color-text-secondary);
-}
-.worker-home-section-title h2 {
   font-size: var(--ys-text-sm);
   font-weight: 700;
+  color: var(--ys-color-text-secondary);
 }
-.worker-home-next-date {
-  font-size: var(--ys-text-lg);
+.home-panel-title svg {
+  color: var(--ys-color-brand-crimson);
+}
+
+/* Next shift as a ticket: a price-sign date tile, the time range, the day bar. */
+.home-ticket-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.home-ticket-date {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  width: 64px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #2a2420, var(--ys-color-text-primary));
+  color: var(--ys-color-brand-yellow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 14px -6px rgba(28, 23, 20, 0.6);
+}
+.home-ticket-date span,
+.home-ticket-date small {
+  font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--ys-color-text-primary);
+  line-height: 1.2;
+  color: rgba(255, 244, 204, 0.75);
 }
-.worker-home-next-time {
+.home-ticket-date strong {
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.05;
+}
+.home-ticket-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.home-ticket-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  font-size: var(--ys-text-md);
+  font-weight: 700;
+}
+.home-ticket-until {
+  font-size: var(--ys-text-xs);
+  font-weight: 700;
+  color: var(--ys-color-brand-crimson-ink);
+}
+.home-ticket-time {
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
-  gap: 10px;
-  font-size: 2rem;
+  gap: 8px;
+  font-size: clamp(1.875rem, 9vw, 2.25rem);
   font-weight: 500;
-  line-height: 1.15;
-  color: var(--ys-color-text-primary);
+  line-height: 1.1;
 }
-.worker-home-next-time > span {
+.home-ticket-time > span {
   color: var(--ys-color-border-strong);
   font-weight: 400;
 }
-.worker-home-next-meta {
+.home-ticket.is-hero .home-ticket-time {
+  font-size: clamp(2.125rem, 10.5vw, 2.75rem);
+}
+.home-ticket-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
   font-size: var(--ys-text-sm);
   color: var(--ys-color-text-secondary);
 }
-.worker-home-chip {
+.home-ticket-meta svg {
+  color: var(--ys-color-text-muted);
+}
+.home-chip {
+  margin-inline-start: 4px;
   padding: 2px 8px;
   border-radius: var(--ys-radius-pill);
   background: var(--ys-color-surface-muted);
   font-size: var(--ys-text-xs);
   font-weight: 600;
 }
-.worker-home-next-none {
+.home-ticket-none {
   font-size: var(--ys-text-md);
   line-height: 1.6;
   color: var(--ys-color-text-secondary);
 }
-/* With no live shift, the next shift is the hero: its heading carries the yellow tile. */
-.worker-home-next.is-hero {
-  padding-top: 20px;
-}
-.worker-home-next.is-hero .worker-home-section-title svg {
-  box-sizing: content-box;
-  padding: 7px;
-  border-radius: 10px;
-  background: var(--ys-color-text-primary);
-  color: #fff;
-}
-.worker-home-next.is-hero .worker-home-section-title h2 {
-  font-size: var(--ys-text-md);
-  color: var(--ys-color-text-primary);
-}
-.worker-home-next.is-hero .worker-home-next-time {
-  font-size: clamp(2.5rem, 12vw, 3rem);
-}
 
-/* Quiet row for "no active shift" once the hero is taken by the next shift. */
-.worker-home-idle {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--ys-radius-lg);
-  background: var(--ys-color-surface-muted);
-}
-.worker-home-idle h2 {
-  font-size: var(--ys-text-md);
-  font-weight: 700;
-}
-.worker-home-idle p {
-  font-size: var(--ys-text-sm);
-  line-height: 1.5;
-  color: var(--ys-color-text-secondary);
-}
-.worker-home-symbol {
+.home-well {
   display: grid;
   place-items: center;
   width: 44px;
@@ -229,25 +336,25 @@
   flex-shrink: 0;
   border-radius: 14px;
   background: var(--ys-color-surface-raised);
-  color: var(--ys-color-text-secondary);
+  color: var(--ys-color-brand-yellow-ink);
 }
-.worker-home-error {
-  justify-items: start;
-  gap: 8px;
-}
-.worker-home-error .worker-home-symbol {
+.home-well--warning {
   background: var(--ys-color-status-warning-subtle);
   color: var(--ys-color-status-warning-ink);
 }
-.worker-home-error h2 {
+.home-error {
+  justify-items: start;
+  gap: 8px;
+}
+.home-error h2 {
   font-size: var(--ys-text-lg);
   font-weight: 800;
 }
-.worker-home-error p {
+.home-error p {
   font-size: var(--ys-text-md);
   color: var(--ys-color-text-secondary);
 }
-.worker-home-stale {
+.home-stale {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -258,60 +365,222 @@
   font-size: var(--ys-text-sm);
   font-weight: 600;
 }
-.worker-home-stale svg {
+.home-stale svg {
   flex-shrink: 0;
   margin-top: 2px;
 }
-/* What to do next: two quiet rows, not a card grid. */
-.worker-home-steps {
+
+/* ---------- This week ---------- */
+.home-week {
   display: grid;
-  border-radius: var(--ys-radius-lg);
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--ys-radius-xl);
   background: var(--ys-color-surface-raised);
-  border: 1px solid var(--ys-color-border-subtle);
+  border: 1px solid rgba(40, 28, 16, 0.06);
   box-shadow: var(--ys-shadow-card);
-  overflow: hidden;
 }
-.worker-home-steps > a {
+.home-week-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.home-week-head h2 {
+  font-size: var(--ys-text-md);
+  font-weight: 800;
+}
+.home-week-head p {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.home-week-head b {
+  font-family: var(--ys-font-numeric);
+  color: var(--ys-color-text-primary);
+}
+.home-week-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  list-style: none;
+}
+.home-week-days li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 0 10px;
+  border-radius: 14px;
+}
+.home-week-days li > span:first-child {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-muted);
+}
+.home-week-days strong {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.home-week-days i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+.home-week-days li[data-shift] i {
+  background: var(--ys-color-brand-crimson);
+}
+.home-week-days li[data-past] {
+  opacity: 0.45;
+}
+.home-week-days li[data-today] {
+  background: var(--ys-color-text-primary);
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(28, 23, 20, 0.6);
+}
+.home-week-days li[data-today] > span:first-child {
+  color: rgba(255, 255, 255, 0.7);
+}
+.home-week-days li[data-today] strong {
+  color: var(--ys-color-brand-yellow);
+}
+.home-week-days li[data-today][data-shift] i {
+  background: var(--ys-color-brand-yellow);
+}
+.home-week-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ys-color-border-subtle);
+}
+.home-week-facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+.home-week-facts dt {
+  font-size: var(--ys-text-sm);
+  color: var(--ys-color-text-secondary);
+}
+.home-week-facts dd {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+.home-week-facts .is-attention {
+  justify-content: flex-end;
+}
+.home-week-facts .is-attention dt,
+.home-week-facts .is-attention dd {
+  color: var(--ys-color-status-warning-ink);
+}
+
+.home-tile {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.home-tile--crimson {
+  --glyph-knock: var(--ys-color-brand-crimson);
+  background: linear-gradient(180deg, #e8125a, var(--ys-color-brand-crimson));
+  color: #fff;
+}
+.home-tile--yellow {
+  --glyph-knock: var(--ys-color-brand-yellow);
+  background: linear-gradient(180deg, #ffd23f, var(--ys-color-brand-yellow));
+  color: var(--ys-color-text-primary);
+}
+.home-tile--ink {
+  --glyph-knock: var(--ys-color-text-primary);
+  background: linear-gradient(180deg, #3a322d, var(--ys-color-text-primary));
+  color: var(--ys-color-brand-yellow);
+}
+
+/* ---------- Next shift while on shift: one row ---------- */
+.home-next-row,
+.home-nudge {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 64px;
-  padding: 12px 16px;
+  padding: 10px 14px;
+  border-radius: var(--ys-radius-xl);
+  background: var(--ys-color-surface-raised);
+  border: 1px solid rgba(40, 28, 16, 0.06);
+  box-shadow: var(--ys-shadow-card);
   color: var(--ys-color-text-primary);
-  transition: background-color var(--ys-transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms var(--ys-ease-standard);
 }
-.worker-home-steps > a + a {
-  border-top: 1px solid var(--ys-color-border-subtle);
+.home-next-row:active,
+.home-nudge:active {
+  transform: scale(0.98);
 }
-.worker-home-steps > a:hover {
-  background: var(--ys-color-surface-base);
-}
-.worker-home-steps > a > svg:first-child {
-  flex-shrink: 0;
-  color: var(--ys-color-text-secondary);
-}
-.worker-home-steps > a > svg:last-of-type {
+.home-next-row > svg {
   flex-shrink: 0;
   margin-inline-start: auto;
-  color: var(--ys-color-text-muted);
+  color: var(--ys-color-border-strong);
 }
-.worker-home-steps > a > span {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
+.home-ticket-date--sm {
+  width: 46px;
+  height: 48px;
+  border-radius: 13px;
+}
+.home-ticket-date--sm strong {
+  font-size: 1.25rem;
+}
+.home-next-row-text,
+.home-nudge-text {
+  display: grid;
   min-width: 0;
 }
-.worker-home-steps strong {
+.home-next-row-text small,
+.home-nudge-text small {
+  font-size: var(--ys-text-xs);
+  font-weight: 600;
+  color: var(--ys-color-text-secondary);
+}
+.home-next-row-text strong {
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* ---------- Availability reminder: only while next week is not submitted ---------- */
+.home-nudge {
+  background: var(--ys-color-brand-yellow-subtle);
+  border-color: rgba(92, 67, 0, 0.12);
+  box-shadow: none;
+}
+.home-nudge-text strong {
   font-size: var(--ys-text-md);
   font-weight: 700;
 }
-.worker-home-steps small {
-  font-size: var(--ys-text-sm);
-  color: var(--ys-color-text-secondary);
+.home-nudge-text small {
+  color: var(--ys-color-brand-yellow-ink);
 }
+.home-nudge-action {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding: 8px 14px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--ys-color-text-primary);
+  color: var(--ys-color-brand-yellow);
+  font-size: var(--ys-text-sm);
+  font-weight: 700;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .worker-home-steps > a {
+  .home-next-row,
+  .home-nudge,
+  .home-refresh,
+  .worker-live-ticks > span {
     transition: none;
   }
   .worker-home-spin {

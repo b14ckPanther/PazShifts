@@ -1,0 +1,108 @@
+/* ---------- Pump counter ---------- */
+.pump-digits {
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.pump-digits-drums {
+  display: inline-flex;
+  align-items: stretch;
+}
+.pump-drum {
+  position: relative;
+  display: inline-block;
+  width: 0.62em;
+  height: 1.08em;
+  overflow: hidden;
+  /* Fade the drum edges so the turning digits read as a cylinder. */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 78%, transparent 100%);
+}
+.pump-drum-strip {
+  position: absolute;
+  inset-inline: 0;
+  top: 0.04em;
+  display: grid;
+  text-align: center;
+  transform: translateY(calc(var(--d) * -1em));
+  transition: transform 620ms cubic-bezier(0.25, 1.35, 0.45, 1);
+}
+.pump-drum-strip > span {
+  display: block;
+  height: 1em;
+  line-height: 1em;
+}
+.pump-sep {
+  display: inline-grid;
+  place-items: center;
+  width: 0.3em;
+  padding-bottom: 0.08em;
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pump-drum-strip {
+    transition: none;
+  }
+  .pump-drum {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/* ---------- 24-hour day bar ---------- */
+.day-bar {
+  --bar-track: var(--ys-color-surface-sunken);
+  --bar-fill: var(--ys-color-text-primary);
+  --bar-icon: var(--ys-color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--bar-icon);
+}
+.day-bar > svg {
+  flex-shrink: 0;
+}
+.day-bar-track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--bar-track);
+}
+.day-bar-tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 2px;
+  margin-top: -1px;
+  margin-inline-start: -1px;
+  border-radius: 50%;
+  background: var(--bar-icon);
+  opacity: 0.6;
+}
+.day-bar-shift {
+  position: absolute;
+  inset-block: 0;
+  min-width: 6px;
+  border-radius: var(--ys-radius-pill);
+  background: var(--bar-fill);
+}
+.day-bar-now {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  margin-inline-start: -1.5px;
+  border-radius: 2px;
+  background: var(--ys-color-brand-yellow);
+  box-shadow: 0 0 0 2px var(--bar-ring, #fff);
+}
+.day-bar--crimson {
+  --bar-fill: var(--ys-color-brand-crimson);
+}
+.day-bar--light {
+  --bar-track: rgba(255, 255, 255, 0.2);
+  --bar-fill: #fff;
+  --bar-icon: rgba(255, 255, 255, 0.75);
+  --bar-ring: var(--ys-color-brand-crimson);
+}
