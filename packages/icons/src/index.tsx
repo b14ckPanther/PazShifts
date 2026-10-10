@@ -262,3 +262,5 @@ export const ListChecksIcon: React.FC<IconProps> = (props) => (
 export const LayoutGridIcon: React.FC<IconProps> = (props) => (
   <LayoutGrid strokeWidth={STROKE} {...props} />
 );
+
+export * from './glyphs';
