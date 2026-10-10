@@ -5,7 +5,15 @@ export type WorkerNotification = {
   id: string;
   user_id: string;
   station_id: string;
-  type: 'SCHEDULE_PUBLISHED' | 'SHIFT_REMINDER' | 'LEFT_OPEN';
+  type:
+    | 'SCHEDULE_PUBLISHED'
+    | 'SHIFT_REMINDER'
+    | 'LEFT_OPEN'
+    | 'SHIFT_TODAY'
+    | 'SHIFT_SOON'
+    | 'CHECKOUT_REMINDER'
+    | 'SHIFT_CAPPED'
+    | 'AVAILABILITY_REMINDER';
   title: string;
   body: string;
   created_at: string;
@@ -16,6 +24,8 @@ export type WorkerNotification = {
     shiftId?: string;
     scheduleId?: string;
     attendanceId?: string;
+    membershipId?: string;
+    weekStart?: string;
   };
 };
 export type NotificationPreferences = {
@@ -69,7 +79,7 @@ export async function workerNotificationTarget(
     !validDate(data.data?.day)
   )
     throw Error('Destination unavailable');
-  if (data.type === 'LEFT_OPEN') {
+  if (['LEFT_OPEN', 'CHECKOUT_REMINDER', 'SHIFT_CAPPED'].includes(data.type)) {
     if (!notificationId(data.data.attendanceId)) throw Error('Destination unavailable');
     const active = await client
       .from('attendance_records')
@@ -77,7 +87,7 @@ export async function workerNotificationTarget(
       .eq('id', data.data.attendanceId)
       .eq('user_id', context.userId)
       .eq('station_id', data.station_id)
-      .eq('status', 'ACTIVE')
+      .eq('status', data.type === 'SHIFT_CAPPED' ? 'FLAGGED' : 'ACTIVE')
       .maybeSingle();
     if (active.error || !active.data) throw Error('Destination unavailable');
     return {
@@ -86,8 +96,17 @@ export async function workerNotificationTarget(
       screen: 'home' as const,
     };
   }
-  if (!['SCHEDULE_PUBLISHED', 'SHIFT_REMINDER'].includes(data.type))
-    throw Error('Destination unavailable');
+  if (data.type === 'AVAILABILITY_REMINDER') {
+    const membership = context.stations.find((s) => s.id === data.station_id)!;
+    if (data.data.membershipId !== membership.membershipId) throw Error('Destination unavailable');
+    return {
+      stationId: data.station_id as string,
+      day: (validDate(data.data.weekStart) ? data.data.weekStart : data.data.day) as string,
+      screen: 'availability' as const,
+    };
+  }
+  const reminder = ['SHIFT_REMINDER', 'SHIFT_TODAY', 'SHIFT_SOON'].includes(data.type);
+  if (data.type !== 'SCHEDULE_PUBLISHED' && !reminder) throw Error('Destination unavailable');
   if (!notificationId(data.data.scheduleId)) throw Error('Destination unavailable');
   const schedule = await client
     .from('schedules')
@@ -97,7 +116,7 @@ export async function workerNotificationTarget(
     .eq('status', 'PUBLISHED')
     .maybeSingle();
   if (schedule.error || !schedule.data) throw Error('Destination unavailable');
-  if (data.type === 'SHIFT_REMINDER') {
+  if (reminder) {
     if (!notificationId(data.data.shiftId)) throw Error('Destination unavailable');
     const membership = context.stations.find((s) => s.id === data.station_id)!;
     const assignment = await client

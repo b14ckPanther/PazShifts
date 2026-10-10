@@ -31,7 +31,9 @@ export function NotificationBridge() {
       worker.openStation(target.stationId, () =>
         target.screen === 'home'
           ? router.navigate('/')
-          : router.navigate({ pathname: '/schedule', params: { day: target.day } })
+          : target.screen === 'availability'
+            ? router.navigate({ pathname: '/availability', params: { week: target.day } })
+            : router.navigate({ pathname: '/schedule', params: { day: target.day } })
       );
     }
   }, [target, worker.context, retry]);

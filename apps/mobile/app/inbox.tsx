@@ -135,7 +135,15 @@ export function Inbox() {
           )}
           {opening && !marking && <Label accessibilityLiveRegion="polite">פותח את העדכון…</Label>}
           {rows.map((row) => {
-            const Icon = row.type === 'SHIFT_REMINDER' ? Clock : Calendar;
+            const Icon = [
+              'SHIFT_REMINDER',
+              'SHIFT_TODAY',
+              'SHIFT_SOON',
+              'CHECKOUT_REMINDER',
+              'SHIFT_CAPPED',
+            ].includes(row.type)
+              ? Clock
+              : Calendar;
             return (
               <Pressable
                 key={row.id}
